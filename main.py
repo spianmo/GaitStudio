@@ -1,10 +1,12 @@
 import json
 import sys
+from typing import Callable, NoReturn
 
 import cv2 as cv
 import mediapipe as mp
 import numpy as np
-import argparse
+
+from numpy import ndarray
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -17,12 +19,20 @@ checked_pose_keypoints = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 
                           26, 27, 28, 29, 30, 31, 32]
 
 
-def BGR(RGB: tuple):
+def BGR(RGB: tuple[int, int, int]) -> tuple[int, int, int]:
+    """
+    RGB Color to BGR Color
+    :param RGB: RGB Color
+    :return: BGR Color
+    """
     return RGB[2], RGB[1], RGB[0]
 
 
-def drawHealBoneLogo(*frames):
-    for index, frame in enumerate(*frames):
+def draw_healbone_logo(*frames: list[ndarray]) -> NoReturn:
+    """
+    add HealBone Logo to CV-Frame
+    """
+    for _, frame in enumerate(*frames):
         logo = cv.imread('./logo.png')
         width = 123 * 2
         height = int(width / 4.3)
@@ -34,15 +44,16 @@ def drawHealBoneLogo(*frames):
         roi += logo
 
 
-def read_video_frames(*streams: str, callback):
+def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tuple:
     """
     从视频流中读取帧，并将帧传递给回调函数
     :param streams:
     :param callback:
+    :returns
     """
     caps = [cv.VideoCapture(stream) for stream in streams]
-    pts_cams = [[] for i in range(len(caps))]
-    pts_3d = []
+    pts_cams: list[list] = [[] for _ in range(len(caps))]
+    pts_3d: list = []
 
     print("read_video_frames:", len(caps))
 
@@ -52,7 +63,7 @@ def read_video_frames(*streams: str, callback):
         cap.set(4, frame_shape[0])
 
     while True:
-        frames = []
+        frames: list[ndarray] = []
         # 遍历caps
         for cap in caps:
             ret, frame = cap.read()
@@ -74,34 +85,34 @@ def read_video_frames(*streams: str, callback):
         pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = callback(*frames)
 
         # 解除写入性能限制，将RGB转换为BGR
-        for index, frame in enumerate(frames):
-            frames[index].flags.writeable = True
-            frames[index] = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
+        for frame_index, frame in enumerate(frames):
+            frames[frame_index].flags.writeable = True
+            frames[frame_index] = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
         # 将归一化的坐标转换为原始坐标
-        for index, pose_landmark in enumerate(pose_landmarks):
+        for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
             if pose_landmark:
                 for keypoint_index, landmark in enumerate(pose_landmark):
                     # 只处理待检测的关键点，用于后续CheckCube扩展
                     if keypoint_index not in checked_pose_keypoints:
                         continue
-                    truth_x = int(round(landmark.x * frames[index].shape[1]))
-                    truth_y = int(round(landmark.y * frames[index].shape[0]))
-                    cv.circle(frames[index], (truth_x, truth_y), 3, BGR(RGB=(255, 0, 0)), -1)
-                    pts_cams[index].append([truth_x, truth_y])
+                    truth_x = int(round(landmark.x * frames[pose_landmark_index].shape[1]))
+                    truth_y = int(round(landmark.y * frames[pose_landmark_index].shape[0]))
+                    cv.circle(frames[pose_landmark_index], (truth_x, truth_y), 3, BGR(RGB=(255, 0, 0)), -1)
+                    pts_cams[pose_landmark_index].append([truth_x, truth_y])
             else:
-                pts_cams[index] = [[-1, -1]] * len(checked_pose_keypoints)
+                pts_cams[pose_landmark_index] = [[-1, -1]] * len(checked_pose_keypoints)
 
-        for index, pose_landmark_proto in enumerate(pose_landmarks_proto):
-            mp_drawing.draw_landmarks(frames[index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,
+        for pose_landmark_proto_index, pose_landmark_proto in enumerate(pose_landmarks_proto):
+            mp_drawing.draw_landmarks(frames[pose_landmark_proto_index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,
                                       landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
         # 绘制HealBone图标
-        drawHealBoneLogo(frames)
+        draw_healbone_logo(frames)
 
         # 窗口展示视频帧
-        for index, frame in enumerate(frames):
-            cv.imshow("cam" + str(index), frame)
+        for frame_index, frame in enumerate(frames):
+            cv.imshow("cam" + str(frame_index), frame)
 
         k = cv.waitKey(1)
         # 按ESC键退出
@@ -112,13 +123,14 @@ def read_video_frames(*streams: str, callback):
     for cap in caps:
         cap.release()
 
-    return [np.array(pts_cam) for pts_cam in pts_cams], np.array(pts_3d)
+    return [np.array(_pts_cam) for _pts_cam in pts_cams], np.array(pts_3d)
 
 
-def inferPose(*video_frames):
+def infer_pose(*video_frames: tuple) -> list:
     """
     推断视频帧中人体姿态
     :param video_frames:
+    :return
     """
     global poseDetectorPool
     if len(poseDetectorPool) == 0:
@@ -128,7 +140,7 @@ def inferPose(*video_frames):
             model_complexity=1,
             smooth_landmarks=True,
             smooth_segmentation=True,
-        ) for i in range(len(video_frames))]
+        ) for _ in range(len(video_frames))]
         print("PoseDetectorPool Size:", len(poseDetectorPool))
 
     results = []
@@ -137,8 +149,13 @@ def inferPose(*video_frames):
     return results
 
 
-def video_frame_handler(*video_frame):
-    infer_results = inferPose(*video_frame)
+def video_frame_handler(*video_frame: tuple) -> tuple[list, list, list, list]:
+    """
+    每一帧视频帧被读取到时的异步Handler
+    :param video_frame:
+    :returns: pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
+    """
+    infer_results = infer_pose(*video_frame)
 
     pose_landmarks = [i.pose_landmarks.landmark for i in infer_results]
     pose_world_landmarks = [i.pose_world_landmarks.landmark for i in infer_results]
@@ -149,7 +166,7 @@ def video_frame_handler(*video_frame):
     return pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
 
 
-def save_keypoints(filename, pts):
+def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
     file = open(filename, "w")
     json.dump(pts.tolist(), file)
     file.close()
@@ -167,12 +184,13 @@ if __name__ == '__main__':
         input_stream2 = int(sys.argv[2])
 
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
-    pts_cams, pts_3d = read_video_frames(input_stream1, input_stream2,
-                                         callback=lambda frame0, frame1: video_frame_handler(frame0, frame1))
+    pts_cams_ndarray, pts_3d_ndarray = read_video_frames(input_stream1, input_stream2,
+                                                         callback=lambda frame0, frame1: video_frame_handler(frame0,
+                                                                                                             frame1))
 
     # 保存原始的推理结果
-    for index, pts_cam in enumerate(pts_cams):
+    for index, pts_cam in enumerate(pts_cams_ndarray):
         save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
 
     # 保存fixed过后的3D空间推理结果
-    save_keypoints('pts_3d.json', pts_3d)
+    save_keypoints('pts_3d.json', pts_3d_ndarray)
