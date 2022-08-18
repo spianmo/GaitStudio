@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Callable, NoReturn
+from typing import Callable, NoReturn, List, Tuple
 
 import cv2 as cv
 import mediapipe as mp
@@ -19,7 +19,7 @@ checked_pose_keypoints = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 
                           26, 27, 28, 29, 30, 31, 32]
 
 
-def BGR(RGB: tuple[int, int, int]) -> tuple[int, int, int]:
+def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
     """
     RGB Color to BGR Color
     :param RGB: RGB Color
@@ -28,7 +28,7 @@ def BGR(RGB: tuple[int, int, int]) -> tuple[int, int, int]:
     return RGB[2], RGB[1], RGB[0]
 
 
-def draw_healbone_logo(*frames: list[ndarray]) -> NoReturn:
+def draw_healbone_logo(*frames: List[ndarray]) -> NoReturn:
     """
     add HealBone Logo to CV-Frame
     """
@@ -52,7 +52,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
     :returns
     """
     caps = [cv.VideoCapture(stream) for stream in streams]
-    pts_cams: list[list] = [[] for _ in range(len(caps))]
+    pts_cams: List[list] = [[] for _ in range(len(caps))]
     pts_3d: list = []
 
     print("read_video_frames:", len(caps))
@@ -63,7 +63,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
         cap.set(4, frame_shape[0])
 
     while True:
-        frames: list[ndarray] = []
+        frames: List[ndarray] = []
         # 遍历caps
         for cap in caps:
             ret, frame = cap.read()
@@ -149,7 +149,7 @@ def infer_pose(*video_frames: tuple) -> list:
     return results
 
 
-def video_frame_handler(*video_frame: tuple) -> tuple[list, list, list, list]:
+def video_frame_handler(*video_frame: tuple) -> Tuple[list, list, list, list]:
     """
     每一帧视频帧被读取到时的异步Handler
     :param video_frame:
