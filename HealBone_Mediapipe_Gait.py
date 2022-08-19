@@ -6,7 +6,6 @@ import cv2 as cv
 import mediapipe as mp
 import numpy as np
 import pandas as pd
-from IPython.core.display_functions import display
 from matplotlib import pyplot as plt
 from mediapipe.python.solutions.pose import PoseLandmark
 
