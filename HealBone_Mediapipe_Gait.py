@@ -13,6 +13,8 @@ from numpy import ndarray
 import seaborn as sns
 from pandas import DataFrame
 
+from acceleration import sensormotionDemo
+
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -256,6 +258,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
 
         # 将归一化的坐标转换为原始坐标
         for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
+            pose_keypoints = []
             if pose_landmark:
                 for keypoint_index, landmark in enumerate(pose_landmark):
                     # 只处理待检测的关键点，用于后续CheckCube扩展
@@ -269,10 +272,11 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
                     visibility = landmark.visibility
                     cv.circle(frames[pose_landmark_index], (visualize_x, visualize_y), radius=3,
                               color=BGR(RGB=(255, 0, 0)), thickness=-1)
-                    pts_cams[pose_landmark_index].append([truth_x, truth_y, truth_z, visibility])
+                    pose_keypoints.append([truth_x, truth_y, truth_z, visibility])
             else:
-                pts_cams[pose_landmark_index] = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
+                pose_keypoints = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
+            pts_cams[pose_landmark_index].append(pose_keypoints)
             # 计算每一帧的3D坐标中的角度
             chart_datas[pose_landmark_index].append(landmark_to_angle(pose_landmark))
 
@@ -298,6 +302,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
 
     for chart_index, chart_data in enumerate(chart_datas):
         df_angles = pd.DataFrame(chart_data)
+
         df_angles["Time_in_sec"] = [n / fps[0] for n in range(len(df_angles))]
 
         # 绘制3D坐标图表
@@ -305,7 +310,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
 
     plt.show()
 
-    return [np.array(_pts_cam) for _pts_cam in pts_cams], np.array(pts_3d)
+    return [np.array(_pts_cam) for _pts_cam in pts_cams], np.array(pts_3d), fps[0]
 
 
 def infer_pose(*video_frames: tuple) -> list:
@@ -366,13 +371,16 @@ if __name__ == '__main__':
         input_stream2 = int(sys.argv[2])
 
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
-    pts_cams_ndarray, pts_3d_ndarray = read_video_frames(input_stream1, input_stream2,
-                                                         callback=lambda frame0, frame1: video_frame_handler(frame0,
-                                                                                                             frame1))
+    pts_cams_ndarray, pts_3d_ndarray, fps = read_video_frames(input_stream1, input_stream2,
+                                                              callback=lambda frame0, frame1: video_frame_handler(
+                                                                  frame0,
+                                                                  frame1))
 
     # 保存原始的推理结果
     for index, pts_cam in enumerate(pts_cams_ndarray):
         save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
+        if index == 0:
+            sensormotionDemo(pts_cam, fps)
 
     # 保存fixed过后的3D空间推理结果
     save_keypoints('pts_3d.json', pts_3d_ndarray)
