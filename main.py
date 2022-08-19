@@ -5,6 +5,7 @@ from typing import Callable, NoReturn, List, Tuple
 import cv2 as cv
 import mediapipe as mp
 import numpy as np
+from mediapipe.python.solutions.pose import PoseLandmark
 
 from numpy import ndarray
 
@@ -15,8 +16,42 @@ mp_drawing_styles = mp.solutions.drawing_styles
 poseDetectorPool = []
 frame_shape = [720, 1280]
 
-checked_pose_keypoints = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-                          26, 27, 28, 29, 30, 31, 32]
+# 检测的点
+checked_pose_keypoints = [
+    PoseLandmark.NOSE,
+    PoseLandmark.LEFT_EYE_INNER,
+    PoseLandmark.LEFT_EYE,
+    PoseLandmark.LEFT_EYE_OUTER,
+    PoseLandmark.RIGHT_EYE_INNER,
+    PoseLandmark.RIGHT_EYE,
+    PoseLandmark.RIGHT_EYE_OUTER,
+    PoseLandmark.LEFT_EAR,
+    PoseLandmark.RIGHT_EAR,
+    PoseLandmark.MOUTH_LEFT,
+    PoseLandmark.MOUTH_RIGHT,
+    PoseLandmark.LEFT_SHOULDER,
+    PoseLandmark.RIGHT_SHOULDER,
+    PoseLandmark.LEFT_ELBOW,
+    PoseLandmark.RIGHT_ELBOW,
+    PoseLandmark.LEFT_WRIST,
+    PoseLandmark.RIGHT_WRIST,
+    PoseLandmark.LEFT_PINKY,
+    PoseLandmark.RIGHT_PINKY,
+    PoseLandmark.LEFT_INDEX,
+    PoseLandmark.RIGHT_INDEX,
+    PoseLandmark.LEFT_THUMB,
+    PoseLandmark.RIGHT_THUMB,
+    PoseLandmark.LEFT_HIP,
+    PoseLandmark.RIGHT_HIP,
+    PoseLandmark.LEFT_KNEE,
+    PoseLandmark.RIGHT_KNEE,
+    PoseLandmark.LEFT_ANKLE,
+    PoseLandmark.RIGHT_ANKLE,
+    PoseLandmark.LEFT_HEEL,
+    PoseLandmark.RIGHT_HEEL,
+    PoseLandmark.LEFT_FOOT_INDEX,
+    PoseLandmark.RIGHT_FOOT_INDEX,
+]
 
 
 def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -59,8 +94,8 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
 
     for cap in caps:
         # 视频流的分辨率设置为1280x720
-        cap.set(3, frame_shape[1])
-        cap.set(4, frame_shape[0])
+        cap.set(cv.CAP_PROP_FRAME_WIDTH, frame_shape[1])
+        cap.set(cv.CAP_PROP_FRAME_HEIGHT, frame_shape[0])
 
     while True:
         frames: List[ndarray] = []
@@ -94,14 +129,16 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
             if pose_landmark:
                 for keypoint_index, landmark in enumerate(pose_landmark):
                     # 只处理待检测的关键点，用于后续CheckCube扩展
-                    if keypoint_index not in checked_pose_keypoints:
+                    if PoseLandmark(keypoint_index) not in checked_pose_keypoints:
                         continue
                     truth_x = int(round(landmark.x * frames[pose_landmark_index].shape[1]))
                     truth_y = int(round(landmark.y * frames[pose_landmark_index].shape[0]))
+                    truth_z = landmark.z
+                    visibility = landmark.visibility
                     cv.circle(frames[pose_landmark_index], (truth_x, truth_y), 3, BGR(RGB=(255, 0, 0)), -1)
-                    pts_cams[pose_landmark_index].append([truth_x, truth_y])
+                    pts_cams[pose_landmark_index].append([truth_x, truth_y, truth_z, visibility])
             else:
-                pts_cams[pose_landmark_index] = [[-1, -1]] * len(checked_pose_keypoints)
+                pts_cams[pose_landmark_index] = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
         for pose_landmark_proto_index, pose_landmark_proto in enumerate(pose_landmarks_proto):
             mp_drawing.draw_landmarks(frames[pose_landmark_proto_index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,

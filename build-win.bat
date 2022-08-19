@@ -1,2 +1,1 @@
-venv\Scripts\activate
-pyinstaller -F --hidden-import opencv-python main.py
+pyinstaller -F -n HealBone-GaitAnalysis  --noconsole --hidden-import opencv-python main.py
