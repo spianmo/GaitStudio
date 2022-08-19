@@ -5,9 +5,14 @@ from typing import Callable, NoReturn, List, Tuple
 import cv2 as cv
 import mediapipe as mp
 import numpy as np
+import pandas as pd
+from IPython.core.display_functions import display
+from matplotlib import pyplot as plt
 from mediapipe.python.solutions.pose import PoseLandmark
 
 from numpy import ndarray
+import seaborn as sns
+from pandas import DataFrame
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -79,6 +84,124 @@ def draw_healbone_logo(*frames: List[ndarray]) -> NoReturn:
         roi += logo
 
 
+def plot_angles(title: str, df: DataFrame) -> None:
+    rc = {'font.sans-serif': 'SimHei',
+          'axes.unicode_minus': False}
+
+    sns.set_style(style='darkgrid', rc=rc)
+
+    fig, axes = plt.subplots(3, 3, figsize=(24, 14))
+
+    fig.suptitle("关节角度变化周期 - " + title)
+
+    sns.lineplot(ax=axes[0, 0], data=df, x="Time_in_sec", y="TorsoLHip_angle").set(xlabel="时间（秒）",
+                                                                                   ylabel="躯干 L 髋关节角度 (°)")
+    sns.lineplot(ax=axes[0, 1], data=df, x="Time_in_sec", y="TorsoRHip_angle").set(xlabel="时间（秒）",
+                                                                                   ylabel="躯干 R 髋关节角度 (°)")
+    sns.lineplot(ax=axes[0, 2], data=df, x="Time_in_sec", y="LHip_angle").set(xlabel="时间（秒）",
+                                                                              ylabel="L 髋关节角度 (°)")
+    sns.lineplot(ax=axes[1, 0], data=df, x="Time_in_sec", y="RHip_angle").set(xlabel="时间（秒）",
+                                                                              ylabel="R 髋关节角度 (°)")
+    sns.lineplot(ax=axes[1, 1], data=df, x="Time_in_sec", y="LKnee_angle").set(xlabel="时间（秒）",
+                                                                               ylabel="L 膝关节角度 (°)")
+    sns.lineplot(ax=axes[1, 2], data=df, x="Time_in_sec", y="RKnee_angle").set(xlabel="时间（秒）",
+                                                                               ylabel="R 膝关节角度 (°)")
+    sns.lineplot(ax=axes[2, 0], data=df, x="Time_in_sec", y="LAnkle_angle").set(xlabel="时间（秒）",
+                                                                                ylabel="L 踝关节角度 (°)")
+    sns.lineplot(ax=axes[2, 1], data=df, x="Time_in_sec", y="RAnkle_angle").set(xlabel="时间（秒）",
+                                                                                ylabel="R 踝关节角度 (°)")
+
+
+def vectors_to_angle(vector1, vector2) -> float:
+    """
+    计算两个向量之间的夹角
+    :param vector1:
+    :param vector2:
+    :return:
+    """
+    x = np.dot(vector1, -vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+    theta = np.degrees(np.arccos(x))
+    return theta
+
+
+def landmark_to_angle(landmarks) -> dict:
+    """
+    计算单次姿态的所有点的检测夹角
+    :param landmarks:
+    :return:
+    """
+    # 鼻部坐标
+    Nose_coor = np.array([landmarks[mp_pose.PoseLandmark.NOSE.value].x, landmarks[mp_pose.PoseLandmark.NOSE.value].y])
+    # 左髋关节坐标
+    LHip_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y])
+    # 右髋关节坐标
+    RHip_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y])
+    # 左右髋关节中点
+    MidHip_coor = np.array([(LHip_coor[0] + RHip_coor[0]) / 2, (LHip_coor[1] + RHip_coor[1]) / 2])
+    # 左膝关节坐标
+    LKnee_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y])
+    # 右膝关节坐标
+    RKnee_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y])
+    # 左踝关节坐标
+    LAnkle_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y])
+    # 右踝关节坐标
+    RAnkle_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y])
+    # 左脚拇指坐标
+    LBigToe_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].x,
+         landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].y])
+    # 右脚拇指坐标
+    RBigToe_coor = np.array(
+        [landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value].x,
+         landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value].y])
+
+    # 躯干向量
+    Torso_vector = MidHip_coor - Nose_coor
+    # 左右胯骨向量
+    Hip_vector = LHip_coor - RHip_coor
+    # 左股骨向量
+    LFemur_vector = LKnee_coor - LHip_coor
+    # 右股骨向量
+    RFemur_vector = RKnee_coor - RHip_coor
+    # 左胫骨向量
+    LTibia_vector = LAnkle_coor - LKnee_coor
+    # 右胫骨向量
+    RTibia_vector = RAnkle_coor - RKnee_coor
+    # 左足部向量
+    LFoot_vector = LBigToe_coor - LAnkle_coor
+    # 右足部向量
+    RFoot_vector = RBigToe_coor - RAnkle_coor
+
+    # 躯干与胯骨的夹角
+    TorsoLHip_angle = vectors_to_angle(Torso_vector, Hip_vector)
+    TorsoRHip_angle = vectors_to_angle(Torso_vector, Hip_vector)
+
+    # 左股骨与胯骨的夹角
+    LHip_angle = vectors_to_angle(LFemur_vector, Hip_vector)
+    # 右股骨与胯骨的夹角
+    RHip_angle = vectors_to_angle(RFemur_vector, -Hip_vector)
+
+    # 左胫骨与左股骨的夹角
+    LKnee_angle = vectors_to_angle(LTibia_vector, LFemur_vector)
+    # 右胫骨与右股骨的夹角
+    RKnee_angle = vectors_to_angle(RTibia_vector, RFemur_vector)
+    # 左踝与左胫骨的夹角
+    LAnkle_angle = vectors_to_angle(LFoot_vector, LTibia_vector)
+    # 右踝与右胫骨的夹角
+    RAnkle_angle = vectors_to_angle(RFoot_vector, RTibia_vector)
+
+    dict_angles = {"TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
+                   "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
+                   "LAnkle_angle": LAnkle_angle, "RAnkle_angle": RAnkle_angle}
+    return dict_angles
+
+
 def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tuple:
     """
     从视频流中读取帧，并将帧传递给回调函数
@@ -87,10 +210,18 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
     :returns
     """
     caps = [cv.VideoCapture(stream) for stream in streams]
+
+    fps = [cv.VideoCapture(stream).get(cv.CAP_PROP_FPS) for stream in streams]
+
+    if np.std(fps) != 0.0:
+        raise Exception('sources different fps')
+
     pts_cams: List[list] = [[] for _ in range(len(caps))]
     pts_3d: list = []
+    chart_datas: list = [[] for _ in range(len(caps))]
 
     print("read_video_frames:", len(caps))
+    print("fps:", fps[0])
 
     for cap in caps:
         # 视频流的分辨率设置为1280x720
@@ -131,14 +262,20 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
                     # 只处理待检测的关键点，用于后续CheckCube扩展
                     if PoseLandmark(keypoint_index) not in checked_pose_keypoints:
                         continue
-                    truth_x = int(round(landmark.x * frames[pose_landmark_index].shape[1]))
-                    truth_y = int(round(landmark.y * frames[pose_landmark_index].shape[0]))
+                    visualize_x = int(round(landmark.x * frames[pose_landmark_index].shape[1]))
+                    visualize_y = int(round(landmark.y * frames[pose_landmark_index].shape[0]))
+                    truth_x = landmark.x
+                    truth_y = landmark.y
                     truth_z = landmark.z
                     visibility = landmark.visibility
-                    cv.circle(frames[pose_landmark_index], (truth_x, truth_y), 3, BGR(RGB=(255, 0, 0)), -1)
+                    cv.circle(frames[pose_landmark_index], (visualize_x, visualize_y), radius=3,
+                              color=BGR(RGB=(255, 0, 0)), thickness=-1)
                     pts_cams[pose_landmark_index].append([truth_x, truth_y, truth_z, visibility])
             else:
                 pts_cams[pose_landmark_index] = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
+
+            # 计算每一帧的3D坐标中的角度
+            chart_datas[pose_landmark_index].append(landmark_to_angle(pose_landmark))
 
         for pose_landmark_proto_index, pose_landmark_proto in enumerate(pose_landmarks_proto):
             mp_drawing.draw_landmarks(frames[pose_landmark_proto_index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,
@@ -159,6 +296,15 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
     cv.destroyAllWindows()
     for cap in caps:
         cap.release()
+
+    for chart_index, chart_data in enumerate(chart_datas):
+        df_angles = pd.DataFrame(chart_data)
+        df_angles["Time_in_sec"] = [n / fps[0] for n in range(len(df_angles))]
+
+        # 绘制3D坐标图表
+        plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+
+    plt.show()
 
     return [np.array(_pts_cam) for _pts_cam in pts_cams], np.array(pts_3d)
 
