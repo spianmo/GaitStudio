@@ -132,7 +132,8 @@ def build_vector(landmarks, landmark_index: PoseLandmark) -> ndarray:
     :param landmarks:
     :return:
     """
-    return np.array([landmarks[landmark_index.value].x, landmarks[landmark_index.value].y, landmarks[landmark_index.value].z])
+    return np.array(
+        [landmarks[landmark_index.value].x, landmarks[landmark_index.value].y, landmarks[landmark_index.value].z])
 
 
 def landmark_to_angle(landmarks) -> dict:
@@ -222,7 +223,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
     pts_3d: list = []
     chart_datas: list = [[] for _ in range(len(caps))]
 
-    print("read_video_frames:", len(caps))
+    print("read_video_sources:", len(caps))
     print("fps:", fps[0])
 
     for cap in caps:
@@ -251,6 +252,10 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
             break
 
         pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = callback(*frames)
+
+        if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
+                pose_world_landmarks_proto is None:
+            continue
 
         # 解除写入性能限制，将RGB转换为BGR
         for frame_index, frame in enumerate(frames):
@@ -337,7 +342,7 @@ def infer_pose(*video_frames: tuple) -> list:
     return results
 
 
-def video_frame_handler(*video_frame: tuple) -> Tuple[list, list, list, list]:
+def video_frame_handler(*video_frame: tuple) -> Tuple[any, any, any, any]:
     """
     每一帧视频帧被读取到时的异步Handler
     :param video_frame:
@@ -345,6 +350,9 @@ def video_frame_handler(*video_frame: tuple) -> Tuple[list, list, list, list]:
     """
     infer_results = infer_pose(*video_frame)
 
+    for i in range(len(infer_results)):
+        if infer_results[i].pose_landmarks is None or infer_results[i].pose_world_landmarks is None:
+            return None, None, None, None
     pose_landmarks = [i.pose_landmarks.landmark for i in infer_results]
     pose_world_landmarks = [i.pose_world_landmarks.landmark for i in infer_results]
 
@@ -362,8 +370,8 @@ def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
 
 if __name__ == '__main__':
     # 预先读取的不同视角视频
-    input_stream1 = 'data/view-side.mp4'
-    input_stream2 = 'data/view-front.mp4'
+    input_stream1 = 'data/exercise-side.mp4'
+    input_stream2 = 'data/exercise-front.mp4'
     show_mediapipe_drawing = True
 
     # 读取相机串口编号
