@@ -443,6 +443,7 @@ if __name__ == '__main__':
             save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
         if show_sensormotion_demo:
             if index == 0:
+                # 分解右膝关节点的加速度
                 sensormotionDemo(pts_cam=pts_cam, analysis_keypoint=PoseLandmark.RIGHT_KNEE, fps=fps)
 
     # 保存fixed过后的3D空间推理结果
