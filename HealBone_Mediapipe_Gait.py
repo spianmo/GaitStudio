@@ -125,6 +125,16 @@ def vectors_to_angle(vector1, vector2) -> float:
     return theta
 
 
+def build_vector(landmarks, landmark_index: PoseLandmark) -> ndarray:
+    """
+    根据关节点坐标构建向量
+    :param landmark_index:
+    :param landmarks:
+    :return:
+    """
+    return np.array([landmarks[landmark_index.value].x, landmarks[landmark_index.value].y, landmarks[landmark_index.value].z])
+
+
 def landmark_to_angle(landmarks) -> dict:
     """
     计算单次姿态的所有点的检测夹角
@@ -132,35 +142,26 @@ def landmark_to_angle(landmarks) -> dict:
     :return:
     """
     # 鼻部坐标
-    Nose_coor = np.array([landmarks[mp_pose.PoseLandmark.NOSE.value].x, landmarks[mp_pose.PoseLandmark.NOSE.value].y])
+    Nose_coor = build_vector(landmarks, mp_pose.PoseLandmark.NOSE)
     # 左髋关节坐标
-    LHip_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y])
+    LHip_coor = build_vector(landmarks, mp_pose.PoseLandmark.LEFT_HIP)
     # 右髋关节坐标
-    RHip_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y])
+    RHip_coor = build_vector(landmarks, mp_pose.PoseLandmark.RIGHT_HIP)
     # 左右髋关节中点
-    MidHip_coor = np.array([(LHip_coor[0] + RHip_coor[0]) / 2, (LHip_coor[1] + RHip_coor[1]) / 2])
+    MidHip_coor = np.array(
+        [(LHip_coor[0] + RHip_coor[0]) / 2, (LHip_coor[1] + RHip_coor[1]) / 2, (LHip_coor[1] + RHip_coor[2]) / 2])
     # 左膝关节坐标
-    LKnee_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y])
+    LKnee_coor = build_vector(landmarks, mp_pose.PoseLandmark.LEFT_KNEE)
     # 右膝关节坐标
-    RKnee_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y])
+    RKnee_coor = build_vector(landmarks, mp_pose.PoseLandmark.RIGHT_KNEE)
     # 左踝关节坐标
-    LAnkle_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y])
+    LAnkle_coor = build_vector(landmarks, mp_pose.PoseLandmark.LEFT_ANKLE)
     # 右踝关节坐标
-    RAnkle_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y])
+    RAnkle_coor = build_vector(landmarks, mp_pose.PoseLandmark.RIGHT_ANKLE)
     # 左脚拇指坐标
-    LBigToe_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].x,
-         landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].y])
+    LBigToe_coor = build_vector(landmarks, mp_pose.PoseLandmark.LEFT_FOOT_INDEX)
     # 右脚拇指坐标
-    RBigToe_coor = np.array(
-        [landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value].x,
-         landmarks[mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value].y])
+    RBigToe_coor = build_vector(landmarks, mp_pose.PoseLandmark.RIGHT_FOOT_INDEX)
 
     # 躯干向量
     Torso_vector = MidHip_coor - Nose_coor
