@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sensormotion as sm
 
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+plt.rcParams['axes.unicode_minus'] = False  # 显示负号
+
 
 def calculateVelocity(point1: list, point2: list, time: float) -> Tuple[float, float, float]:
     velocity_x = (point2[0] - point1[0]) / time
@@ -34,9 +37,9 @@ def calculateAccelerationListFrame(point_list: list, frames: int) -> Tuple[ndarr
         [acceleration[2] for acceleration in accelerations])
 
 
-def sensormotionDemo(pts_cam: ndarray, fps: int):
+def sensormotionDemo(pts_cam: ndarray, analysis_keypoint, fps: int):
     accelerations_x, accelerations_y, accelerations_z = calculateAccelerationListFrame(
-        [keypoints[26] for keypoints in pts_cam.tolist()], fps)
+        [keypoints[analysis_keypoint.value] for keypoints in list(pts_cam)], fps)
 
     sampling_rate = fps  # number of samples per second
 
@@ -102,11 +105,11 @@ def sensormotionDemo(pts_cam: ndarray, fps: int):
     print(' - Stride regularity: {:.4f}'.format(stride_reg))
     print(' - Step symmetry: {:.4f}'.format(step_sym))
 
-    x_counts = sm.pa.convert_counts(accelerations_x, frames_time, time_scale='ms', epoch=10, rectify='full',
+    x_counts = sm.pa.convert_counts(accelerations_x, frames_time, time_scale='ms', epoch=1, rectify='full',
                                     integrate='simpson', plot=True)
-    y_counts = sm.pa.convert_counts(accelerations_y, frames_time, time_scale='ms', epoch=10, rectify='full',
+    y_counts = sm.pa.convert_counts(accelerations_y, frames_time, time_scale='ms', epoch=1, rectify='full',
                                     integrate='simpson', plot=True)
-    z_counts = sm.pa.convert_counts(accelerations_z, frames_time, time_scale='ms', epoch=10, rectify='full',
+    z_counts = sm.pa.convert_counts(accelerations_z, frames_time, time_scale='ms', epoch=1, rectify='full',
                                     integrate='simpson', plot=True)
 
     vm = sm.signal.vector_magnitude(x_counts, y_counts, z_counts)

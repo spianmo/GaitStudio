@@ -22,7 +22,7 @@ mp_drawing_styles = mp.solutions.drawing_styles
 poseDetectorPool = []
 frame_shape = [720, 1280]
 
-# 检测的点
+# 待检测的点
 checked_pose_keypoints = [
     PoseLandmark.NOSE,
     PoseLandmark.LEFT_EYE_INNER,
@@ -111,6 +111,8 @@ def plot_angles(title: str, df: DataFrame) -> None:
                                                                                 ylabel="L 踝关节角度 (°)")
     sns.lineplot(ax=axes[2, 1], data=df, x="Time_in_sec", y="RAnkle_angle").set(xlabel="时间（秒）",
                                                                                 ylabel="R 踝关节角度 (°)")
+
+    plt.show()
 
 
 def vectors_to_angle(vector1, vector2) -> float:
@@ -295,7 +297,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
 
         # 窗口展示视频帧
         for frame_index, frame in enumerate(frames):
-            cv.imshow("cam" + str(frame_index), frame)
+            cv.imshow("HealBone-Mediapipe-Gait: Camera" + str(frame_index), frame)
 
         k = cv.waitKey(1)
         # 按ESC键退出
@@ -306,17 +308,7 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
     for cap in caps:
         cap.release()
 
-    for chart_index, chart_data in enumerate(chart_datas):
-        df_angles = pd.DataFrame(chart_data)
-
-        df_angles["Time_in_sec"] = [n / fps[0] for n in range(len(df_angles))]
-
-        # 绘制3D坐标图表
-        plot_angles("CAM[" + str(chart_index) + "]", df_angles)
-
-    plt.show()
-
-    return [np.array(_pts_cam) for _pts_cam in pts_cams], np.array(pts_3d), fps[0]
+    return [np.array(_pts_cam) for _pts_cam in pts_cams], np.array(pts_3d), fps[0], chart_datas
 
 
 def infer_pose(*video_frames: tuple) -> list:
@@ -380,16 +372,21 @@ if __name__ == '__main__':
         input_stream2 = int(sys.argv[2])
 
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
-    pts_cams_ndarray, pts_3d_ndarray, fps = read_video_frames(input_stream1, input_stream2,
-                                                              callback=lambda frame0, frame1: video_frame_handler(
-                                                                  frame0,
-                                                                  frame1))
+    pts_cams_ndarray, pts_3d_ndarray, fps, chart_datas = read_video_frames(input_stream1, input_stream2,
+                                                                           callback=lambda frame0, frame1:
+                                                                           video_frame_handler(frame0, frame1))
 
-    # 保存原始的推理结果
+    # 绘制步态周期图表
+    for chart_index, chart_data in enumerate(chart_datas):
+        df_angles = pd.DataFrame(chart_data)
+        df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
+        plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+
+    # 保存原始的推理结果，以index为0的推理结果进行3D空间下加速度分解分析
     for index, pts_cam in enumerate(pts_cams_ndarray):
         save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
         if index == 0:
-            sensormotionDemo(pts_cam, fps)
+            sensormotionDemo(pts_cam=pts_cam, analysis_keypoint=PoseLandmark.RIGHT_KNEE, fps=fps)
 
     # 保存fixed过后的3D空间推理结果
     save_keypoints('pts_3d.json', pts_3d_ndarray)
