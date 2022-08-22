@@ -207,10 +207,13 @@ def landmark_to_angle(landmarks) -> dict:
     return dict_angles
 
 
-def read_video_frames(*streams: str, videoFrameHandler: Callable[[tuple], tuple],
-                      computedAnglesCallback: Callable) -> tuple:
+def read_video_frames(*streams: any, videoFrameHandler: Callable[[tuple], tuple],
+                      computedAnglesCallback: Callable, poseLandmarksProtoCallback: Callable,
+                      poseLandmarksCallback: Callable) -> tuple:
     """
     从视频流中读取帧，并将帧传递给回调函数
+    :param poseLandmarksCallback:
+    :param poseLandmarksProtoCallback:
     :param computedAnglesCallback:
     :param streams:
     :param videoFrameHandler:
@@ -284,28 +287,24 @@ def read_video_frames(*streams: str, videoFrameHandler: Callable[[tuple], tuple]
                     cv.circle(frames[pose_landmark_index], (visualize_x, visualize_y), radius=3,
                               color=BGR(RGB=(255, 0, 0)), thickness=-1)
                     pose_keypoints.append([truth_x, truth_y, truth_z, visibility])
+
             else:
                 pose_keypoints = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
             pts_cams[pose_landmark_index].append(pose_keypoints)
 
             # 计算每一帧的3D坐标中的角度
-            angle_dict = landmark_to_angle(pose_keypoints)
+            angle_dict = landmark_to_angle(pose_landmark)
             chart_datas[pose_landmark_index].append(angle_dict)
 
             if computedAnglesCallback:
                 computedAnglesCallback(angle_dict)
 
-        for pose_landmark_proto_index, pose_landmark_proto in enumerate(pose_landmarks_proto):
-            mp_drawing.draw_landmarks(frames[pose_landmark_proto_index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,
-                                      landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+            if poseLandmarksCallback:
+                poseLandmarksCallback(pose_landmark_index, pose_keypoints)
 
-        # 绘制HealBone图标
-        draw_healbone_logo(frames)
-
-        # 窗口展示视频帧
-        for frame_index, frame in enumerate(frames):
-            cv.imshow("HealBone-Mediapipe-Gait: Camera" + str(frame_index), frame)
+        if poseLandmarksProtoCallback:
+            poseLandmarksProtoCallback(pose_landmarks_proto, frames)
 
         k = cv.waitKey(1)
         # 按ESC键退出
@@ -371,6 +370,33 @@ def real_time_computed_angles_handler(angle_dict: dict):
     print(angle_dict)
 
 
+def pose_landmarks_proto_handler(pose_landmarks_proto, frames):
+    """
+    多source姿态关键点proto回调函数
+    :param pose_landmarks_proto:
+    :param frames:
+    """
+    for pose_landmark_proto_index, pose_landmark_proto in enumerate(pose_landmarks_proto):
+        mp_drawing.draw_landmarks(frames[pose_landmark_proto_index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,
+                                  landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+
+    # 绘制HealBone图标
+    draw_healbone_logo(frames)
+
+    # 窗口展示视频帧
+    for frame_index, frame in enumerate(frames):
+        cv.imshow("HealBone-Mediapipe-Gait: Camera" + str(frame_index), frame)
+
+
+def pose_landmarks_handler(pose_landmarks_index, pose_landmarks):
+    """
+    多source姿态关键点回调函数
+    :param pose_landmarks_index:
+    :param pose_landmarks:
+    """
+    print(pose_landmarks_index, pose_landmarks)
+
+
 def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
     file = open(filename, "w")
     json.dump(pts.tolist(), file)
@@ -379,22 +405,23 @@ def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
 
 if __name__ == '__main__':
     # 预先读取的不同视角视频
-    input_stream1 = 'data/exercise-side.mp4'
-    input_stream2 = 'data/exercise-front.mp4'
+    input_stream = ('data/exercise-side.mp4', 'data/exercise-front.mp4')
     show_mediapipe_drawing = True
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
-        input_stream1 = int(sys.argv[1])
-        input_stream2 = int(sys.argv[2])
+        input_stream = (int(sys.argv[1]), int(sys.argv[2]))
 
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
-    pts_cams_ndarray, pts_3d_ndarray, fps, chart_datas = read_video_frames(input_stream1, input_stream2,
-                                                                           videoFrameHandler=lambda frame0, frame1:
-                                                                           video_frame_handler(frame0, frame1),
+    pts_cams_ndarray, pts_3d_ndarray, fps, chart_datas = read_video_frames(*input_stream,
+                                                                           videoFrameHandler=lambda *frames:
+                                                                           video_frame_handler(*frames),
                                                                            computedAnglesCallback=lambda angle_dict:
-                                                                           real_time_computed_angles_handler(
-                                                                               angle_dict))
+                                                                           real_time_computed_angles_handler(angle_dict),
+                                                                           poseLandmarksProtoCallback=lambda pose_landmarks_proto, frames:
+                                                                           pose_landmarks_proto_handler(pose_landmarks_proto, frames),
+                                                                           poseLandmarksCallback=lambda pose_landmarks_index, pose_landmarks:
+                                                                           pose_landmarks_handler(pose_landmarks_index, pose_landmarks))
 
     # 绘制步态周期图表
     for chart_index, chart_data in enumerate(chart_datas):
