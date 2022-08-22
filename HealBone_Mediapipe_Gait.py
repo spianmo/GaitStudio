@@ -210,7 +210,7 @@ def landmark_to_angle(landmarks) -> dict:
 
 def read_video_frames(*streams: any, videoFrameHandler: Callable[[tuple], tuple],
                       computedAnglesCallback: Callable, poseLandmarksProtoCallback: Callable,
-                      poseLandmarksCallback: Callable) -> tuple:
+                      poseLandmarksCallback: Callable, crop_video: bool) -> tuple:
     """
     从视频流中读取帧，并将帧传递给回调函数
     :param poseLandmarksCallback:
@@ -246,8 +246,9 @@ def read_video_frames(*streams: any, videoFrameHandler: Callable[[tuple], tuple]
             ret, frame = cap.read()
             if not ret:
                 break
-            if frame.shape[1] != 720:
-                frame = frame[:, frame_shape[1] // 2 - frame_shape[0] // 2:frame_shape[1] // 2 + frame_shape[0] // 2]
+            if crop_video:
+                if frame.shape[1] != frame_shape[1]:
+                    frame = frame[:, frame_shape[1] // 2 - frame_shape[0] // 2:frame_shape[1] // 2 + frame_shape[0] // 2]
 
             # 将BGR转换为RGB
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -398,19 +399,24 @@ def pose_landmarks_handler(pose_landmarks_index, pose_landmarks):
     print(pose_landmarks_index, pose_landmarks)
 
 
-def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
+def save_pts(filename: str, pts: ndarray) -> NoReturn:
     file = open(filename, "w")
     json.dump(pts.tolist(), file)
     file.close()
 
 
 if __name__ == '__main__':
-    show_sensormotion_demo = False
-    show_plot_angle_demo = False
+    show_sensormotion_demo = True
+    show_plot_angle_demo = True
     store_raw_pts = True
+    debug_mode = False
+    crop_video = True
 
     # 预先读取的不同视角视频
-    input_stream = ('data/exercise-side.mp4', 'data/exercise-front.mp4')
+    if debug_mode:
+        input_stream = ('data/exercise-side.mp4',)
+    else:
+        input_stream = ('data/exercise-side.mp4', 'data/exercise-front.mp4')
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
@@ -425,7 +431,8 @@ if __name__ == '__main__':
                                                                            poseLandmarksProtoCallback=lambda pose_landmarks_proto, frames:
                                                                            pose_landmarks_proto_handler(pose_landmarks_proto, frames),
                                                                            poseLandmarksCallback=lambda pose_landmarks_index, pose_landmarks:
-                                                                           pose_landmarks_handler(pose_landmarks_index, pose_landmarks))
+                                                                           pose_landmarks_handler(pose_landmarks_index, pose_landmarks),
+                                                                           crop_video=crop_video)
 
     # 绘制步态周期图表
     for chart_index, chart_data in enumerate(chart_datas):
@@ -440,7 +447,7 @@ if __name__ == '__main__':
     # 保存原始的推理结果，以index为0的推理结果进行3D空间下加速度分解分析
     for index, pts_cam in enumerate(pts_cams_ndarray):
         if store_raw_pts:
-            save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
+            save_pts('pts_cam' + str(index) + '.json', pts_cam)
         if show_sensormotion_demo:
             if index == 0:
                 # 分解右膝关节点的加速度
@@ -448,4 +455,4 @@ if __name__ == '__main__':
 
     # 保存fixed过后的3D空间推理结果
     if store_raw_pts:
-        save_keypoints('pts_3d.json', pts_3d_ndarray)
+        save_pts('pts_3d.json', pts_3d_ndarray)

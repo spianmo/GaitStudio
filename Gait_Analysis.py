@@ -9,14 +9,21 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import statsmodels.api as sm
 
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置-黑体
+plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
+
 
 def auto_correlation(y, t) -> float:
+    """
+    自相关函数
+    :param y:
+    :param t:
+    :return:
+    """
     s = pd.Series(y)
 
     x = sm.tsa.acf(s)
 
-    plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置-黑体
-    plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
     plt.plot(t[:len(x)], x)
     plt.grid()
     plt.show()
@@ -24,11 +31,19 @@ def auto_correlation(y, t) -> float:
     xf = np.copy(x)
     xf[0] = 0.0
     period = t[np.argmax(xf)]
-
     return period
 
 
 def contact(y, fr, period, min_dis=9, max_dis=30) -> ndarray:
+    """
+    contact
+    :param y:
+    :param fr:
+    :param period:
+    :param min_dis:
+    :param max_dis:
+    :return:
+    """
     # get the local minimums that are less than 150
     i_min = argrelextrema(y.values, np.less)[0]
     i_max = argrelextrema(y.values, np.greater)[0]
