@@ -125,7 +125,7 @@ def vectors_to_angle(vector1, vector2) -> float:
     """
     x = np.dot(vector1, -vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
     theta = np.degrees(np.arccos(x))
-    return theta
+    return 180 - theta
 
 
 def build_vector(landmarks, landmark_index: PoseLandmark) -> ndarray:
@@ -410,13 +410,13 @@ if __name__ == '__main__':
     show_plot_angle_demo = True
     store_raw_pts = True
     debug_mode = False
-    crop_video = True
+    crop_video = False
 
     # 预先读取的不同视角视频
     if debug_mode:
-        input_stream = ('data/exercise-side.mp4',)
+        input_stream = ('data/view-side.mp4',)
     else:
-        input_stream = ('data/exercise-side.mp4', 'data/exercise-front.mp4')
+        input_stream = ('data/view-side.mp4', 'data/view-front.mp4')
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
@@ -438,11 +438,12 @@ if __name__ == '__main__':
     for chart_index, chart_data in enumerate(chart_datas):
         df_angles = pd.DataFrame(chart_data)
         df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
-        if show_plot_angle_demo:
-            plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+        if chart_index == 0:
+            if show_plot_angle_demo:
+                plot_angles("CAM[" + str(chart_index) + "]", df_angles)
 
-        # 分析步态周期
-        Gait_Analysis.analysis(df_angles=df_angles, fps=fps)
+            # 分析步态周期
+            Gait_Analysis.analysis(df_angles=df_angles, fps=fps)
 
     # 保存原始的推理结果，以index为0的推理结果进行3D空间下加速度分解分析
     for index, pts_cam in enumerate(pts_cams_ndarray):
