@@ -13,6 +13,7 @@ from numpy import ndarray
 import seaborn as sns
 from pandas import DataFrame
 
+import Gait_Analysis
 from acceleration import sensormotionDemo
 
 mp_pose = mp.solutions.pose
@@ -255,7 +256,7 @@ def read_video_frames(*streams: any, videoFrameHandler: Callable[[tuple], tuple]
             frame.flags.writeable = False
             frames.append(frame)
         if len(frames) is not len(caps):
-            print("Error: not all frames read, just {}/{}".format(len(frames), len(caps)))
+            print("Error: not all caps read, just {}/{}".format(len(frames), len(caps)))
             break
 
         pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = videoFrameHandler(
@@ -404,9 +405,12 @@ def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
 
 
 if __name__ == '__main__':
+    show_sensormotion_demo = False
+    show_plot_angle_demo = False
+    store_raw_pts = True
+
     # 预先读取的不同视角视频
     input_stream = ('data/exercise-side.mp4', 'data/exercise-front.mp4')
-    show_mediapipe_drawing = True
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
@@ -427,13 +431,20 @@ if __name__ == '__main__':
     for chart_index, chart_data in enumerate(chart_datas):
         df_angles = pd.DataFrame(chart_data)
         df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
-        plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+        if show_plot_angle_demo:
+            plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+
+        # 分析步态周期
+        Gait_Analysis.analysis(df_angles=df_angles, fps=fps)
 
     # 保存原始的推理结果，以index为0的推理结果进行3D空间下加速度分解分析
     for index, pts_cam in enumerate(pts_cams_ndarray):
-        save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
-        if index == 0:
-            sensormotionDemo(pts_cam=pts_cam, analysis_keypoint=PoseLandmark.RIGHT_KNEE, fps=fps)
+        if store_raw_pts:
+            save_keypoints('pts_cam' + str(index) + '.json', pts_cam)
+        if show_sensormotion_demo:
+            if index == 0:
+                sensormotionDemo(pts_cam=pts_cam, analysis_keypoint=PoseLandmark.RIGHT_KNEE, fps=fps)
 
     # 保存fixed过后的3D空间推理结果
-    save_keypoints('pts_3d.json', pts_3d_ndarray)
+    if store_raw_pts:
+        save_keypoints('pts_3d.json', pts_3d_ndarray)
