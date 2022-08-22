@@ -26,3 +26,5 @@ setuptools~=60.2.0
 sensormotion~=1.1.4
 pandas~=1.4.3
 seaborn~=0.11.2
+pyrealsense2~=2.50.0.3812
+statsmodels~=0.13.2
