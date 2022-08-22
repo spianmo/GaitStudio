@@ -207,11 +207,13 @@ def landmark_to_angle(landmarks) -> dict:
     return dict_angles
 
 
-def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tuple:
+def read_video_frames(*streams: str, videoFrameHandler: Callable[[tuple], tuple],
+                      computedAnglesCallback: Callable) -> tuple:
     """
     从视频流中读取帧，并将帧传递给回调函数
+    :param computedAnglesCallback:
     :param streams:
-    :param callback:
+    :param videoFrameHandler:
     :returns
     """
     caps = [cv.VideoCapture(stream) for stream in streams]
@@ -253,7 +255,8 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
             print("Error: not all frames read, just {}/{}".format(len(frames), len(caps)))
             break
 
-        pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = callback(*frames)
+        pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = videoFrameHandler(
+            *frames)
 
         if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                 pose_world_landmarks_proto is None:
@@ -285,8 +288,13 @@ def read_video_frames(*streams: str, callback: Callable[[tuple], tuple]) -> tupl
                 pose_keypoints = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
             pts_cams[pose_landmark_index].append(pose_keypoints)
+
             # 计算每一帧的3D坐标中的角度
-            chart_datas[pose_landmark_index].append(landmark_to_angle(pose_landmark))
+            angle_dict = landmark_to_angle(pose_keypoints)
+            chart_datas[pose_landmark_index].append(angle_dict)
+
+            if computedAnglesCallback:
+                computedAnglesCallback(angle_dict)
 
         for pose_landmark_proto_index, pose_landmark_proto in enumerate(pose_landmarks_proto):
             mp_drawing.draw_landmarks(frames[pose_landmark_proto_index], pose_landmark_proto, mp_pose.POSE_CONNECTIONS,
@@ -354,6 +362,15 @@ def video_frame_handler(*video_frame: tuple) -> Tuple[any, any, any, any]:
     return pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
 
 
+def real_time_computed_angles_handler(angle_dict: dict):
+    """
+    实时计算角度回调函数
+    :param angle_dict:
+    :return:
+    """
+    print(angle_dict)
+
+
 def save_keypoints(filename: str, pts: ndarray) -> NoReturn:
     file = open(filename, "w")
     json.dump(pts.tolist(), file)
@@ -373,8 +390,11 @@ if __name__ == '__main__':
 
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
     pts_cams_ndarray, pts_3d_ndarray, fps, chart_datas = read_video_frames(input_stream1, input_stream2,
-                                                                           callback=lambda frame0, frame1:
-                                                                           video_frame_handler(frame0, frame1))
+                                                                           videoFrameHandler=lambda frame0, frame1:
+                                                                           video_frame_handler(frame0, frame1),
+                                                                           computedAnglesCallback=lambda angle_dict:
+                                                                           real_time_computed_angles_handler(
+                                                                               angle_dict))
 
     # 绘制步态周期图表
     for chart_index, chart_data in enumerate(chart_datas):
