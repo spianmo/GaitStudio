@@ -1,0 +1,19 @@
+MODEL:
+  filter_widths: [ 3,3,3,3,3 ]
+  dropout: 0.25
+  channels: 1024
+  causal: false
+  TEST_FLIP: true
+  TRAIN_FLIP: true
+IN_FORMAT:
+  layout_name: 'coco'
+  num_joints: 17
+  keypoints_symmetry:
+    - [ 1, 3, 5, 7, 9, 11, 13, 15 ]
+    - [ 2, 4, 6, 8, 10, 12, 14, 16 ]
+OUT_FORMAT:
+  layout_name: 'h36m'
+  num_joints: 17
+  keypoints_symmetry:
+    - [ 4, 5, 6, 11, 12, 13 ]
+    - [ 1, 2, 3, 14, 15, 16 ]

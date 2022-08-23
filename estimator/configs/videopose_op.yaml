@@ -1,0 +1,19 @@
+MODEL:
+  filter_widths: [ 3,3,3,3,3 ]
+  dropout: 0.25
+  channels: 1024
+  causal: false
+  TEST_FLIP: true
+  TRAIN_FLIP: true
+IN_FORMAT:
+  layout_name: 'openpose'
+  num_joints: 25
+  keypoints_symmetry:
+    - [ 5, 6, 7, 12, 13, 14, 16, 18, 19, 20, 21 ]
+    - [ 2, 3, 4, 9, 10, 11, 15, 17, 22, 23, 24 ]
+OUT_FORMAT:
+  layout_name: 'h36m'
+  num_joints: 21
+  keypoints_symmetry:
+    - [ 4, 5, 6, 11, 12, 13, 18, 20 ]
+    - [ 1, 2, 3, 14, 15, 16, 17, 19 ]
