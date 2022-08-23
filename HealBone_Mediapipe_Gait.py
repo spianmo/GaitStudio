@@ -125,7 +125,7 @@ def vectors_to_angle(vector1, vector2) -> float:
     """
     x = np.dot(vector1, -vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
     theta = np.degrees(np.arccos(x))
-    return 180 - theta
+    return theta
 
 
 def build_vector(landmarks, landmark_index: PoseLandmark) -> ndarray:
@@ -406,7 +406,7 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
 
 
 if __name__ == '__main__':
-    show_sensormotion_demo = True
+    show_sensormotion_demo = False
     show_plot_angle_demo = True
     store_raw_pts = True
     debug_mode = False
@@ -438,7 +438,7 @@ if __name__ == '__main__':
     for chart_index, chart_data in enumerate(chart_datas):
         df_angles = pd.DataFrame(chart_data)
         df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
-        if chart_index == 0:
+        if chart_index == 1:
             if show_plot_angle_demo:
                 plot_angles("CAM[" + str(chart_index) + "]", df_angles)
 
