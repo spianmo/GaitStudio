@@ -46,7 +46,6 @@ class Video(object):
         self._meta = self._reader.get_meta_data()
         self._nframes = int(self._meta['duration'] * self._meta['fps'])
 
-    ## convenience accessors to metadata
     @property
     def metadata(self):
         return self._meta
@@ -67,7 +66,6 @@ class Video(object):
     def close(self):
         self._reader.close()
 
-    ## Methods for slicerator
     def __getitem__(self, i):
         return self._reader.get_data(i)
 
