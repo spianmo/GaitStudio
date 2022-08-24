@@ -409,11 +409,14 @@ if __name__ == '__main__':
     show_sensormotion_demo = False
     show_plot_angle_demo = True
     store_raw_pts = True
-    debug_mode = False
+    debug_mode = True
     crop_video = False
 
     # 预先读取的不同视角视频
     if debug_mode:
+        # input_stream = (
+        #     'data/multi/Walking.54138969.mp4',
+        #     'data/multi/Walking.55011271.mp4', 'data/multi/Walking.58860488.mp4', 'data/multi/Walking.60457274.mp4')
         input_stream = ('data/view-side.mp4',)
     else:
         input_stream = ('data/view-side.mp4', 'data/view-front.mp4')
