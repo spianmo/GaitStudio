@@ -1,5 +1,7 @@
 import json
+import os
 import sys
+from pathlib import Path
 from typing import Callable, NoReturn, List, Tuple
 
 import cv2 as cv
@@ -400,7 +402,10 @@ def pose_landmarks_handler(pose_landmarks_index, pose_landmarks):
 
 
 def save_pts(filename: str, pts: ndarray) -> NoReturn:
-    file = open(filename, "w")
+    pts_output = Path("pts_output")
+    if not pts_output.is_dir():
+        os.makedirs(pts_output)
+    file = open('pts_output/' + filename, "w")
     json.dump(pts.tolist(), file)
     file.close()
 
@@ -409,7 +414,7 @@ if __name__ == '__main__':
     show_sensormotion_demo = False
     show_plot_angle_demo = True
     store_raw_pts = True
-    debug_mode = True
+    debug_mode = False
     crop_video = False
 
     # 预先读取的不同视角视频
