@@ -414,7 +414,7 @@ if __name__ == '__main__':
     show_plot_angle_demo = True
     store_raw_pts = True
     debug_mode = False
-    crop_video = False
+    crop_video = True
 
     # 预先读取的不同视角视频
     if debug_mode:
@@ -423,9 +423,11 @@ if __name__ == '__main__':
         #     'data/multi/Walking.55011271.mp4', 'data/multi/Walking.58860488.mp4', 'data/multi/Walking.60457274.mp4')
         input_stream = ('data/multi-virtual/Walking.camera1.mp4',)
     else:
-        input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
+        # input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
         # input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
+        # input_stream = ('data/multi-hb-syj/Walking.camera1.mp4', 'data/multi-hb-syj/Walking.camera2.mp4')
         # input_stream = ('data/multi/Walking.54138969.mp4', 'data/multi/Walking.55011271.mp4')
+        input_stream = ('data/multi-25fps/Walking.54138969.mp4', 'data/multi-25fps/Walking.55011271.mp4')
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
@@ -462,3 +464,5 @@ if __name__ == '__main__':
     # 保存fixed过后的3D空间推理结果
     if store_raw_pts:
         save_pts('pts_3d.json', pts_3d_ndarray)
+
+    plt.show()
