@@ -22,7 +22,7 @@ positions_2d = {}
 positions_3d = {}
 angles_3d = {}
 
-in_dir = Path('../data/multi')
+in_dir = Path('../data/multi-virtual')
 
 
 def plot_angles(title: str, df: DataFrame) -> None:

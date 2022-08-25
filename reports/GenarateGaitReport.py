@@ -94,28 +94,28 @@ def ReportNoBorderTable(lineData: List[List], colWidths=None, rowHeights=None, t
 def generate_angle_plots(df: DataFrame) -> List[BytesIO]:
     metadatas = [
         {
-            "title": "躯干髋关节角度",
+            "title": "躯干髋关节夹角变化周期",
             "axis": [
                 ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
                 ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
             ]
         },
         {
-            "title": "髋关节角度",
+            "title": "髋关节角变化周期",
             "axis": [
                 ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
                 ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
             ]
         },
         {
-            "title": "膝关节角度",
+            "title": "膝关节角度变化周期",
             "axis": [
                 ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
                 ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
             ]
         },
         {
-            "title": "踝关节角度",
+            "title": "踝关节角度变化周期",
             "axis": [
                 ["Time_in_sec", "LAnkle_angle", "时间（秒）", "L 踝关节角度 (°)"],
                 ["Time_in_sec", "RAnkle_angle", "时间（秒）", "R 踝关节角度 (°)"]
@@ -161,7 +161,7 @@ class HealBoneGaitReport:
         self.summaryPage()
 
         # 图表页
-        self.graphPage()
+        self.graphPages()
 
         self.doc = SimpleDocTemplate(self.path, pagesize=LETTER)
 
@@ -194,7 +194,7 @@ class HealBoneGaitReport:
     def summaryPage(self):
         self.elements.append(PageBreak())
 
-        self.elements.append(ParagraphReportHeader(fontSize=16, text='报告详情'))
+        self.elements.append(ParagraphReportHeader(fontSize=16, text='时空参数'))
         self.elements.append(HeightSpacer())
         self.elements.append(ReportDivider())
         self.elements.append(HeightSpacer())
@@ -222,7 +222,7 @@ class HealBoneGaitReport:
         self.elements.append(HeightSpacer(heightPixels=10))
         self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=12))
 
-    def graphPage(self):
+    def graphPages(self):
         drawings = generate_angle_plots(self.graph)
         for drawing in drawings:
             self.elements.append(PageBreak())
@@ -231,7 +231,3 @@ class HealBoneGaitReport:
     def exportPDF(self):
         # Build
         self.doc.multiBuild(self.elements, canvasmaker=PageHeaderFooter)
-
-
-if __name__ == '__main__':
-    report = HealBoneGaitReport('report-example.pdf', summaryData=[])

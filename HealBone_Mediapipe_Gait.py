@@ -249,7 +249,7 @@ def read_video_frames(*streams: any, videoFrameHandler: Callable[[tuple], tuple]
             if not ret:
                 break
             if crop_video:
-                if frame.shape[1] != frame_shape[1]:
+                if frame.shape[1] != frame.shape[0]:
                     frame = frame[:, frame_shape[1] // 2 - frame_shape[0] // 2:frame_shape[1] // 2 + frame_shape[0] // 2]
 
             # 将BGR转换为RGB
@@ -411,7 +411,7 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
 
 
 if __name__ == '__main__':
-    show_sensormotion_demo = False
+    show_sensormotion_demo = True
     show_plot_angle_demo = True
     store_raw_pts = True
     debug_mode = False
@@ -422,9 +422,9 @@ if __name__ == '__main__':
         # input_stream = (
         #     'data/multi/Walking.54138969.mp4',
         #     'data/multi/Walking.55011271.mp4', 'data/multi/Walking.58860488.mp4', 'data/multi/Walking.60457274.mp4')
-        input_stream = ('data/view-side.mp4',)
+        input_stream = ('data/multi-virtual/Walking.camera1.mp4',)
     else:
-        input_stream = ('data/view-side.mp4', 'data/view-front.mp4')
+        input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
@@ -458,7 +458,7 @@ if __name__ == '__main__':
         if store_raw_pts:
             save_pts('pts_cam' + str(index) + '.json', pts_cam)
         if show_sensormotion_demo:
-            if index == 0:
+            if index == 1:
                 # 分解右膝关节点的加速度
                 sensormotionDemo(pts_cam=pts_cam, analysis_keypoint=PoseLandmark.RIGHT_KNEE, fps=fps)
 

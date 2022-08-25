@@ -84,7 +84,7 @@ def analysis(df_angles: DataFrame, fps: int):
         ["检测项", "检测值", "单位", "参考值"],
         ["样本步行总时长", str(df_angles["Time_in_sec"].iloc[-1]), "秒", "-"],
         ["每步之间的平均时长", str(period / 2), "秒", "-"],
-        ["步速:", str(((2 * 60.0) / period).round(2)), "步数/分钟", "-"],
+        ["步速", str(((2 * 60.0) / period).round(2)), "步数/分钟", "-"],
 
         ["最大躯干与胯骨的夹角", str(df_angles["TorsoLHip_angle"].max().round(2)), "°", "-"],
         ["最小躯干与胯骨的夹角", str(df_angles["TorsoLHip_angle"].min().round(2)), "°", "-"],
