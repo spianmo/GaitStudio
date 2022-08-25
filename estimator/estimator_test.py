@@ -12,17 +12,9 @@ from estimator.videopose3d import VideoPose3D
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-# map cam id to list index (from VideoPose3D)
-cam_map = {
-    'camera1': 0,
-    'camera2': 1,
-}
-
 positions_2d = {}
 positions_3d = {}
 angles_3d = {}
-
-in_dir = Path('../data/multi-virtual')
 
 
 def plot_angles(title: str, df: DataFrame) -> None:
@@ -44,34 +36,27 @@ def plot_angles(title: str, df: DataFrame) -> None:
 
 
 if __name__ == '__main__':
+    video_file = Path('../data/multi/Walking.54138969.mp4')
 
-    # Iterate over all activities
-    positions_2d = [None] * len(cam_map)
-    positions_3d = [None] * len(cam_map)
-    angles_3d = [None] * len(cam_map)
+    cam = video_file.stem.split('.')[1]
+    video = Video(video_file)
 
-    # every file is by one camera
-    for video_files in in_dir.iterdir():
-        cam = video_files.stem.split('.')[1]
-        video = Video(video_files)
+    # estimate 2D and 3D keypoints using the HPE pipeline
+    estimator_2d = MediaPipe_Estimator2D(out_format='coco')
+    estimator_3d = VideoPose3D()
 
-        # estimate 2D and 3D keypoints using the HPE pipeline
-        estimator_2d = MediaPipe_Estimator2D(out_format='coco')
-        estimator_3d = VideoPose3D()
+    kpts, meta = estimator_2d.estimate(video)
+    pose_3d = estimator_3d.estimate(kpts, meta)['video']
+    angles = calc_common_angles(pose_3d)
+    angles['Frames'] = [i + 1 for i in range(len(angles['RKnee']))]
 
-        kpts, meta = estimator_2d.estimate(video)
-        pose_3d = estimator_3d.estimate(kpts, meta)['video']
-        angles = calc_common_angles(pose_3d)
-        angles['Frames'] = [i+1 for i in range(len(angles['RKnee']))]
-
-        # save data at correct list position
-        id = cam_map[cam]
-        pose_2d = kpts['video']['custom'][0]
-        positions_2d[id] = pose_2d
-        positions_3d[id] = pose_3d
-        angles_3d[id] = angles
-        tmp = pd.DataFrame(angles)
-        plot_angles('Test', tmp)
+    # save data at correct list position
+    pose_2d = kpts['video']['custom'][0]
+    positions_2d = pose_2d
+    positions_3d = pose_3d
+    angles_3d = angles
+    tmp = pd.DataFrame(angles)
+    plot_angles('Test', tmp)
 
     print(positions_3d)
     print('\n\n')

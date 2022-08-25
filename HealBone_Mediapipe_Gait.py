@@ -411,7 +411,6 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
 
 
 if __name__ == '__main__':
-    show_sensormotion_demo = True
     show_plot_angle_demo = True
     store_raw_pts = True
     debug_mode = False
@@ -424,7 +423,9 @@ if __name__ == '__main__':
         #     'data/multi/Walking.55011271.mp4', 'data/multi/Walking.58860488.mp4', 'data/multi/Walking.60457274.mp4')
         input_stream = ('data/multi-virtual/Walking.camera1.mp4',)
     else:
-        input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
+        input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
+        # input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
+        # input_stream = ('data/multi/Walking.54138969.mp4', 'data/multi/Walking.55011271.mp4')
 
     # 读取相机串口编号
     if len(sys.argv) == 3:
@@ -446,21 +447,17 @@ if __name__ == '__main__':
     for chart_index, chart_data in enumerate(chart_datas):
         df_angles = pd.DataFrame(chart_data)
         df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
-        if chart_index == 1:
+        if chart_index == 0:
             if show_plot_angle_demo:
                 plot_angles("CAM[" + str(chart_index) + "]", df_angles)
 
             # 分析步态周期
-            Gait_Analysis.analysis(df_angles=df_angles, fps=fps)
+            Gait_Analysis.analysis(df_angles=df_angles, fps=fps, pts_cam=pts_cams_ndarray[0], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
-    # 保存原始的推理结果，以index为0的推理结果进行3D空间下加速度分解分析
+    # 保存原始的推理结果
     for index, pts_cam in enumerate(pts_cams_ndarray):
         if store_raw_pts:
             save_pts('pts_cam' + str(index) + '.json', pts_cam)
-        if show_sensormotion_demo:
-            if index == 1:
-                # 分解右膝关节点的加速度
-                sensormotionDemo(pts_cam=pts_cam, analysis_keypoint=PoseLandmark.RIGHT_KNEE, fps=fps)
 
     # 保存fixed过后的3D空间推理结果
     if store_raw_pts:

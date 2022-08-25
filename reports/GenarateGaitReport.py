@@ -91,64 +91,14 @@ def ReportNoBorderTable(lineData: List[List], colWidths=None, rowHeights=None, t
     return table
 
 
-def generate_angle_plots(df: DataFrame) -> List[BytesIO]:
-    metadatas = [
-        {
-            "title": "躯干髋关节夹角变化周期",
-            "axis": [
-                ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
-                ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
-            ]
-        },
-        {
-            "title": "髋关节角变化周期",
-            "axis": [
-                ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
-                ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
-            ]
-        },
-        {
-            "title": "膝关节角度变化周期",
-            "axis": [
-                ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
-                ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
-            ]
-        },
-        {
-            "title": "踝关节角度变化周期",
-            "axis": [
-                ["Time_in_sec", "LAnkle_angle", "时间（秒）", "L 踝关节角度 (°)"],
-                ["Time_in_sec", "RAnkle_angle", "时间（秒）", "R 踝关节角度 (°)"]
-            ]
-        }
-    ]
-    images = []
-    rc = {'font.sans-serif': 'SimHei',
-          'axes.unicode_minus': False}
-    sns.set_style(style='darkgrid', rc=rc)
-    for metadata in metadatas:
-        fig, axes = plt.subplots(2, 1, figsize=(5.5, 7))
-
-        fig.suptitle(metadata["title"])
-
-        sns.lineplot(ax=axes[0], data=df, x=metadata["axis"][0][0], y=metadata["axis"][0][1]).set(xlabel=metadata["axis"][0][2],
-                                                                                                  ylabel=metadata["axis"][0][3])
-
-        sns.lineplot(ax=axes[1], data=df, x=metadata["axis"][1][0], y=metadata["axis"][1][1]).set(xlabel=metadata["axis"][1][2],
-                                                                                                  ylabel=metadata["axis"][1][3])
-        image = BytesIO()
-        fig.savefig(image, format='svg')
-        image.seek(0)
-        images.append(svg2rlg(image))
-    return images
-
-
 class HealBoneGaitReport:
 
-    def __init__(self, path, summaryData=[], graph=None):
+    def __init__(self, path, SpatiotemporalData=None, ROMData=None, SpatiotemporalGraph=None, ROMGraph=None):
         self.path = path
-        self.summaryData = summaryData
-        self.graph = graph
+        self.SpatiotemporalData = SpatiotemporalData
+        self.ROMData = ROMData
+        self.SpatiotemporalGraph = SpatiotemporalGraph
+        self.ROMGraph = ROMGraph
         self.styleSheet = getSampleStyleSheet()
         self.elements = []
         pdfmetrics.registerFont(TTFont('SimSun', resourcePath + 'font/SimSun.ttf'))
@@ -157,11 +107,14 @@ class HealBoneGaitReport:
         # 报告封面
         self.coverPage()
 
-        # 汇总页
-        self.summaryPage()
+        # Spatiotemporal时空参数页
+        self.SpatiotemporalPage()
 
-        # 图表页
-        self.graphPages()
+        # Spatiotemporal图表页
+        self.SpatiotemporalGraphPage()
+
+        # ROM关节活动度参数图表页
+        self.ROMPage()
 
         self.doc = SimpleDocTemplate(self.path, pagesize=LETTER)
 
@@ -191,10 +144,10 @@ class HealBoneGaitReport:
         paragraphReportSummary = Paragraph(text, psDetalle)
         self.elements.append(paragraphReportSummary)
 
-    def summaryPage(self):
+    def SpatiotemporalPage(self):
         self.elements.append(PageBreak())
 
-        self.elements.append(ParagraphReportHeader(fontSize=16, text='时空参数'))
+        self.elements.append(ParagraphReportHeader(fontSize=16, text='Spatiotemporal parameters 时空参数'))
         self.elements.append(HeightSpacer())
         self.elements.append(ReportDivider())
         self.elements.append(HeightSpacer())
@@ -206,8 +159,38 @@ class HealBoneGaitReport:
         主要参数
         """
 
-        self.elements.append(ReportNoBorderTable(lineData=self.summaryData, colWidths=120,
-                                                 rowHeights=28, tableStyle=[
+        self.elements.append(ReportNoBorderTable(lineData=self.SpatiotemporalData, colWidths=120, rowHeights=45, tableStyle=[
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
+            ("ALIGN", (2, 0), (2, -1), 'CENTER'),
+            ("ALIGN", (3, 0), (3, -1), 'CENTER'),
+            ('BACKGROUND', (0, 0), (-1, 0), colorGreen2),
+            ('BACKGROUND', (0, -1), (-1, -1), colorBlue1),
+            ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONT', (0, 0), (-1, -1), 'msyh'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12)
+        ]))
+        self.elements.append(HeightSpacer(heightPixels=10))
+        self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=12))
+
+    def ROMPage(self):
+        for rom_index, romItem in enumerate(self.ROMData):
+            self.elements.append(PageBreak())
+
+            self.elements.append(ParagraphReportHeader(fontSize=16, text=('Range of Motion ' + romItem["title"])))
+            self.elements.append(HeightSpacer())
+            self.elements.append(ReportDivider())
+            self.elements.append(HeightSpacer())
+
+            # self.elements.append(ParagraphReportHeader(text='主要参数', color=colorBlue0))
+            self.elements.append(HeightSpacer(heightPixels=10))
+
+            """
+            主要参数
+            """
+
+            self.elements.append(ReportNoBorderTable(lineData=romItem["list"], colWidths=120, rowHeights=38, tableStyle=[
                 ('ALIGN', (0, 0), (0, -1), 'LEFT'),
                 ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
                 ("ALIGN", (2, 0), (2, -1), 'CENTER'),
@@ -217,15 +200,13 @@ class HealBoneGaitReport:
                 ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('FONT', (0, 0), (-1, -1), 'msyh'),
-                ('FONTSIZE', (0, 0), (-1, -1), 14)
+                ('FONTSIZE', (0, 0), (-1, -1), 12)
             ]))
-        self.elements.append(HeightSpacer(heightPixels=10))
-        self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=12))
-
-    def graphPages(self):
-        drawings = generate_angle_plots(self.graph)
-        for drawing in drawings:
             self.elements.append(PageBreak())
+            self.elements.append(self.ROMGraph[rom_index])
+
+    def SpatiotemporalGraphPage(self):
+        for drawing in self.SpatiotemporalGraph:
             self.elements.append(drawing)
 
     def exportPDF(self):

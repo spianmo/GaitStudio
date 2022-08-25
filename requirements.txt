@@ -118,3 +118,4 @@ zipp==3.8.1
 
 reportlab~=3.6.11
 setuptools~=60.2.0
+svglib~=1.4.1
