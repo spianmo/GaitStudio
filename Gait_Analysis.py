@@ -55,13 +55,13 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
                 ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
             ]
         },
-        {
-            "title": "踝关节角度变化周期",
-            "axis": [
-                ["Time_in_sec", "LAnkle_angle", "时间（秒）", "L 踝关节角度 (°)"],
-                ["Time_in_sec", "RAnkle_angle", "时间（秒）", "R 踝关节角度 (°)"]
-            ]
-        }
+        # {
+        #     "title": "踝关节角度变化周期",
+        #     "axis": [
+        #         ["Time_in_sec", "LAnkle_angle", "时间（秒）", "L 踝关节角度 (°)"],
+        #         ["Time_in_sec", "RAnkle_angle", "时间（秒）", "R 踝关节角度 (°)"]
+        #     ]
+        # }
     ]
     images = []
     rc = {'font.sans-serif': 'SimHei',
@@ -482,10 +482,10 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
     report = HealBoneGaitReport('report_output/GaitReport-' + get_local_format_time(time.time()) + '.pdf', SpatiotemporalData=[
         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
         ["Number of step\n步数", str(step_count), "-", "-"],
-        ["Cadence\n步速", str(cadence.round(2)), "steps/min", "-"],
-        ["Mean step time\n平均步长", str(step_time.round(2)), "ms", "-"],
+        ["Cadence\n步率", str((cadence/60).round(2)), "steps/sec", "2.274±0.643"],
+        ["Stride time\n跨步时间", str((step_time/1000).round(2)), "sec", "0.901±0.293"],
         ["Step time variability\nstandard deviation\n步长时间变化(标准差)", str(step_time_sd.round(2)), "-", "-"],
-        ["Step time variability\ncoefficient of variation\n步长时间变化(变化系数)", str(step_time_cov.round(2)), "-", "-"],
+        ["Step time variability\ncoefficient of variation\n步长时间变化(变化系数)", str(step_time_cov.round(2)), "CV(%)", "22.847±22.72"],
         ["Step regularity\n步长规律指数", str(step_reg.round(4)), "-", "-"],
         ["Stride regularity\n步幅规律指数", str(stride_reg.round(4)), "-", "-"],
         ["Step symmetry\n步长对称指数", str(step_sym.round(4)), "-", "-"],
@@ -506,45 +506,47 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
             "title": "髋关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左髋关节伸展\nL.Hip Extension", str(df_angles["LHip_angle"].max().round(2)), "degree", "-"],
-                ["左髋关节屈曲\nL.Hip Flex", str(df_angles["LHip_angle"].min().round(2)), "degree", "-"],
-                ["右髋关节伸展\nR.Hip Extension", str(df_angles["RHip_angle"].max().round(2)), "degree", "-"],
-                ["右髋关节屈曲\nR.Hip Flex", str(df_angles["RHip_angle"].min().round(2)), "degree", "-"],
-                ["左髋关节外展\nL.Hip Abduction", "-", "degree", "-"],
-                ["左髋关节内收\nL.Hip Adduction", "-", "degree", "-"],
-                ["右髋关节外展\nR.Hip Abduction", "-", "degree", "-"],
-                ["右髋关节内收\nR.Hip Adduction", "-", "degree", "-"],
-                ["检测项共计", "", "", "8 项"]
+                ["左髋关节伸展\nL.Hip Extension", str(df_angles["LHip_angle"].max().round(2)), "degree", "30"],
+                ["左髋关节屈曲\nL.Hip Flexion", str(df_angles["LHip_angle"].min().round(2)), "degree", "120"],
+                ["右髋关节伸展\nR.Hip Extension", str(df_angles["RHip_angle"].max().round(2)), "degree", "30"],
+                ["右髋关节屈曲\nR.Hip Flexion", str(df_angles["RHip_angle"].min().round(2)), "degree", "120"],
+                ["左髋关节外展\nL.Hip Abduction", "-", "degree", "45"],
+                ["左髋关节内收\nL.Hip Adduction", "-", "degree", "30"],
+                ["右髋关节外展\nR.Hip Abduction", "-", "degree", "45"],
+                ["右髋关节内收\nR.Hip Adduction", "-", "degree", "30"],
+                ["左髋关节外旋\nL.Hip Internal Rotation", "-", "degree", "45"],
+                ["左髋关节内旋\nL.Hip External Rotation", "-", "degree", "45"],
+                ["右髋关节外旋\nR.Hip Internal Rotation", "-", "degree", "45"],
+                ["右髋关节内旋\nR.Hip External Rotation", "-", "degree", "45"],
+                ["检测项共计", "", "", "12 项"]
             ]
         }
         , {
             "title": "膝关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].max().round(2)), "degree", "-"],
-                ["左膝关节屈曲\nL.KNEE Flex", str(df_angles["LKnee_angle"].min().round(2)), "degree", "-"],
-                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].max().round(2)), "degree", "-"],
-                ["右膝关节屈曲\nR.KNEE Extension", str(df_angles["RKnee_angle"].min().round(2)), "degree", "-"],
-                ["左膝关节外展\nL.KNEE Abduction", "-", "degree", "-"],
-                ["左膝关节内收\nL.KNEE Adduction", "-", "degree", "-"],
-                ["右膝关节外展\nR.KNEE Abduction", "-", "degree", "-"],
-                ["右膝关节内收\nR.KNEE Adduction", "-", "degree", "-"],
-                ["检测项共计", "", "", "8 项"]
+                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].max().round(2)), "degree", "0"],
+                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].min().round(2)), "degree", "135"],
+                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].max().round(2)), "degree", "0"],
+                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].min().round(2)), "degree", "135"],
+                ["检测项共计", "", "", "4 项"]
             ]
-        }, {
-            "title": "踝关节活动度",
-            "list": [
-                ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左踝关节伸展\nL.Ankle Extension", str(df_angles["LAnkle_angle"].max().round(2)), "degree", "-"],
-                ["左踝关节屈曲\nL.Ankle Flex", str(df_angles["LAnkle_angle"].min().round(2)), "degree", "-"],
-                ["右踝关节伸展\nR.Ankle Extension", str(df_angles["RAnkle_angle"].max().round(2)), "degree", "-"],
-                ["右踝关节屈曲\nR.Ankle Extension", str(df_angles["RAnkle_angle"].min().round(2)), "degree", "-"],
-                ["左踝关节外展\nL.Ankle Abduction", "-", "degree", "-"],
-                ["左踝关节内收\nL.Ankle Adduction", "-", "degree", "-"],
-                ["右踝关节外展\nR.Ankle Abduction", "-", "degree", "-"],
-                ["右踝关节内收\nR.Ankle Adduction", "-", "degree", "-"],
-                ["检测项共计", "", "", "8 项"]
-            ]
-        }], ROMGraph=polt_angle_plots(df_angles), SpatiotemporalGraph=sensormotionDrawing)
+        },
+        # {
+        #     "title": "踝关节活动度",
+        #     "list": [
+        #         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
+        #         ["左踝关节跖屈\nL.Ankle Plantar flexion", str(df_angles["LAnkle_angle"].max().round(2)), "degree", "20"],
+        #         ["左踝关节背屈\nL.Ankle Dorsiflexion", str(df_angles["LAnkle_angle"].min().round(2)), "degree", "30"],
+        #         ["右踝关节跖屈\nR.Ankle Plantar flexion", str(df_angles["RAnkle_angle"].max().round(2)), "degree", "20"],
+        #         ["右踝关节背屈\nR.Ankle Dorsiflexion", str(df_angles["RAnkle_angle"].min().round(2)), "degree", "30"],
+        #         ["左踝关节外翻\nL.Ankle Pronation", "-", "degree", "15"],
+        #         ["左踝关节内翻\nL.Ankle Supination", "-", "degree", "35"],
+        #         ["右踝关节外翻\nR.Ankle Pronation", "-", "degree", "15"],
+        #         ["右踝关节内翻\nR.Ankle Supination", "-", "degree", "35"],
+        #         ["检测项共计", "", "", "8 项"]
+        #     ]
+        # }
+    ], ROMGraph=polt_angle_plots(df_angles), SpatiotemporalGraph=sensormotionDrawing)
     report.exportPDF()
     df_angles.to_excel("report_output/GaitAngle-" + get_local_format_time(time.time()) + ".xlsx")

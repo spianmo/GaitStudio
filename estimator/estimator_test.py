@@ -17,7 +17,7 @@ positions_3d = {}
 angles_3d = {}
 
 
-def plot_angles(title: str, df: DataFrame) -> None:
+def simple_plot_angles(title: str, df: DataFrame) -> None:
     rc = {'font.sans-serif': 'SimHei',
           'axes.unicode_minus': False}
 
@@ -36,7 +36,7 @@ def plot_angles(title: str, df: DataFrame) -> None:
 
 
 if __name__ == '__main__':
-    video_file = Path('../data/multi/Walking.54138969.mp4')
+    video_file = Path('../data/multi-hb/Walking.camera2.mp4')
 
     cam = video_file.stem.split('.')[1]
     video = Video(video_file)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     positions_3d = pose_3d
     angles_3d = angles
     tmp = pd.DataFrame(angles)
-    plot_angles('Test', tmp)
+    simple_plot_angles('Test', tmp)
 
     print(positions_3d)
     print('\n\n')
