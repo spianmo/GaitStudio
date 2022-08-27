@@ -99,6 +99,13 @@ def plot_angles(title: str, df: DataFrame) -> None:
 
     fig, axes = plt.subplots(3, 3, figsize=(24, 14))
 
+    axes[0, 0].set(ylim=(30, 180))
+    axes[0, 1].set(ylim=(30, 180))
+    axes[0, 2].set(ylim=(30, 180))
+    axes[1, 0].set(ylim=(30, 180))
+    axes[1, 1].set(ylim=(0, 90))
+    axes[1, 2].set(ylim=(0, 90))
+
     fig.suptitle("关节角度变化周期 - " + title)
 
     sns.lineplot(ax=axes[0, 0], data=df, x="Time_in_sec", y="TorsoLHip_angle").set(xlabel="时间（秒）",
@@ -126,7 +133,7 @@ def vectors_to_angle(vector1, vector2) -> float:
     """
     x = np.dot(vector1, -vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
     theta = np.degrees(np.arccos(x))
-    return theta
+    return 180 - theta
 
 
 def build_vector(landmarks, landmark_index) -> ndarray:
@@ -146,23 +153,24 @@ def landmark_to_angle(landmarks) -> dict:
     :param landmarks:
     :return:
     """
+    MHip, RHip, RKnee, RAnkle, LHip, LKnee, LAnkle, Spine1, Neck, \
+    Head, Site, LShoulder, LElbow, LWrist, RShoulder, RElbow, RWrist = range(17)
     # 鼻部坐标
-    Nose_coor = build_vector(landmarks, 0)
+    Nose_coor = build_vector(landmarks, Head)
     # 左髋关节坐标
-    LHip_coor = build_vector(landmarks, 12)
+    LHip_coor = build_vector(landmarks, LHip)
     # 右髋关节坐标
-    RHip_coor = build_vector(landmarks, 11)
+    RHip_coor = build_vector(landmarks, RHip)
     # 左右髋关节中点
-    MidHip_coor = np.array(
-        [(LHip_coor[0] + RHip_coor[0]) / 2, (LHip_coor[1] + RHip_coor[1]) / 2, (LHip_coor[1] + RHip_coor[2]) / 2])
+    MidHip_coor = build_vector(landmarks, MHip)
     # 左膝关节坐标
-    LKnee_coor = build_vector(landmarks, 14)
+    LKnee_coor = build_vector(landmarks, LKnee)
     # 右膝关节坐标
-    RKnee_coor = build_vector(landmarks, 13)
+    RKnee_coor = build_vector(landmarks, RKnee)
     # 左踝关节坐标
-    LAnkle_coor = build_vector(landmarks, 16)
+    LAnkle_coor = build_vector(landmarks, LAnkle)
     # 右踝关节坐标
-    RAnkle_coor = build_vector(landmarks, 15)
+    RAnkle_coor = build_vector(landmarks, RAnkle)
 
     # 躯干向量
     Torso_vector = MidHip_coor - Nose_coor
@@ -340,7 +348,6 @@ def video_frame_handler(*video_frame: tuple) -> Tuple[any, any, any, any]:
     return pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
 
 
-
 def pose_landmarks_proto_handler(pose_landmarks_proto, frames):
     """
     多source姿态关键点proto回调函数
@@ -390,8 +397,8 @@ if __name__ == '__main__':
         #     'data/multi/Walking.55011271.mp4', 'data/multi/Walking.58860488.mp4', 'data/multi/Walking.60457274.mp4')
         input_stream = ('data/multi-virtual/Walking.camera1.mp4',)
     else:
-        # input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
-        input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
+        input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
+        # input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
         # input_stream = ('data/multi-hb-syj/Walking.camera1.mp4', 'data/multi-hb-syj/Walking.camera2.mp4')
         # input_stream = ('data/multi/Walking.54138969.mp4', 'data/multi/Walking.55011271.mp4')
         # input_stream = ('data/multi-25fps/Walking.54138969.mp4', 'data/multi-25fps/Walking.55011271.mp4')
@@ -418,31 +425,25 @@ if __name__ == '__main__':
             _pts_cam, _end = np.split(pts_cam, [-2], axis=2)
             videopose3d_poses[index] = estimator_3d.estimate(_pts_cam, fps, w=frame_shape[1], h=frame_shape[0])
 
-    angles = calc_common_angles(videopose3d_poses[1])
-    angles['Frames'] = [i + 1 for i in range(len(angles['RKnee']))]
 
-    tmp = pd.DataFrame(angles)
-    simple_plot_angles('Test', tmp)
+    chart_datas: list = [[] for _ in range(len(pts_cams_ndarray))]
 
+    for chart_index, chart_data in enumerate(chart_datas):
+        if chart_index == 1:
+            for pose_landmark_index, pose_landmark in enumerate(videopose3d_poses[chart_index]):
+                # 计算每一帧的3D坐标中的角度
+                angle_dict = landmark_to_angle(pose_landmark)
+                chart_datas[chart_index].append(angle_dict)
 
-    # chart_datas: list = [[] for _ in range(len(pts_cams_ndarray))]
-    #
-    # for chart_index, chart_data in enumerate(chart_datas):
-    #     for pose_landmark_index, pose_landmark in enumerate(videopose3d_poses[chart_index]):
-    #         # 计算每一帧的3D坐标中的角度
-    #         angle_dict = landmark_to_angle(pose_landmark)
-    #         chart_datas[chart_index].append(angle_dict)
-    #
-    #
-    # # 绘制步态周期图表
-    # for chart_index, chart_data in enumerate(chart_datas):
-    #     df_angles = pd.DataFrame(chart_data)
-    #     df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
-    #     if chart_index == 1:
-    #         if show_plot_angle_demo:
-    #             plot_angles("CAM[" + str(chart_index) + "]", df_angles)
-    #
-    #         # 分析步态周期
-    #         Gait_Analysis.analysis(df_angles=df_angles, fps=fps, pts_cam=pts_cams_ndarray[0], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
+    # 绘制步态周期图表
+    for chart_index, chart_data in enumerate(chart_datas):
+        df_angles = pd.DataFrame(chart_data)
+        df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
+        if chart_index == 1:
+            if show_plot_angle_demo:
+                plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+
+            # 分析步态周期
+            Gait_Analysis.analysis(df_angles=df_angles, fps=fps, pts_cam=pts_cams_ndarray[0], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
     # plt.show()

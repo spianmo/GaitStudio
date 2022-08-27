@@ -203,9 +203,19 @@ class VideoPose3DAsync():
 
         return pose_2d / femur_scale
 
+    def image_coordinates(self, X, w, h):
+        """Reverse camera frame normalization"""
+
+        assert X.shape[-1] == 2
+        return X * [w, h]
+
     def estimate(self, keypoints, fps, w, h):
 
+        keypoints = np.vstack(keypoints).reshape(-1, 33, 2)
+
         keypoints = mediapipe2coco(keypoints)
+
+        keypoints = self.image_coordinates(keypoints, w, h)
 
         pad = (self.model.receptive_field() - 1) // 2  # Padding on each side
         causal_shift = pad if self.causal else 0

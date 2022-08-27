@@ -1,1 +1,1 @@
-pyinstaller -F -n HealBone-GaitAnalysis  --noconsole --hidden-import opencv-python HealBone_Mediapipe_Gait.py
+pyinstaller -F -n HealBone-GaitAnalysis  --noconsole --hidden-import opencv-python --hidden-import matplotlib.backends.backend_svg HealBone_Mediapipe_Gait_VideoPose3D.py

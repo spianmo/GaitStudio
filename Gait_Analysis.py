@@ -35,7 +35,16 @@ def get_local_format_time(timestamp):
 def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
     metadatas = [
         {
+            "title": "膝关节角度变化周期",
+            "ylim": (0, 90),
+            "axis": [
+                ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
+                ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
+            ]
+        },
+        {
             "title": "躯干髋关节夹角变化周期",
+            "ylim": (30, 180),
             "axis": [
                 ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
                 ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
@@ -43,16 +52,10 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         },
         {
             "title": "髋关节角变化周期",
+            "ylim": (30, 180),
             "axis": [
                 ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
                 ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
-            ]
-        },
-        {
-            "title": "膝关节角度变化周期",
-            "axis": [
-                ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
-                ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
             ]
         },
         # {
@@ -71,6 +74,9 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         fig, axes = plt.subplots(2, 1, figsize=(5.5, 7))
 
         fig.suptitle(metadata["title"])
+
+        axes[0].set(ylim=metadata["ylim"])
+        axes[1].set(ylim=metadata["ylim"])
 
         sns.lineplot(ax=axes[0], data=df, x=metadata["axis"][0][0], y=metadata["axis"][0][1]).set(xlabel=metadata["axis"][0][2],
                                                                                                   ylabel=metadata["axis"][0][3])
@@ -495,14 +501,17 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
         ["检测项共计", "", "", "9 项"]
     ], ROMData=[
         {
-            "title": "臀部活动度",
+            "title": "膝关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["骨盆倾斜\nPelvis Obliquity", str(df_angles["TorsoLHip_angle"].max().round(2)), "degree", "-"],
-                ["骨盆旋转\nPelvis Rotation", str(df_angles["TorsoLHip_angle"].min().round(2)), "degree", "-"],
-                ["检测项共计", "", "", "2 项"]
+                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].max().round(2)), "degree", "0"],
+                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].min().round(2)), "degree", "135"],
+                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].max().round(2)), "degree", "0"],
+                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].min().round(2)), "degree", "135"],
+                ["检测项共计", "", "", "4 项"]
             ]
-        }, {
+        },
+        {
             "title": "髋关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
@@ -520,16 +529,14 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
                 ["右髋关节内旋\nR.Hip External Rotation", "-", "degree", "45"],
                 ["检测项共计", "", "", "12 项"]
             ]
-        }
-        , {
-            "title": "膝关节活动度",
+        },
+        {
+            "title": "臀部活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].max().round(2)), "degree", "0"],
-                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].min().round(2)), "degree", "135"],
-                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].max().round(2)), "degree", "0"],
-                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].min().round(2)), "degree", "135"],
-                ["检测项共计", "", "", "4 项"]
+                ["骨盆倾斜\nPelvis Obliquity", str(df_angles["TorsoLHip_angle"].max().round(2)), "degree", "-"],
+                ["骨盆旋转\nPelvis Rotation", str(df_angles["TorsoLHip_angle"].min().round(2)), "degree", "-"],
+                ["检测项共计", "", "", "2 项"]
             ]
         },
         # {
