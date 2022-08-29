@@ -446,4 +446,4 @@ if __name__ == '__main__':
             # 分析步态周期
             Gait_Analysis.analysis(df_angles=df_angles, fps=fps, pts_cam=pts_cams_ndarray[0], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
-    # plt.show()
+    plt.show()

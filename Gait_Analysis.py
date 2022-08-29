@@ -491,7 +491,7 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
         ["Cadence\n步率", str((cadence/60).round(2)), "steps/sec", "2.274±0.643"],
         ["Stride time\n跨步时间", str((step_time/1000).round(2)), "sec", "0.901±0.293"],
         ["Step time variability\nstandard deviation\n步长时间变化(标准差)", str(step_time_sd.round(2)), "-", "-"],
-        ["Step time variability\ncoefficient of variation\n步长时间变化(变化系数)", str(step_time_cov.round(2)), "CV(%)", "22.847±22.72"],
+        ["Step time variability\ncoefficient of variation\n步长时间变化(变化系数)", str((step_time_cov*100).round(2)), "CV(%)", "22.847±22.72"],
         ["Step regularity\n步长规律指数", str(step_reg.round(4)), "-", "-"],
         ["Stride regularity\n步幅规律指数", str(stride_reg.round(4)), "-", "-"],
         ["Step symmetry\n步长对称指数", str(step_sym.round(4)), "-", "-"],
@@ -504,10 +504,10 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
             "title": "膝关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].max().round(2)), "degree", "0"],
-                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].min().round(2)), "degree", "135"],
-                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].max().round(2)), "degree", "0"],
-                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].min().round(2)), "degree", "135"],
+                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].min().round(2)), "degree", "0"],
+                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].max().round(2)), "degree", "135"],
+                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].min().round(2)), "degree", "0"],
+                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].max().round(2)), "degree", "135"],
                 ["检测项共计", "", "", "4 项"]
             ]
         },
@@ -515,10 +515,10 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
             "title": "髋关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左髋关节伸展\nL.Hip Extension", str(df_angles["LHip_angle"].max().round(2)), "degree", "30"],
-                ["左髋关节屈曲\nL.Hip Flexion", str(df_angles["LHip_angle"].min().round(2)), "degree", "120"],
-                ["右髋关节伸展\nR.Hip Extension", str(df_angles["RHip_angle"].max().round(2)), "degree", "30"],
-                ["右髋关节屈曲\nR.Hip Flexion", str(df_angles["RHip_angle"].min().round(2)), "degree", "120"],
+                ["左髋关节伸展\nL.Hip Extension", str(df_angles["LHip_angle"].min().round(2)), "degree", "30"],
+                ["左髋关节屈曲\nL.Hip Flexion", str(df_angles["LHip_angle"].max().round(2)), "degree", "120"],
+                ["右髋关节伸展\nR.Hip Extension", str(df_angles["RHip_angle"].min().round(2)), "degree", "30"],
+                ["右髋关节屈曲\nR.Hip Flexion", str(df_angles["RHip_angle"].max().round(2)), "degree", "120"],
                 ["左髋关节外展\nL.Hip Abduction", "-", "degree", "45"],
                 ["左髋关节内收\nL.Hip Adduction", "-", "degree", "30"],
                 ["右髋关节外展\nR.Hip Abduction", "-", "degree", "45"],

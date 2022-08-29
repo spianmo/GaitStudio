@@ -66,8 +66,8 @@ colorBlue1 = Color((122.0 / 255), (180.0 / 255), (225.0 / 255), 1)
 colorGreenLine = Color((50.0 / 255), (140.0 / 255), (140.0 / 255), 1)
 
 
-def ParagraphReportHeader(color=colorGreen0, fontSize=12, text=''):
-    psHeaderText = ParagraphStyle('Hed0', fontName='msyh', fontSize=fontSize, alignment=TA_LEFT, borderWidth=3, textColor=color)
+def ParagraphReportHeader(color=colorGreen0, fontSize=12, text='', leftIndent=-14, alignment=TA_LEFT):
+    psHeaderText = ParagraphStyle('Hed0', fontName='msyh', fontSize=fontSize, alignment=alignment, borderWidth=3, textColor=color, leftIndent=leftIndent)
     return Paragraph(text, psHeaderText)
 
 
@@ -172,7 +172,7 @@ class HealBoneGaitReport:
             ('FONTSIZE', (0, 0), (-1, -1), 12)
         ]))
         self.elements.append(HeightSpacer(heightPixels=10))
-        self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=12))
+        self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=10))
 
     def ROMPage(self):
         for rom_index, romItem in enumerate(self.ROMData):
@@ -202,6 +202,10 @@ class HealBoneGaitReport:
                 ('FONT', (0, 0), (-1, -1), 'msyh'),
                 ('FONTSIZE', (0, 0), (-1, -1), 12)
             ]))
+
+            self.elements.append(ParagraphReportHeader(
+                text='References: Wem ROM by joint Available:https://www.wikem.org/wiki/Range_of_motion_by_joint (accessed 25.10.2021)',
+                color=colorBlack, fontSize=10))
             self.elements.append(PageBreak())
             self.elements.append(self.ROMGraph[rom_index])
 
