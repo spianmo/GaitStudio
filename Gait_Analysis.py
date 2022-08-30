@@ -43,19 +43,35 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
             ]
         },
         {
-            "title": "躯干髋关节夹角变化周期",
-            "ylim": (30, 180),
-            "axis": [
-                ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
-                ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
-            ]
-        },
-        {
-            "title": "髋关节角变化周期",
-            "ylim": (30, 180),
+            "title": "髋关节角度变化周期（内收外展）",
+            "ylim": (20, 160),
             "axis": [
                 ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
                 ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
+            ]
+        },
+        {
+            "title": "髋关节角度变化周期（屈曲伸展）",
+            "ylim": (0, 100),
+            "axis": [
+                ["Time_in_sec", "TorsoLFemur_angle", "时间（秒）", "L 髋关节角度 (°)"],
+                ["Time_in_sec", "TorsoRFemur_angle", "时间（秒）", "R 髋关节角度 (°)"]
+            ]
+        },
+        {
+            "title": "髋关节角度变化周期（外旋内旋）",
+            "ylim": (20, 180),
+            "axis": [
+                ["Time_in_sec", "LTibiaSelf_vector", "时间（秒）", "L 髋关节角度 (°)"],
+                ["Time_in_sec", "RTibiaSelf_vector", "时间（秒）", "R 髋关节角度 (°)"]
+            ]
+        },
+        {
+            "title": "躯干髋关节角度变化周期",
+            "ylim": (20, 160),
+            "axis": [
+                ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
+                ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
             ]
         },
         # {
@@ -84,6 +100,7 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         sns.lineplot(ax=axes[1], data=df, x=metadata["axis"][1][0], y=metadata["axis"][1][1]).set(xlabel=metadata["axis"][1][2],
                                                                                                   ylabel=metadata["axis"][1][3])
         image = BytesIO()
+        fig.tight_layout()
         fig.savefig(image, format='svg')
         image.seek(0)
         images.append(svg2rlg(image))
@@ -93,21 +110,27 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
 def polt_accelerations(frames_time, x, y, z, x_f, y_f, z_f):
     fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(5.5, 7))
 
-    fig.suptitle("RIGHT_KNEE Accelerations")
+    fig.suptitle("RIGHT_KNEE Accelerations 右膝关节-加速度周期分解")
 
-    ax[0].set_title('Medio-lateral (ML) - side to side')
+    ax[0].set_title('Medio-lateral (ML) - side to side 加速度X轴')
     ax[0].plot(frames_time, x, linewidth=0.3, color='k')
     ax[0].plot(frames_time, x_f, linewidth=0.8, color='r')
+    ax[0].set_xlabel("时间（秒）")
+    ax[0].set_ylabel("米/秒$^{2}$")
 
-    ax[1].set_title('Vertical (VT) - up down')
+    ax[1].set_title('Vertical (VT) - up down 加速度Y轴')
     ax[1].plot(frames_time, y, linewidth=0.3, color='k')
     ax[1].plot(frames_time, y_f, linewidth=0.9, color='r')
+    ax[1].set_xlabel("时间（秒）")
+    ax[1].set_ylabel("米/秒$^{2}$")
 
-    ax[2].set_title('Antero-posterior (AP) - forwards backwards')
+    ax[2].set_title('Antero-posterior (AP) - forwards backwards 加速度Z轴')
     ax[2].plot(frames_time, z, linewidth=0.3, color='k')
     ax[2].plot(frames_time, z_f, linewidth=0.9, color='r')
+    ax[2].set_xlabel("时间（秒）")
+    ax[2].set_ylabel("米/秒$^{2}$")
 
-    fig.subplots_adjust(hspace=.5)
+    fig.tight_layout()
     image = BytesIO()
     fig.savefig(image, format='svg')
     image.seek(0)
@@ -148,15 +171,17 @@ def polt_find_peaks(time, signal, peak_type="peak", min_val=0.5, min_dist=25, de
             label="{} peaks".format(len(peaks)),
         )
         axarr.set_xlim(min(time), max(time))
-        axarr.set_xlabel("Time")
+        axarr.set_xlabel("时间（秒）")
         axarr.grid(show_grid)
+        axarr.set_ylabel("米/秒$^{2}$")
         axarr.legend(loc="lower right")
     else:
         f, axarr = plt.subplots(2, 1, figsize=fig_size)
         axarr[0].plot(time, signal, "k")
         axarr[0].title.set_text("Original")
         axarr[0].set_xlim(min(time), max(time))
-        axarr[0].set_xlabel("Time")
+        axarr[0].set_xlabel("时间（秒）")
+        axarr[0].set_ylabel("米/秒$^{2}$")
         axarr[0].grid(show_grid)
 
         axarr[1].plot(time, new_signal, "k")
@@ -170,13 +195,17 @@ def polt_find_peaks(time, signal, peak_type="peak", min_val=0.5, min_dist=25, de
         )
         axarr[1].title.set_text("Detrended (degree: {})".format(detrend))
         axarr[1].set_xlim(min(time), max(time))
-        axarr[1].set_xlabel("Time")
+        axarr[1].set_xlabel("时间（秒）")
+        axarr[1].set_ylabel("米/秒$^{2}$")
         axarr[1].grid(show_grid)
         axarr[1].legend(loc="lower right")
 
-    f.subplots_adjust(hspace=0.5)
-    suptitle_string = "Peak Detection (val: {}, dist: {})"
-    plt.suptitle(suptitle_string.format(min_val, min_dist), y=1.01, size=16)
+    f.tight_layout()
+    if peak_type == "peak":
+        suptitle_string = "Peak Detection (val: {}, dist: {}) 峰值信号"
+    else:
+        suptitle_string = "Valley Detection (val: {}, dist: {}) 谷值信号"
+    plt.suptitle(suptitle_string.format(min_val, min_dist), y=1.01)
     image = BytesIO()
     f.savefig(image, format='svg')
     image.seek(0)
@@ -267,8 +296,9 @@ def plot_signal(
         axarr.set_ylabel(ylab)
         axarr.grid(show_grid)
 
-    plt.suptitle(title, size=16)
+    plt.suptitle(title)
     image = BytesIO()
+    f.tight_layout()
     f.savefig(image, format='svg')
     image.seek(0)
     return svg2rlg(image)
@@ -297,13 +327,12 @@ def plot_xcorr(x, y, scale="none", show_grid=True, fig_size=(5.5, 3.5)):
         corr /= x.size - abs(lags)
     elif scale == "coeff":
         corr /= np.sqrt(np.dot(x, x) * np.dot(y, y))
-
     drawing = plot_signal(
         lags,
         corr,
-        title="Cross-correlation (scale: {})".format(scale),
-        xlab="Lag",
-        ylab="Correlation",
+        title="Cross-correlation (scale: {}) 互相关函数(无偏估计)".format(scale),
+        xlab="Lag 延迟",
+        ylab="Correlation 相关性系数",
         show_grid=show_grid,
         fig_size=fig_size,
     )
@@ -405,7 +434,7 @@ def plot_cut_points(x, set_name, n_axis, fig_size=(5.5, 3.5)):
 
     plt.xticks(range(1, len(x) + 1))
 
-    plt.suptitle("Physical activity counts and intensity", size=16)
+    plt.suptitle("Physical activity counts and intensity 物理活动次数和强度")
     plt.xlabel("Epoch (length: 60 seconds)")
     plt.ylabel("PA count")
     image = BytesIO()
@@ -424,6 +453,8 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
     sampling_rate = fps
     frames_time = np.array([frame_index * 1000 / fps for frame_index in range(len(pts_cam) - 1)])
 
+    frames_time_sec = np.array([frame_index / fps for frame_index in range(len(pts_cam) - 1)])
+
     """
     绘制加速度视图
     """
@@ -435,7 +466,7 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
     y_f = sm.signal.filter_signal(b, a, accelerations_y)  # VT vertical
     z_f = sm.signal.filter_signal(b, a, accelerations_z)  # AP antero-posterior
 
-    sensormotionDrawing.append(polt_accelerations(frames_time, accelerations_x, accelerations_y, accelerations_z, x_f, y_f, z_f))
+    sensormotionDrawing.append(polt_accelerations(frames_time_sec, accelerations_x, accelerations_y, accelerations_z, x_f, y_f, z_f))
 
     """
     计算基于自相关的指标，例如步长规律性、步幅规律性和步长对称性。
@@ -446,7 +477,7 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
     """
     提取步态指标，如步速、步长等, 识别信号中的谷
     """
-    peak_times, peak_values, peak_drawing = polt_find_peaks(frames_time, y_f, peak_type='valley', min_val=0.6, min_dist=10)
+    peak_times, peak_values, peak_drawing = polt_find_peaks(frames_time_sec, y_f, peak_type='valley', min_val=0.6, min_dist=10)
     sensormotionDrawing.append(peak_drawing)
     step_count = sm.gait.step_count(peak_times)
     cadence = sm.gait.cadence(frames_time, peak_times)
@@ -488,10 +519,10 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
     report = HealBoneGaitReport('report_output/GaitReport-' + get_local_format_time(time.time()) + '.pdf', SpatiotemporalData=[
         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
         ["Number of step\n步数", str(step_count), "-", "-"],
-        ["Cadence\n步率", str((cadence/60).round(2)), "steps/sec", "2.274±0.643"],
-        ["Stride time\n跨步时间", str((step_time/1000).round(2)), "sec", "0.901±0.293"],
-        ["Step time variability\nstandard deviation\n步长时间变化(标准差)", str(step_time_sd.round(2)), "-", "-"],
-        ["Step time variability\ncoefficient of variation\n步长时间变化(变化系数)", str((step_time_cov*100).round(2)), "CV(%)", "22.847±22.72"],
+        ["Cadence\n步频", str((cadence / 60).round(2)), "steps/sec", "2.274±0.643"],
+        ["Stride time\n跨步时间", str((step_time / 1000).round(2)), "sec", "0.901±0.293"],
+        ["Step time variability(SD)\n步长时间变化(标准差)", str(step_time_sd.round(2)), "-", "-"],
+        ["Step time variability(CoV)\n步长时间变化系数", str((step_time_cov * 100).round(2)), "CoV(%)", "22.847±22.72"],
         ["Step regularity\n步长规律指数", str(step_reg.round(4)), "-", "-"],
         ["Stride regularity\n步幅规律指数", str(stride_reg.round(4)), "-", "-"],
         ["Step symmetry\n步长对称指数", str(step_sym.round(4)), "-", "-"],
@@ -504,10 +535,10 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
             "title": "膝关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].min().round(2)), "degree", "0"],
-                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].max().round(2)), "degree", "135"],
-                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].min().round(2)), "degree", "0"],
-                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].max().round(2)), "degree", "135"],
+                ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].min().round(2)), "°", "0-60"],
+                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].max().round(2)), "°", "0-60"],
+                ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].min().round(2)), "°", "0-60"],
+                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].max().round(2)), "°", "0-60"],
                 ["检测项共计", "", "", "4 项"]
             ]
         },
@@ -515,27 +546,27 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
             "title": "髋关节活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["左髋关节伸展\nL.Hip Extension", str(df_angles["LHip_angle"].min().round(2)), "degree", "30"],
-                ["左髋关节屈曲\nL.Hip Flexion", str(df_angles["LHip_angle"].max().round(2)), "degree", "120"],
-                ["右髋关节伸展\nR.Hip Extension", str(df_angles["RHip_angle"].min().round(2)), "degree", "30"],
-                ["右髋关节屈曲\nR.Hip Flexion", str(df_angles["RHip_angle"].max().round(2)), "degree", "120"],
-                ["左髋关节外展\nL.Hip Abduction", "-", "degree", "45"],
-                ["左髋关节内收\nL.Hip Adduction", "-", "degree", "30"],
-                ["右髋关节外展\nR.Hip Abduction", "-", "degree", "45"],
-                ["右髋关节内收\nR.Hip Adduction", "-", "degree", "30"],
-                ["左髋关节外旋\nL.Hip Internal Rotation", "-", "degree", "45"],
-                ["左髋关节内旋\nL.Hip External Rotation", "-", "degree", "45"],
-                ["右髋关节外旋\nR.Hip Internal Rotation", "-", "degree", "45"],
-                ["右髋关节内旋\nR.Hip External Rotation", "-", "degree", "45"],
+                ["左髋关节伸展\nL.Hip Extension", str(df_angles["TorsoLFemur_angle"].min().round(2)), "°", "0-30"],
+                ["左髋关节屈曲\nL.Hip Flexion", str(df_angles["TorsoLFemur_angle"].max().round(2)), "°", "0-40"],
+                ["右髋关节伸展\nR.Hip Extension", str(df_angles["TorsoRFemur_angle"].min().round(2)), "°", "0-30"],
+                ["右髋关节屈曲\nR.Hip Flexion", str(df_angles["TorsoRFemur_angle"].max().round(2)), "°", "0-40"],
+                ["左髋关节外展\nL.Hip Abduction", str((180 - df_angles["LHip_angle"].max() - 90).round(2)), "°", "-"],
+                ["左髋关节内收\nL.Hip Adduction", str((90 - (180 - df_angles["LHip_angle"].min())).round(2)), "°", "-"],
+                ["右髋关节外展\nR.Hip Abduction", str((180 - df_angles["RHip_angle"].max() - 90).round(2)), "°", "-"],
+                ["右髋关节内收\nR.Hip Adduction", str((90 - (180 - df_angles["RHip_angle"].min())).round(2)), "°", "-"],
+                ["左髋关节外旋\nL.Hip Internal Rotation", str((180 - df_angles["LTibiaSelf_vector"].max()).round(2)), "°", "-"],
+                ["左髋关节内旋\nL.Hip External Rotation", str((df_angles["LTibiaSelf_vector"].min()).round(2)), "°", "-"],
+                ["右髋关节外旋\nR.Hip Internal Rotation", str((180 - df_angles["RTibiaSelf_vector"].max()).round(2)), "°", "-"],
+                ["右髋关节内旋\nR.Hip External Rotation", str((df_angles["RTibiaSelf_vector"].min()).round(2)), "°", "-"],
                 ["检测项共计", "", "", "12 项"]
             ]
         },
         {
-            "title": "臀部活动度",
+            "title": "骨盆活动度",
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-                ["骨盆倾斜\nPelvis Obliquity", str(df_angles["TorsoLHip_angle"].max().round(2)), "degree", "-"],
-                ["骨盆旋转\nPelvis Rotation", str(df_angles["TorsoLHip_angle"].min().round(2)), "degree", "-"],
+                ["骨盆侧倾\nPelvis Obliquity", str((90 - df_angles["TorsoLHip_angle"].max()).round(2)), "°", "0-10"],
+                ["骨盆旋转\nPelvis Rotation", str((90 - df_angles["TorsoLHip_angle"].min()).round(2)), "°", "0-10"],
                 ["检测项共计", "", "", "2 项"]
             ]
         },
@@ -543,14 +574,14 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
         #     "title": "踝关节活动度",
         #     "list": [
         #         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
-        #         ["左踝关节跖屈\nL.Ankle Plantar flexion", str(df_angles["LAnkle_angle"].max().round(2)), "degree", "20"],
-        #         ["左踝关节背屈\nL.Ankle Dorsiflexion", str(df_angles["LAnkle_angle"].min().round(2)), "degree", "30"],
-        #         ["右踝关节跖屈\nR.Ankle Plantar flexion", str(df_angles["RAnkle_angle"].max().round(2)), "degree", "20"],
-        #         ["右踝关节背屈\nR.Ankle Dorsiflexion", str(df_angles["RAnkle_angle"].min().round(2)), "degree", "30"],
-        #         ["左踝关节外翻\nL.Ankle Pronation", "-", "degree", "15"],
-        #         ["左踝关节内翻\nL.Ankle Supination", "-", "degree", "35"],
-        #         ["右踝关节外翻\nR.Ankle Pronation", "-", "degree", "15"],
-        #         ["右踝关节内翻\nR.Ankle Supination", "-", "degree", "35"],
+        #         ["左踝关节跖屈\nL.Ankle Plantar flexion", str(df_angles["LAnkle_angle"].max().round(2)), "°", "20"],
+        #         ["左踝关节背屈\nL.Ankle Dorsiflexion", str(df_angles["LAnkle_angle"].min().round(2)), "°", "30"],
+        #         ["右踝关节跖屈\nR.Ankle Plantar flexion", str(df_angles["RAnkle_angle"].max().round(2)), "°", "20"],
+        #         ["右踝关节背屈\nR.Ankle Dorsiflexion", str(df_angles["RAnkle_angle"].min().round(2)), "°", "30"],
+        #         ["左踝关节外翻\nL.Ankle Pronation", "-", "°", "15"],
+        #         ["左踝关节内翻\nL.Ankle Supination", "-", "°", "35"],
+        #         ["右踝关节外翻\nR.Ankle Pronation", "-", "°", "15"],
+        #         ["右踝关节内翻\nR.Ankle Supination", "-", "°", "35"],
         #         ["检测项共计", "", "", "8 项"]
         #     ]
         # }

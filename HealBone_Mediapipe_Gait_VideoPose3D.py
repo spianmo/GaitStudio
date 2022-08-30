@@ -26,7 +26,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
 poseDetectorPool = []
-frame_shape = [720, 1280]
+frame_shape = [1080, 1920]
 
 # 待检测的点
 checked_pose_keypoints = [
@@ -97,14 +97,18 @@ def plot_angles(title: str, df: DataFrame) -> None:
 
     sns.set_style(style='darkgrid', rc=rc)
 
-    fig, axes = plt.subplots(3, 3, figsize=(24, 14))
+    fig, axes = plt.subplots(3, 4, figsize=(24, 14))
 
-    axes[0, 0].set(ylim=(30, 180))
-    axes[0, 1].set(ylim=(30, 180))
-    axes[0, 2].set(ylim=(30, 180))
-    axes[1, 0].set(ylim=(30, 180))
-    axes[1, 1].set(ylim=(0, 90))
-    axes[1, 2].set(ylim=(0, 90))
+    axes[0, 0].set(ylim=(20, 160))
+    axes[0, 1].set(ylim=(20, 160))
+    axes[0, 2].set(ylim=(0, 100))
+    axes[0, 3].set(ylim=(0, 100))
+    axes[1, 0].set(ylim=(20, 160))
+    axes[1, 1].set(ylim=(20, 160))
+    axes[1, 2].set(ylim=(20, 180))
+    axes[1, 3].set(ylim=(20, 180))
+    axes[2, 0].set(ylim=(0, 90))
+    axes[2, 1].set(ylim=(0, 90))
 
     fig.suptitle("关节角度变化周期 - " + title)
 
@@ -112,13 +116,25 @@ def plot_angles(title: str, df: DataFrame) -> None:
                                                                                    ylabel="躯干 L 髋关节角度 (°)")
     sns.lineplot(ax=axes[0, 1], data=df, x="Time_in_sec", y="TorsoRHip_angle").set(xlabel="时间（秒）",
                                                                                    ylabel="躯干 R 髋关节角度 (°)")
-    sns.lineplot(ax=axes[0, 2], data=df, x="Time_in_sec", y="LHip_angle").set(xlabel="时间（秒）",
-                                                                              ylabel="L 髋关节角度 (°)")
-    sns.lineplot(ax=axes[1, 0], data=df, x="Time_in_sec", y="RHip_angle").set(xlabel="时间（秒）",
-                                                                              ylabel="R 髋关节角度 (°)")
-    sns.lineplot(ax=axes[1, 1], data=df, x="Time_in_sec", y="LKnee_angle").set(xlabel="时间（秒）",
+
+    sns.lineplot(ax=axes[0, 2], data=df, x="Time_in_sec", y="TorsoLFemur_angle").set(xlabel="时间（秒）",
+                                                                                     ylabel="L 髋关节角度（屈曲伸展） (°)")
+    sns.lineplot(ax=axes[0, 3], data=df, x="Time_in_sec", y="TorsoRFemur_angle").set(xlabel="时间（秒）",
+                                                                                     ylabel="R 髋关节角度（屈曲伸展）(°)")
+
+    sns.lineplot(ax=axes[1, 0], data=df, x="Time_in_sec", y="LHip_angle").set(xlabel="时间（秒）",
+                                                                              ylabel="L 髋关节角度（内收外展） (°)")
+    sns.lineplot(ax=axes[1, 1], data=df, x="Time_in_sec", y="RHip_angle").set(xlabel="时间（秒）",
+                                                                              ylabel="R 髋关节角度（内收外展） (°)")
+
+    sns.lineplot(ax=axes[1, 2], data=df, x="Time_in_sec", y="LTibiaSelf_vector").set(xlabel="时间（秒）",
+                                                                                     ylabel="L 髋关节角度（外旋内旋） (°)")
+    sns.lineplot(ax=axes[1, 3], data=df, x="Time_in_sec", y="RTibiaSelf_vector").set(xlabel="时间（秒）",
+                                                                                     ylabel="R 髋关节角度（外旋内旋） (°)")
+
+    sns.lineplot(ax=axes[2, 0], data=df, x="Time_in_sec", y="LKnee_angle").set(xlabel="时间（秒）",
                                                                                ylabel="L 膝关节角度 (°)")
-    sns.lineplot(ax=axes[1, 2], data=df, x="Time_in_sec", y="RKnee_angle").set(xlabel="时间（秒）",
+    sns.lineplot(ax=axes[2, 1], data=df, x="Time_in_sec", y="RKnee_angle").set(xlabel="时间（秒）",
                                                                                ylabel="R 膝关节角度 (°)")
 
     plt.show()
@@ -189,10 +205,21 @@ def landmark_to_angle(landmarks) -> dict:
     TorsoLHip_angle = vectors_to_angle(Torso_vector, Hip_vector)
     TorsoRHip_angle = vectors_to_angle(Torso_vector, -Hip_vector)
 
+    # 内收外展
     # 左股骨与胯骨的夹角
     LHip_angle = vectors_to_angle(LFemur_vector, Hip_vector)
     # 右股骨与胯骨的夹角
     RHip_angle = vectors_to_angle(RFemur_vector, -Hip_vector)
+
+    # 屈曲伸展
+    # 躯干与股骨
+    TorsoLFemur_angle = vectors_to_angle(Torso_vector, LFemur_vector)
+    TorsoRFemur_angle = vectors_to_angle(Torso_vector, RFemur_vector)
+
+    # 外旋内旋
+    # 胫骨旋转
+    LTibiaSelf_vector = vectors_to_angle(LTibia_vector, np.array([0, 1, 0]))
+    RTibiaSelf_vector = vectors_to_angle(RTibia_vector, np.array([0, 1, 0]))
 
     # 左胫骨与左股骨的夹角
     LKnee_angle = vectors_to_angle(LTibia_vector, LFemur_vector)
@@ -200,7 +227,9 @@ def landmark_to_angle(landmarks) -> dict:
     RKnee_angle = vectors_to_angle(RTibia_vector, RFemur_vector)
 
     dict_angles = {"TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
-                   "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle}
+                   "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
+                   "TorsoLFemur_angle": TorsoLFemur_angle, "TorsoRFemur_angle": TorsoRFemur_angle,
+                   "LTibiaSelf_vector": LTibiaSelf_vector, "RTibiaSelf_vector": RTibiaSelf_vector}
     return dict_angles
 
 
@@ -227,10 +256,14 @@ def read_video_frames(*streams: any, videoFrameHandler: Callable[[tuple], tuple]
     print("read_video_sources:", len(caps))
     print("fps:", fps[0])
 
-    for cap in caps:
-        # 视频流的分辨率设置为1280x720
-        cap.set(cv.CAP_PROP_FRAME_WIDTH, frame_shape[1])
-        cap.set(cv.CAP_PROP_FRAME_HEIGHT, frame_shape[0])
+    for cap_index, cap in enumerate(caps):
+        # 视频流的分辨率设置为1920x1080
+        if cap_index == 0:
+            cap.set(cv.CAP_PROP_FRAME_WIDTH, frame_shape[1])
+            cap.set(cv.CAP_PROP_FRAME_HEIGHT, frame_shape[0])
+        else:
+            cap.set(cv.CAP_PROP_FRAME_WIDTH, frame_shape[0])
+            cap.set(cv.CAP_PROP_FRAME_HEIGHT, frame_shape[1])
 
     while True:
         frames: List[ndarray] = []
@@ -363,7 +396,7 @@ def pose_landmarks_proto_handler(pose_landmarks_proto, frames):
 
     # 窗口展示视频帧
     for frame_index, frame in enumerate(frames):
-        cv.imshow("HealBone-Mediapipe-Gait: Camera" + str(frame_index), frame)
+        cv.imshow("HealBone-Mediapipe-Gait: Camera" + str(frame_index), cv.resize(frame, (0, 0), fx=0.5, fy=0.5))
 
 
 def pose_landmarks_handler(pose_landmarks_index, pose_landmarks):
@@ -397,8 +430,8 @@ if __name__ == '__main__':
         #     'data/multi/Walking.55011271.mp4', 'data/multi/Walking.58860488.mp4', 'data/multi/Walking.60457274.mp4')
         input_stream = ('data/multi-virtual/Walking.camera1.mp4',)
     else:
-        input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
-        # input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
+        # input_stream = ('data/multi-virtual/Walking.camera1.mp4', 'data/multi-virtual/Walking.camera2.mp4')
+        input_stream = ('data/multi-hb/Walking.camera1.mp4', 'data/multi-hb/Walking.camera2.mp4')
         # input_stream = ('data/multi-hb-syj/Walking.camera1.mp4', 'data/multi-hb-syj/Walking.camera2.mp4')
         # input_stream = ('data/multi/Walking.54138969.mp4', 'data/multi/Walking.55011271.mp4')
         # input_stream = ('data/multi-25fps/Walking.54138969.mp4', 'data/multi-25fps/Walking.55011271.mp4')
@@ -421,29 +454,35 @@ if __name__ == '__main__':
 
     videopose3d_poses = [[] for _ in range(len(pts_cams_ndarray))]
     for index, pts_cam in enumerate(pts_cams_ndarray):
-        if index == 1:
-            _pts_cam, _end = np.split(pts_cam, [-2], axis=2)
-            videopose3d_poses[index] = estimator_3d.estimate(_pts_cam, fps, w=frame_shape[1], h=frame_shape[0])
-
+        _pts_cam, _end = np.split(pts_cam, [-2], axis=2)
+        videopose3d_poses[index] = estimator_3d.estimate(_pts_cam, fps, w=frame_shape[1], h=frame_shape[0])
 
     chart_datas: list = [[] for _ in range(len(pts_cams_ndarray))]
 
     for chart_index, chart_data in enumerate(chart_datas):
-        if chart_index == 1:
-            for pose_landmark_index, pose_landmark in enumerate(videopose3d_poses[chart_index]):
-                # 计算每一帧的3D坐标中的角度
-                angle_dict = landmark_to_angle(pose_landmark)
-                chart_datas[chart_index].append(angle_dict)
+        for pose_landmark_index, pose_landmark in enumerate(videopose3d_poses[chart_index]):
+            # 计算每一帧的3D坐标中的角度
+            angle_dict = landmark_to_angle(pose_landmark)
+            chart_datas[chart_index].append(angle_dict)
 
+    df_angless: list = [{} for _ in range(len(pts_cams_ndarray))]
     # 绘制步态周期图表
     for chart_index, chart_data in enumerate(chart_datas):
-        df_angles = pd.DataFrame(chart_data)
-        df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
-        if chart_index == 1:
-            if show_plot_angle_demo:
-                plot_angles("CAM[" + str(chart_index) + "]", df_angles)
+        df_angless[chart_index] = pd.DataFrame(chart_data)
 
-            # 分析步态周期
-            Gait_Analysis.analysis(df_angles=df_angles, fps=fps, pts_cam=pts_cams_ndarray[0], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
+    df_angles = pd.DataFrame({"TorsoLHip_angle": df_angless[0]["TorsoLHip_angle"], "TorsoRHip_angle": df_angless[0]["TorsoRHip_angle"],
+                              "LHip_angle": df_angless[0]["LHip_angle"],
+                              "RHip_angle": df_angless[0]["RHip_angle"], "LKnee_angle": df_angless[1]["LKnee_angle"],
+                              "RKnee_angle": df_angless[1]["RKnee_angle"],
+                              "TorsoLFemur_angle": df_angless[1]["TorsoLFemur_angle"],
+                              "TorsoRFemur_angle": df_angless[1]["TorsoRFemur_angle"],
+                              "LTibiaSelf_vector": df_angless[1]["LTibiaSelf_vector"],
+                              "RTibiaSelf_vector": df_angless[1]["RTibiaSelf_vector"]})
+    df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
+    if show_plot_angle_demo:
+        plot_angles("CAM[Fixed]", pd.DataFrame(df_angles))
+
+    # 分析步态周期
+    Gait_Analysis.analysis(df_angles=pd.DataFrame(df_angles), fps=fps, pts_cam=pts_cams_ndarray[1], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
     plt.show()

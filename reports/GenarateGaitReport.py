@@ -66,8 +66,9 @@ colorBlue1 = Color((122.0 / 255), (180.0 / 255), (225.0 / 255), 1)
 colorGreenLine = Color((50.0 / 255), (140.0 / 255), (140.0 / 255), 1)
 
 
-def ParagraphReportHeader(color=colorGreen0, fontSize=12, text='', leftIndent=-14, alignment=TA_LEFT):
-    psHeaderText = ParagraphStyle('Hed0', fontName='msyh', fontSize=fontSize, alignment=alignment, borderWidth=3, textColor=color, leftIndent=leftIndent)
+def ParagraphReportHeader(color=colorGreen0, fontSize=12, text='', leftIndent=-14, alignment=TA_LEFT, leading=12):
+    psHeaderText = ParagraphStyle('Hed0', fontName='msyh', fontSize=fontSize, alignment=alignment, borderWidth=3, textColor=color,
+                                  leftIndent=leftIndent, leading=leading)
     return Paragraph(text, psHeaderText)
 
 
@@ -132,14 +133,23 @@ class HealBoneGaitReport:
         img.drawWidth = 6.5 * inch
         self.elements.append(img)
 
-        self.elements.append(HeightSpacer(250))
+        self.elements.append(HeightSpacer(240))
 
-        psDetalle = ParagraphStyle('Resumen', fontSize=9, leading=14, justifyBreaks=1, alignment=TA_LEFT, justifyLastLine=1)
-        time_fmt_str = time.asctime(time.localtime(time.time()))
+        psDetalle = ParagraphStyle('Resumen', fontName='msyh',
+                                   fontSize=12, leading=15, justifyBreaks=1,
+                                   alignment=TA_LEFT, justifyLastLine=1)
+        # time_fmt_str = time.asctime(time.localtime(time.time()))
+        # text = """HEALBONE GAIT ANALYSIS REPORT<br/>
+        # PATIENT: QianJin Tang<br/>
+        # REPORT TIME: """ + time_fmt_str + """<br/>
+        # LAB: NanJin HealBone Lab1<br/>
+        # """
+        time_fmt_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         text = """HEALBONE GAIT ANALYSIS REPORT<br/>
-        PATIENT: QianJin Tang<br/>
-        REPORT TIME: """ + time_fmt_str + """<br/>
-        LAB: NanJin HealBone Lab1<br/>
+        复骨医疗步态分析报告<br/>
+        受测者姓名: 测试人员1<br/>
+        受测时间: """ + time_fmt_str + """<br/>
+        地点: 南京复骨医疗实验室<br/>
         """
         paragraphReportSummary = Paragraph(text, psDetalle)
         self.elements.append(paragraphReportSummary)
@@ -169,14 +179,14 @@ class HealBoneGaitReport:
             ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONT', (0, 0), (-1, -1), 'msyh'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12)
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('LEADING', (0, 0), (-1, -1), 18)
         ]))
         self.elements.append(HeightSpacer(heightPixels=10))
         self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=10))
 
     def ROMPage(self):
         for rom_index, romItem in enumerate(self.ROMData):
-            self.elements.append(PageBreak())
 
             self.elements.append(ParagraphReportHeader(fontSize=16, text=('Range of Motion ' + romItem["title"])))
             self.elements.append(HeightSpacer())
@@ -200,14 +210,67 @@ class HealBoneGaitReport:
                 ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('FONT', (0, 0), (-1, -1), 'msyh'),
-                ('FONTSIZE', (0, 0), (-1, -1), 12)
+                ('FONTSIZE', (0, 0), (-1, -1), 12),
+                ('LEADING', (0, 0), (-1, -1), 15)
             ]))
 
+            self.elements.append(HeightSpacer(heightPixels=10))
             self.elements.append(ParagraphReportHeader(
                 text='References: Wem ROM by joint Available:https://www.wikem.org/wiki/Range_of_motion_by_joint (accessed 25.10.2021)',
                 color=colorBlack, fontSize=10))
+            if romItem["title"] == "膝关节活动度":
+                img = Image(resourcePath + 'static/Knee_Motions.png')
+                img.drawHeight = 3.2 * inch
+                img.drawWidth = 4.8 * inch
+                self.elements.append(img)
+                self.elements.append(HeightSpacer(heightPixels=10))
+                self.elements.append(ParagraphReportHeader(
+                    text='膝关节伸展-屈曲（0°～140°）\n轴心位于膝关节的腓骨小头，固定臂与股骨长轴平行，移动臂与腓骨长轴平行。',
+                    color=colorBlack, fontSize=12, leading=20))
+                self.elements.append(self.ROMGraph[0])
+            if romItem["title"] == "髋关节活动度":
+                img = Image(resourcePath + 'static/Hip_Motions.png')
+                img.drawHeight = 6.0 * inch
+                img.drawWidth = 6.0 * inch
+                self.elements.append(ParagraphReportHeader(
+                    text='',
+                    color=colorBlack, fontSize=10))
+                self.elements.append(img)
+                self.elements.append(HeightSpacer(heightPixels=10))
+                self.elements.append(ParagraphReportHeader(
+                    text='髋关节屈曲（0°～120°）髋关节伸展（0°～15°-30°）\n轴心位于股骨大转子侧面，固定臂指向骨盆侧面，移动臂与股骨长轴平行。\n'
+                         '髋关节外展（0°～45°）髋关节内收（0°～35°）\n轴心位于髂前上棘，固定臂位于两髂前上棘的连线上，移动臂与股骨长轴平行。\n'
+                         '髋关节内旋（0°～35°）髋关节外旋（0°～45°）\n轴心置于胫骨平台的中点，固定臂和移动臂与胫骨长轴平行。当髋关节内旋时固定臂仍保留于原来的位置与地面垂直，移动臂则跟随胫骨移动。\n',
+                    color=colorBlack, fontSize=12, leading=20))
+                self.elements.append(self.ROMGraph[1])
+                self.elements.append(self.ROMGraph[2])
+                self.elements.append(self.ROMGraph[3])
+            if romItem["title"] == "骨盆活动度":
+                img1 = Image(resourcePath + 'static/Pelvis_Motions.png')
+                img1.drawHeight = 2 * inch
+                img1.drawWidth = 2 * inch
+                self.elements.append(ParagraphReportHeader(
+                    text='',
+                    color=colorBlack, fontSize=10))
+                self.elements.append(HeightSpacer(heightPixels=10))
+                self.elements.append(ParagraphReportHeader(
+                    text='骨盆侧倾Pelvis Obliquity',
+                    color=colorBlack, fontSize=12, leading=20))
+                self.elements.append(img1)
+
+                img2 = Image(resourcePath + 'static/Pelvis_rotation.png')
+                img2.drawHeight = 2 * inch
+                img2.drawWidth = 2 * inch
+                self.elements.append(ParagraphReportHeader(
+                    text='',
+                    color=colorBlack, fontSize=10))
+                self.elements.append(HeightSpacer(heightPixels=10))
+                self.elements.append(ParagraphReportHeader(
+                    text='骨盆旋转Pelvis Rotation',
+                    color=colorBlack, fontSize=12, leading=20))
+                self.elements.append(img2)
+                self.elements.append(self.ROMGraph[4])
             self.elements.append(PageBreak())
-            self.elements.append(self.ROMGraph[rom_index])
 
     def SpatiotemporalGraphPage(self):
         for drawing in self.SpatiotemporalGraph:
