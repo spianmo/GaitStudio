@@ -234,6 +234,11 @@ def landmark_to_angle(landmarks) -> dict:
     return dict_angles
 
 
+def check_pose_credibility(pose_keypoints):
+    print(pose_keypoints)
+
+
+
 def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarksProtoCallback: Callable,
                       poseLandmarksCallback: Callable) -> tuple:
     """
@@ -270,6 +275,7 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                 continue
             # 将归一化的坐标转换为原始坐标
             pose_keypoints = []
+
             for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
                 if pose_landmark:
                     # 只处理待检测的关键点，用于后续CheckCube扩展
@@ -279,20 +285,22 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                     visualize_y = int(round(pose_landmark.y * frame.shape[0]))
                     truth_x = pose_landmark.x
                     truth_y = pose_landmark.y
+                    # MediaPipe原始的landmark_z不可信
                     truth_z = pose_landmark.z
                     deep_z = depth_image[visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1,
                                          visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1]
                     visibility = pose_landmark.visibility
-                    cv.putText(frame, "z:" + str(
+                    cv.putText(frame, "depth:" + str(
                         round(deep_z, 3)),
                                (visualize_x - 10, visualize_y - 10),
                                cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1,
                                cv.LINE_AA)
                     cv.circle(frame, (visualize_x, visualize_y), radius=3, color=BGR(RGB=(255, 0, 0)), thickness=-1)
-                    pose_keypoints.append([truth_x, truth_y, truth_z, visibility])
+                    pose_keypoints.append([truth_x, truth_y, deep_z, visibility])
                 else:
                     pose_keypoints = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
+            check_pose_credibility(pose_keypoints)
             pts_cams.append(pose_keypoints)
 
             if poseLandmarksCallback:
@@ -326,7 +334,7 @@ def infer_pose(video_frame) -> Any:
         poseDetector = mp_pose.Pose(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
-            model_complexity=1,
+            model_complexity=2,
             smooth_landmarks=True,
             smooth_segmentation=True,
         )
@@ -443,7 +451,3 @@ if __name__ == '__main__':
     )
     k4a.start()
     main()
-    # try:
-    #     main()
-    # except:
-    #     k4a.stop()
