@@ -270,8 +270,8 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                     pose_world_landmarks_proto is None:
                 continue
             # 将归一化的坐标转换为原始坐标
+            pose_keypoints = []
             for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
-                pose_keypoints = []
                 if pose_landmark:
                     # 只处理待检测的关键点，用于后续CheckCube扩展
                     if PoseLandmark(pose_landmark_index) not in checked_pose_keypoints:
@@ -280,19 +280,25 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                     visualize_y = int(round(pose_landmark.y * frame.shape[0]))
                     truth_x = pose_landmark.x
                     truth_y = pose_landmark.y
-                    # print(visualize_x, visualize_y)
+                    print(visualize_x, visualize_y)
                     truth_z = pose_landmark.z
-                    # truth_z = depth_image[visualize_x, visualize_y]
+                    deep_z = depth_image[visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1,
+                                         visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1]
                     visibility = pose_landmark.visibility
+                    cv.putText(frame, "z:" + str(
+                        round(deep_z, 3)),
+                               (visualize_x - 10, visualize_y - 10),
+                               cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1,
+                               cv.LINE_AA)
                     cv.circle(frame, (visualize_x, visualize_y), radius=3, color=BGR(RGB=(255, 0, 0)), thickness=-1)
                     pose_keypoints.append([truth_x, truth_y, truth_z, visibility])
                 else:
                     pose_keypoints = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
-                pts_cams.append(pose_keypoints)
+            pts_cams.append(pose_keypoints)
 
-                if poseLandmarksCallback:
-                    poseLandmarksCallback(pose_landmark_index, pose_keypoints)
+            if poseLandmarksCallback:
+                poseLandmarksCallback(pose_keypoints)
 
             if poseLandmarksProtoCallback:
                 poseLandmarksProtoCallback(pose_landmarks_proto, frame)
@@ -359,13 +365,13 @@ def pose_landmarks_proto_handler(pose_landmarks_proto, frame):
     cv.imshow("HealBone-Mediapipe-Gait: KinectCamera 1", cv.resize(frame, (0, 0), fx=0.5, fy=0.5))
 
 
-def pose_landmarks_handler(pose_landmarks_index, pose_landmarks):
+def pose_landmarks_handler(pose_landmarks):
     """
     多source姿态关键点回调函数
     :param pose_landmarks_index:
     :param pose_landmarks:
     """
-    # print(pose_landmarks_index, pose_landmarks)
+    # print( pose_landmarks)
 
 
 def save_pts(filename: str, pts: ndarray) -> NoReturn:
@@ -382,8 +388,8 @@ def main():
     pts_cams_ndarray, pts_3d_ndarray, fps = read_video_frames(videoFrameHandler=lambda frame: video_frame_handler(frame),
                                                               poseLandmarksProtoCallback=lambda pose_landmarks_proto, frame:
                                                               pose_landmarks_proto_handler(pose_landmarks_proto, frame),
-                                                              poseLandmarksCallback=lambda pose_landmarks_index, pose_landmarks:
-                                                              pose_landmarks_handler(pose_landmarks_index, pose_landmarks))
+                                                              poseLandmarksCallback=lambda pose_landmarks:
+                                                              pose_landmarks_handler(pose_landmarks))
 
     estimator_3d = VideoPose3DAsync()
 
@@ -411,7 +417,7 @@ def main():
         plot_angles("CAM[Fixed]", pd.DataFrame(df_angles))
 
     # 分析步态周期
-    Gait_Analysis.analysis(df_angles=pd.DataFrame(df_angles), fps=fps, pts_cam=pts_cams_ndarray[1], analysis_keypoint=PoseLandmark.RIGHT_KNEE)
+    Gait_Analysis.analysis(df_angles=pd.DataFrame(df_angles), fps=fps, pts_cam=pts_cams_ndarray, analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
     plt.show()
 
