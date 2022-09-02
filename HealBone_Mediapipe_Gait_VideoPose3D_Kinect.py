@@ -28,7 +28,6 @@ mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
-poseDetectorPool = []
 frame_shape = [1080, 1920]
 
 # 待检测的点
@@ -307,8 +306,13 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
             # 按ESC键退出
             if k & 0xFF == 27:
                 break
+
+        del capture
     cv.destroyAllWindows()
     return pts_cams, np.array(pts_3d), fps
+
+
+global poseDetector
 
 
 def infer_pose(video_frame) -> Any:
@@ -318,7 +322,7 @@ def infer_pose(video_frame) -> Any:
     :return
     """
     global poseDetector
-    if len(poseDetectorPool) == 0:
+    if not poseDetector:
         poseDetector = mp_pose.Pose(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
@@ -384,6 +388,8 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
 
 
 def main():
+    global poseDetector
+    poseDetector = None
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
     pts_cams_ndarray, pts_3d_ndarray, fps = read_video_frames(videoFrameHandler=lambda frame: video_frame_handler(frame),
                                                               poseLandmarksProtoCallback=lambda pose_landmarks_proto, frame:
