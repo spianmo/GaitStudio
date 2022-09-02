@@ -279,7 +279,6 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                     visualize_y = int(round(pose_landmark.y * frame.shape[0]))
                     truth_x = pose_landmark.x
                     truth_y = pose_landmark.y
-                    print(visualize_x, visualize_y)
                     truth_z = pose_landmark.z
                     deep_z = depth_image[visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1,
                                          visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1]
@@ -305,6 +304,7 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
             k = cv.waitKey(1)
             # 按ESC键退出
             if k & 0xFF == 27:
+                k4a.stop()
                 break
 
         del capture
@@ -366,7 +366,7 @@ def pose_landmarks_proto_handler(pose_landmarks_proto, frame):
     draw_healbone_logo(frame)
 
     # 窗口展示视频帧
-    cv.imshow("HealBone-Mediapipe-Gait: KinectCamera 1", cv.resize(frame, (0, 0), fx=0.5, fy=0.5))
+    cv.imshow("HealBone-Mediapipe-Gait: KinectCamera 1", cv.resize(frame, (0, 0), fx=0.6, fy=0.6))
 
 
 def pose_landmarks_handler(pose_landmarks):
