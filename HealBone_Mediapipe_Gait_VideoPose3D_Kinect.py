@@ -22,7 +22,7 @@ from acceleration import sensormotionDemo
 from estimator.estimator_test import simple_plot_angles
 from estimator.utils.angle_helper import calc_common_angles
 from estimator.videopose3d_async import VideoPose3DAsync
-from kinect_helpers import depthInMeters
+from kinect_helpers import depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -100,16 +100,27 @@ def plot_angles(title: str, df: DataFrame) -> None:
 
     fig, axes = plt.subplots(3, 4, figsize=(24, 14))
 
-    axes[0, 0].set(ylim=(20, 160))
-    axes[0, 1].set(ylim=(20, 160))
-    axes[0, 2].set(ylim=(0, 100))
-    axes[0, 3].set(ylim=(0, 100))
-    axes[1, 0].set(ylim=(20, 160))
-    axes[1, 1].set(ylim=(20, 160))
-    axes[1, 2].set(ylim=(20, 180))
-    axes[1, 3].set(ylim=(20, 180))
-    axes[2, 0].set(ylim=(0, 90))
-    axes[2, 1].set(ylim=(0, 90))
+    # axes[0, 0].set(ylim=(20, 160))
+    # axes[0, 1].set(ylim=(20, 160))
+    # axes[0, 2].set(ylim=(0, 100))
+    # axes[0, 3].set(ylim=(0, 100))
+    # axes[1, 0].set(ylim=(20, 160))
+    # axes[1, 1].set(ylim=(20, 160))
+    # axes[1, 2].set(ylim=(20, 180))
+    # axes[1, 3].set(ylim=(20, 180))
+    # axes[2, 0].set(ylim=(0, 90))
+    # axes[2, 1].set(ylim=(0, 90))
+
+    axes[0, 0].set(ylim=(0, 180))
+    axes[0, 1].set(ylim=(0, 180))
+    axes[0, 2].set(ylim=(0, 180))
+    axes[0, 3].set(ylim=(0, 180))
+    axes[1, 0].set(ylim=(0, 180))
+    axes[1, 1].set(ylim=(0, 180))
+    axes[1, 2].set(ylim=(0, 180))
+    axes[1, 3].set(ylim=(0, 180))
+    axes[2, 0].set(ylim=(0, 180))
+    axes[2, 1].set(ylim=(0, 180))
 
     fig.suptitle("关节角度变化周期 - " + title)
 
@@ -153,7 +164,7 @@ def vectors_to_angle(vector1, vector2) -> float:
     return 180 - theta
 
 
-def build_vector(landmarks, landmark_index) -> ndarray:
+def build_vector_h36m(landmarks, landmark_index) -> ndarray:
     """
     根据关节点坐标构建向量
     :param landmark_index:
@@ -164,7 +175,18 @@ def build_vector(landmarks, landmark_index) -> ndarray:
         [landmarks[landmark_index][0], landmarks[landmark_index][1], landmarks[landmark_index][2]])
 
 
-def landmark_to_angle(landmarks) -> dict:
+def build_vector_mediapipe(landmarks, landmark_index: PoseLandmark) -> ndarray:
+    """
+    根据关节点坐标构建向量
+    :param landmark_index:
+    :param landmarks:
+    :return:
+    """
+    return np.array(
+        [landmarks[landmark_index.value].x, landmarks[landmark_index.value].y, landmarks[landmark_index.value].z])
+
+
+def landmark_to_angle_h36m(landmarks) -> dict:
     """
     计算单次姿态的所有点的检测夹角
     :param landmarks:
@@ -173,21 +195,21 @@ def landmark_to_angle(landmarks) -> dict:
     MHip, RHip, RKnee, RAnkle, LHip, LKnee, LAnkle, Spine1, Neck, \
     Head, Site, LShoulder, LElbow, LWrist, RShoulder, RElbow, RWrist = range(17)
     # 鼻部坐标
-    Nose_coor = build_vector(landmarks, Head)
+    Nose_coor = build_vector_h36m(landmarks, Head)
     # 左髋关节坐标
-    LHip_coor = build_vector(landmarks, LHip)
+    LHip_coor = build_vector_h36m(landmarks, LHip)
     # 右髋关节坐标
-    RHip_coor = build_vector(landmarks, RHip)
+    RHip_coor = build_vector_h36m(landmarks, RHip)
     # 左右髋关节中点
-    MidHip_coor = build_vector(landmarks, MHip)
+    MidHip_coor = build_vector_h36m(landmarks, MHip)
     # 左膝关节坐标
-    LKnee_coor = build_vector(landmarks, LKnee)
+    LKnee_coor = build_vector_h36m(landmarks, LKnee)
     # 右膝关节坐标
-    RKnee_coor = build_vector(landmarks, RKnee)
+    RKnee_coor = build_vector_h36m(landmarks, RKnee)
     # 左踝关节坐标
-    LAnkle_coor = build_vector(landmarks, LAnkle)
+    LAnkle_coor = build_vector_h36m(landmarks, LAnkle)
     # 右踝关节坐标
-    RAnkle_coor = build_vector(landmarks, RAnkle)
+    RAnkle_coor = build_vector_h36m(landmarks, RAnkle)
 
     # 躯干向量
     Torso_vector = MidHip_coor - Nose_coor
@@ -234,9 +256,81 @@ def landmark_to_angle(landmarks) -> dict:
     return dict_angles
 
 
-def check_pose_credibility(pose_keypoints):
-    print(pose_keypoints)
+def landmark_to_angle_mediapipe(landmarks) -> dict:
+    """
+    计算单次姿态的所有点的检测夹角
+    :param landmarks:
+    :return:
+    """
+    # 鼻部坐标
+    Nose_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.NOSE)
+    # 左髋关节坐标
+    LHip_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.LEFT_HIP)
+    # 右髋关节坐标
+    RHip_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.RIGHT_HIP)
+    # 左右髋关节中点
+    MidHip_coor = np.array(
+        [(LHip_coor[0] + RHip_coor[0]) / 2, (LHip_coor[1] + RHip_coor[1]) / 2, (LHip_coor[2] + RHip_coor[2]) / 2])
+    # 左膝关节坐标
+    LKnee_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.LEFT_KNEE)
+    # 右膝关节坐标
+    RKnee_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.RIGHT_KNEE)
+    # 左踝关节坐标
+    LAnkle_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.LEFT_ANKLE)
+    # 右踝关节坐标
+    RAnkle_coor = build_vector_h36m(landmarks, mp_pose.PoseLandmark.RIGHT_ANKLE)
 
+    # 躯干向量
+    Torso_vector = MidHip_coor - Nose_coor
+    # 左右胯骨向量
+    Hip_vector = LHip_coor - RHip_coor
+    # 左股骨向量
+    LFemur_vector = LKnee_coor - LHip_coor
+    # 右股骨向量
+    RFemur_vector = RKnee_coor - RHip_coor
+    # 左胫骨向量
+    LTibia_vector = LAnkle_coor - LKnee_coor
+    # 右胫骨向量
+    RTibia_vector = RAnkle_coor - RKnee_coor
+
+    # 躯干与胯骨的夹角
+    TorsoLHip_angle = vectors_to_angle(Torso_vector, Hip_vector)
+    TorsoRHip_angle = vectors_to_angle(Torso_vector, -Hip_vector)
+
+    # 内收外展
+    # 左股骨与胯骨的夹角
+    LHip_angle = vectors_to_angle(LFemur_vector, Hip_vector)
+    # 右股骨与胯骨的夹角
+    RHip_angle = vectors_to_angle(RFemur_vector, -Hip_vector)
+
+    # 屈曲伸展
+    # 躯干与股骨
+    TorsoLFemur_angle = vectors_to_angle(Torso_vector, LFemur_vector)
+    TorsoRFemur_angle = vectors_to_angle(Torso_vector, RFemur_vector)
+
+    # 外旋内旋
+    # 胫骨旋转
+    LTibiaSelf_vector = vectors_to_angle(LTibia_vector, np.array([0, 1, 0]))
+    RTibiaSelf_vector = vectors_to_angle(RTibia_vector, np.array([0, 1, 0]))
+
+    # 左胫骨与左股骨的夹角
+    LKnee_angle = vectors_to_angle(LTibia_vector, LFemur_vector)
+    # 右胫骨与右股骨的夹角
+    RKnee_angle = vectors_to_angle(RTibia_vector, RFemur_vector)
+
+    dict_angles = {"TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
+                   "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
+                   "TorsoLFemur_angle": TorsoLFemur_angle, "TorsoRFemur_angle": TorsoRFemur_angle,
+                   "LTibiaSelf_vector": LTibiaSelf_vector, "RTibiaSelf_vector": RTibiaSelf_vector}
+    return dict_angles
+
+
+def credible_pose(pose_keypoints):
+    confidences = [keypoint[3] for keypoint in pose_keypoints]
+    return np.array(confidences).min() > 0.5
+
+
+global recording, record_frame_count
 
 
 def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarksProtoCallback: Callable,
@@ -287,27 +381,45 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                     truth_y = pose_landmark.y
                     # MediaPipe原始的landmark_z不可信
                     truth_z = pose_landmark.z
-                    deep_z = depth_image[visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1,
-                                         visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1]
+                    deep_axis1 = visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1
+                    deep_axis2 = visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1
+                    deep_z = depth_image[deep_axis1 if deep_axis1 > 0 else 0,
+                                         deep_axis2 if deep_axis2 > 0 else 0]
                     visibility = pose_landmark.visibility
-                    cv.putText(frame, "depth:" + str(
+                    cv.putText(frame, "Depth:" + str(
                         round(deep_z, 3)),
                                (visualize_x - 10, visualize_y - 10),
-                               cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1,
+                               cv.FONT_HERSHEY_SIMPLEX, 0.5, BGR(RGB=(102, 153, 250)), 1,
                                cv.LINE_AA)
                     cv.circle(frame, (visualize_x, visualize_y), radius=3, color=BGR(RGB=(255, 0, 0)), thickness=-1)
                     pose_keypoints.append([truth_x, truth_y, deep_z, visibility])
                 else:
                     pose_keypoints = [[-1, -1, -1, -1]] * len(checked_pose_keypoints)
 
-            check_pose_credibility(pose_keypoints)
-            pts_cams.append(pose_keypoints)
+            global recording, record_frame_count
+            if record_frame_count == 120:
+                k4a.stop()
+                break
+            if credible_pose(pose_keypoints):
+                if not recording:
+                    print("开始检测！")
+                    recording = True
+                pts_cams.append(pose_keypoints)
+                record_frame_count += 1
+                print("已检测" + str(record_frame_count * (1 / fps)) + '秒')
+            else:
+                if recording:
+                    recording = False
+                    record_frame_count = 0
+                    pts_cams = []
+                    print("检测过程被打断！等待重新检测")
+                    continue
 
             if poseLandmarksCallback:
                 poseLandmarksCallback(pose_keypoints)
 
             if poseLandmarksProtoCallback:
-                poseLandmarksProtoCallback(pose_landmarks_proto, frame)
+                poseLandmarksProtoCallback(pose_landmarks_proto, frame, color_depth_image(capture.transformed_depth))
 
             k = cv.waitKey(1)
             # 按ESC键退出
@@ -361,20 +473,31 @@ def video_frame_handler(video_frame):
     return pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
 
 
-def pose_landmarks_proto_handler(pose_landmarks_proto, frame):
+def pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame):
     """
     多source姿态关键点proto回调函数
+    :param deep_frame:
     :param pose_landmarks_proto:
     :param frame:
     """
+    combined_image = cv.addWeighted(frame, 0.5, colorize(deep_frame), 0.5, 0)
+    mp_drawing.draw_landmarks(combined_image, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
+                              landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+
     mp_drawing.draw_landmarks(frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
                               landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
+    mp_drawing.draw_landmarks(deep_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
+                              landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+
     # 绘制HealBone图标
+    draw_healbone_logo(combined_image)
     draw_healbone_logo(frame)
 
     # 窗口展示视频帧
-    cv.imshow("HealBone-Mediapipe-Gait: KinectCamera 1", cv.resize(frame, (0, 0), fx=0.6, fy=0.6))
+    cv.imshow("HealBone-Mediapipe-Gait: KinectCamera FOV", cv.resize(frame, (0, 0), fx=0.6, fy=0.6))
+    cv.imshow("HealBone-Mediapipe-Gait: KinectCamera IR", cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6))
+    cv.imshow("HealBone-Mediapipe-Gait: KinectCamera FOV IR", cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
 
 
 def pose_landmarks_handler(pose_landmarks):
@@ -396,24 +519,32 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
 
 
 def main():
-    global poseDetector
+    use_video_pose_3d = False
+
+    global poseDetector, recording, record_frame_count
     poseDetector = None
+    recording = False
+    record_frame_count = 0
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
     pts_cams_ndarray, pts_3d_ndarray, fps = read_video_frames(videoFrameHandler=lambda frame: video_frame_handler(frame),
-                                                              poseLandmarksProtoCallback=lambda pose_landmarks_proto, frame:
-                                                              pose_landmarks_proto_handler(pose_landmarks_proto, frame),
+                                                              poseLandmarksProtoCallback=lambda pose_landmarks_proto, frame, deep_frame:
+                                                              pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame),
                                                               poseLandmarksCallback=lambda pose_landmarks:
                                                               pose_landmarks_handler(pose_landmarks))
+    if use_video_pose_3d:
+        # 使用videoPose估计器
+        estimator_3d = VideoPose3DAsync()
+        videopose3d_pose = estimator_3d.estimate(pts_cams_ndarray, fps, w=frame_shape[1], h=frame_shape[0])
+    else:
+        videopose3d_pose = pts_cams_ndarray
 
-    estimator_3d = VideoPose3DAsync()
-
-    videopose3d_pose = estimator_3d.estimate(pts_cams_ndarray, fps, w=frame_shape[1], h=frame_shape[0])
+    # xx = np.array(pts_cams_ndarray)
 
     chart_data: list = []
 
     for pose_landmark_index, pose_landmark in enumerate(videopose3d_pose):
         # 计算每一帧的3D坐标中的角度
-        angle_dict = landmark_to_angle(pose_landmark)
+        angle_dict = landmark_to_angle_h36m(pose_landmark) if use_video_pose_3d else landmark_to_angle_mediapipe(pose_landmark)
         chart_data.append(angle_dict)
 
     df_angles = pd.DataFrame(chart_data)
@@ -445,7 +576,7 @@ if __name__ == '__main__':
         Config(
             color_resolution=pyk4a.ColorResolution.RES_1080P,
             camera_fps=pyk4a.FPS.FPS_30,
-            depth_mode=pyk4a.DepthMode.WFOV_2X2BINNED,
+            depth_mode=pyk4a.DepthMode.NFOV_2X2BINNED,
             synchronized_images_only=True,
         )
     )

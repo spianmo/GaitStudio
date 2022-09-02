@@ -36,7 +36,7 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
     metadatas = [
         {
             "title": "膝关节角度变化周期",
-            "ylim": (0, 90),
+            "ylim": (0, 180),
             "axis": [
                 ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
                 ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
@@ -44,7 +44,7 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         },
         {
             "title": "髋关节角度变化周期（内收外展）",
-            "ylim": (20, 160),
+            "ylim": (0, 180),
             "axis": [
                 ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
                 ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
@@ -52,7 +52,7 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         },
         {
             "title": "髋关节角度变化周期（屈曲伸展）",
-            "ylim": (0, 100),
+            "ylim": (0, 180),
             "axis": [
                 ["Time_in_sec", "TorsoLFemur_angle", "时间（秒）", "L 髋关节角度 (°)"],
                 ["Time_in_sec", "TorsoRFemur_angle", "时间（秒）", "R 髋关节角度 (°)"]
@@ -60,7 +60,7 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         },
         {
             "title": "髋关节角度变化周期（外旋内旋）",
-            "ylim": (20, 180),
+            "ylim": (0, 180),
             "axis": [
                 ["Time_in_sec", "LTibiaSelf_vector", "时间（秒）", "L 髋关节角度 (°)"],
                 ["Time_in_sec", "RTibiaSelf_vector", "时间（秒）", "R 髋关节角度 (°)"]
@@ -68,7 +68,7 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         },
         {
             "title": "躯干髋关节角度变化周期",
-            "ylim": (20, 160),
+            "ylim": (0, 180),
             "axis": [
                 ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
                 ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
@@ -82,6 +82,55 @@ def polt_angle_plots(df: DataFrame) -> List[BytesIO]:
         #     ]
         # }
     ]
+    # metadatas = [
+    #     {
+    #         "title": "膝关节角度变化周期",
+    #         "ylim": (0, 90),
+    #         "axis": [
+    #             ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
+    #             ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
+    #         ]
+    #     },
+    #     {
+    #         "title": "髋关节角度变化周期（内收外展）",
+    #         "ylim": (20, 160),
+    #         "axis": [
+    #             ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
+    #             ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
+    #         ]
+    #     },
+    #     {
+    #         "title": "髋关节角度变化周期（屈曲伸展）",
+    #         "ylim": (0, 100),
+    #         "axis": [
+    #             ["Time_in_sec", "TorsoLFemur_angle", "时间（秒）", "L 髋关节角度 (°)"],
+    #             ["Time_in_sec", "TorsoRFemur_angle", "时间（秒）", "R 髋关节角度 (°)"]
+    #         ]
+    #     },
+    #     {
+    #         "title": "髋关节角度变化周期（外旋内旋）",
+    #         "ylim": (20, 180),
+    #         "axis": [
+    #             ["Time_in_sec", "LTibiaSelf_vector", "时间（秒）", "L 髋关节角度 (°)"],
+    #             ["Time_in_sec", "RTibiaSelf_vector", "时间（秒）", "R 髋关节角度 (°)"]
+    #         ]
+    #     },
+    #     {
+    #         "title": "躯干髋关节角度变化周期",
+    #         "ylim": (20, 160),
+    #         "axis": [
+    #             ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
+    #             ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
+    #         ]
+    #     },
+    #     # {
+    #     #     "title": "踝关节角度变化周期",
+    #     #     "axis": [
+    #     #         ["Time_in_sec", "LAnkle_angle", "时间（秒）", "L 踝关节角度 (°)"],
+    #     #         ["Time_in_sec", "RAnkle_angle", "时间（秒）", "R 踝关节角度 (°)"]
+    #     #     ]
+    #     # }
+    # ]
     images = []
     rc = {'font.sans-serif': 'SimHei',
           'axes.unicode_minus': False}
@@ -527,7 +576,7 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
         ["Stride regularity\n步幅规律指数", str(stride_reg.round(4)), "-", "-"],
         ["Step symmetry\n步长对称指数", str(step_sym.round(4)), "-", "-"],
 
-        ["Total\n样本步行总时长", str(df_angles["Time_in_sec"].iloc[-1]), "sec", "-"],
+        ["Total\n样本步行总时长", str(df_angles["Time_in_sec"].iloc[-1].round(2)), "sec", "-"],
 
         ["检测项共计", "", "", "9 项"]
     ], ROMData=[
@@ -536,9 +585,9 @@ def analysis(df_angles: DataFrame, fps: int, pts_cam: ndarray, analysis_keypoint
             "list": [
                 ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
                 ["左膝关节伸展\nL.KNEE Extension", str(df_angles["LKnee_angle"].min().round(2)), "°", "0-60"],
-                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].max().round(2)), "°", "0-60"],
+                ["左膝关节屈曲\nL.KNEE Flexion", str(df_angles["LKnee_angle"].max().round(2)), "°", "0-140"],
                 ["右膝关节伸展\nR.KNEE Extension", str(df_angles["RKnee_angle"].min().round(2)), "°", "0-60"],
-                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].max().round(2)), "°", "0-60"],
+                ["右膝关节屈曲\nR.KNEE Flexion", str(df_angles["RKnee_angle"].max().round(2)), "°", "0-140"],
                 ["检测项共计", "", "", "4 项"]
             ]
         },

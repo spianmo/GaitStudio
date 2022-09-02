@@ -26,7 +26,7 @@ def main():
             # 深度图像数据
             depth_image = capture.transformed_depth
             # 归一化为米
-            depth_image = depthInMeters(depth_image)
+            #depth_image = depthInMeters(depth_image)
 
             if smooth_depth_mode:
                 transformed_colored_depth_image = color_depth_image(smooth_depth_image(depth_image, max_hole_size=10))
