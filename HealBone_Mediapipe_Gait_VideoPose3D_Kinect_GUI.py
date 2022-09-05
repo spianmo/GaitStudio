@@ -8,9 +8,9 @@ import cv2 as cv
 import mediapipe as mp
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 from matplotlib import pyplot as plt
 from mediapipe.python.solutions.pose import PoseLandmark
 
@@ -652,7 +652,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 if __name__ == '__main__':
     detectStatus = False
-    app = QApplication(sys.argv)
+    app = QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
     hbWin.show()
