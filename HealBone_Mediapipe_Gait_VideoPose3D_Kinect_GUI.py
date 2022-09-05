@@ -21,13 +21,14 @@ from pyk4a import PyK4A, Config
 import pyk4a
 
 import Gait_Analysis
+import MainWindow
 from acceleration import sensormotionDemo
 from estimator.estimator_test import simple_plot_angles
 from estimator.utils.angle_helper import calc_common_angles
 from estimator.videopose3d_async import VideoPose3DAsync
 from kinect_helpers import depthInMeters, color_depth_image, colorize, smooth_depth_image
 from kinect_smoothing import Denoising_Filter, HoleFilling_Filter
-from mainWindow import Ui_MainWindow
+from MainWindow import Ui_MainWindow
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -465,7 +466,7 @@ def read_video_frames(k4a, time, fps, videoFrameHandler: Callable[[tuple], tuple
 
         del capture
     cv.destroyAllWindows()
-    stopDetect()
+    hbWin.stopDetect()
     return pts_cams, np.array(pts_3d), fps
 
 
@@ -623,35 +624,36 @@ def start(time, cameraView):
 global detectStatus
 
 
-def stopDetect():
-    global detectStatus
-    detectStatus = False
-    ui.btnStart.setText("开始检测")
+class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
+    def __init__(self):
+        QMainWindow.__init__(self)
+        MainWindow.Ui_MainWindow.__init__(self)
+        self.setupUi(self)
+        self.btnStart.clicked.connect(self.btnStartClicked)
 
+    def stopDetect(self):
+        global detectStatus
+        detectStatus = False
+        self.btnStart.setText("开始检测")
 
-def startDetect():
-    global detectStatus
-    detectStatus = True
-    ui.btnStart.setText("停止检测")
-    start(int(ui.sbTime.text()), ui.cameraView)
+    def startDetect(self):
+        global detectStatus
+        detectStatus = True
+        self.btnStart.setText("停止检测")
+        start(int(self.sbTime.text()), self.cameraView)
 
-
-def btnStartClicked():
-    global detectStatus
-    if detectStatus:
-        stopDetect()
-    else:
-        startDetect()
+    def btnStartClicked(self):
+        global detectStatus
+        if detectStatus:
+            self.stopDetect()
+        else:
+            self.startDetect()
 
 
 if __name__ == '__main__':
     detectStatus = False
     app = QApplication(sys.argv)
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
-    MainWindow = QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    ui.btnStart.clicked.connect(btnStartClicked)
-
-    MainWindow.show()
+    hbWin = HealBoneWindow()
+    hbWin.show()
     sys.exit(app.exec_())
