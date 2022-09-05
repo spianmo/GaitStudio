@@ -1,0 +1,98 @@
+*{
+    font-family: 微软雅黑;
+    color: #BBBBBB;
+    background-color: #2F2F2F;
+}
+
+QMainWindow {
+    background-color: #2F2F2F;
+}
+
+QLabel#cameraView {
+	background-color: black;
+}
+
+QLabel, QGroupBox {
+    color: #BBBBBB;
+}
+
+QGroupBox {
+    border: 1px solid #424242;
+    border-radius: 5px;
+    margin-top: 1ex;
+}
+
+QPushButton {
+    background-color: #212121;
+    border-radius: 6px;
+}
+
+QPushButton:hover{
+    background-color: #424242;
+}
+
+QSpinBox {
+padding-right: 15px;
+border:1px solid #212121;
+border-radius:5px;
+background:#444444;
+padding-left:2px;
+}
+
+QSpinBox:hover {
+    background-color: rgb(59,59,59);
+}
+
+QSpinBox::up-button { /* 向上按钮 */
+	subcontrol-origin: border; /* 起始位置 */
+	subcontrol-position: top right; /* 居于右上角 */
+	border: none;
+	width: 12px;
+	margin-top: 2px;
+	margin-right: 1px;
+	margin-bottom: 0px;
+	padding-right:2px;
+}
+
+QSpinBox::up-button:hover {
+	border: none;
+}
+
+QSpinBox::up-arrow { /* 向上箭头，图片大小为8x8 */
+	image: url(resources/up.png);
+}
+
+QSpinBox::up-arrow:hover {
+	image: url(resources/up.png);
+}
+
+QSpinBox::up-arrow:disabled, QSpinBox::up-arrow:off {
+	image: url(resources/up.png);
+}
+
+QSpinBox::down-button { /* 向下按钮 */
+	subcontrol-origin: border;
+	subcontrol-position: bottom right;
+	border: none;
+	width: 12px;
+	margin-top: 0px;
+	margin-right: 1px;
+	margin-bottom: 2px;
+	padding-right:2px;
+}
+
+QSpinBox::down-button:hover {
+	border: none;
+}
+
+QSpinBox::down-arrow { /* 向下箭头 */
+	image: url(resources/down.png);
+}
+
+QSpinBox::down-arrow:hover {
+	image: url(resources/down.png);
+}
+
+QSpinBox::down-arrow:disabled, QSpinBox::down-arrow:off {
+	image: url(resources/down.png);
+}
