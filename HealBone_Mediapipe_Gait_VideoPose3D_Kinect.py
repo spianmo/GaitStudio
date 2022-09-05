@@ -22,7 +22,8 @@ from acceleration import sensormotionDemo
 from estimator.estimator_test import simple_plot_angles
 from estimator.utils.angle_helper import calc_common_angles
 from estimator.videopose3d_async import VideoPose3DAsync
-from kinect_helpers import depthInMeters, color_depth_image, colorize
+from kinect_helpers import depthInMeters, color_depth_image, colorize, smooth_depth_image
+from kinect_smoothing import Denoising_Filter, HoleFilling_Filter
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -352,8 +353,21 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
         capture = k4a.get_capture()
         # 原始的RGBA视频帧
         frame = capture.color[:, :, :3]
+
+        depth_image_raw = capture.transformed_depth
+
+        # OpenCV自带的去噪修复，帧率太低
+        # depth_image_raw = smooth_depth_image(depth_image_raw, max_hole_size=10)
+
+        # 孔洞填充滤波器
+        # hole_filter = HoleFilling_Filter(flag='min')
+        # depth_image_raw = hole_filter.smooth_image(depth_image_raw)
+        # 去噪滤波器
+        # noise_filter = Denoising_Filter(flag='modeling', theta=60)
+        # depth_image_raw = noise_filter.smooth_image(depth_image_raw)
+
         # 深度图像数据归一化为米
-        depth_image = depthInMeters(capture.transformed_depth)
+        depth_image = depthInMeters(depth_image_raw)
         if np.any(capture.depth):
 
             # 将BGR转换为RGB
@@ -419,7 +433,7 @@ def read_video_frames(videoFrameHandler: Callable[[tuple], tuple], poseLandmarks
                 poseLandmarksCallback(pose_keypoints)
 
             if poseLandmarksProtoCallback:
-                poseLandmarksProtoCallback(pose_landmarks_proto, frame, color_depth_image(capture.transformed_depth))
+                poseLandmarksProtoCallback(pose_landmarks_proto, frame, color_depth_image(depth_image_raw))
 
             k = cv.waitKey(1)
             # 按ESC键退出
@@ -581,4 +595,8 @@ if __name__ == '__main__':
         )
     )
     k4a.start()
-    main()
+    # main()
+    try:
+        main()
+    except:
+        sys.exit(0)

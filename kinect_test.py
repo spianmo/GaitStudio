@@ -7,7 +7,7 @@ from pyk4a import Config, PyK4A
 
 
 def main():
-    smooth_depth_mode = False
+    smooth_depth_mode = True
     k4a = PyK4A(
         Config(
             color_resolution=pyk4a.ColorResolution.RES_1080P,
