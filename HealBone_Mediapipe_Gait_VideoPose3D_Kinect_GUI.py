@@ -8,8 +8,9 @@ import cv2 as cv
 import mediapipe as mp
 import numpy as np
 import pandas as pd
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
 from matplotlib import pyplot as plt
 from mediapipe.python.solutions.pose import PoseLandmark
 
@@ -337,7 +338,7 @@ def credible_pose(pose_keypoints):
 global recording, record_frame_count
 
 
-def show_cv_frame(label, frame):
+def show_cv_frame(cameraView, frame):
     """
     将cv的frame显示到label上
     :param label:
@@ -349,9 +350,10 @@ def show_cv_frame(label, frame):
                    shrink.shape[0],
                    shrink.shape[1] * 3,
                    QImage.Format_RGB888)
-    jpg_out = QPixmap(QtImg).scaled(label.width(), label.height())
-
-    label.setPixmap(jpg_out)
+    jpg_out = QPixmap(QtImg).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatioByExpanding)
+    scene = QGraphicsScene()  # 创建场景
+    scene.addItem(QGraphicsPixmapItem(jpg_out))
+    cameraView.setScene(scene)  # 将场景添加至视图
 
 
 def read_video_frames(k4a, time, fps, videoFrameHandler: Callable[[tuple], tuple], poseLandmarksProtoCallback: Callable,
@@ -508,7 +510,7 @@ def video_frame_handler(video_frame):
     return pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
 
 
-def pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, label):
+def pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, cameraView):
     """
     多source姿态关键点proto回调函数
     :param deep_frame:
@@ -530,7 +532,7 @@ def pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, label)
     draw_healbone_logo(frame)
 
     # 窗口展示视频帧
-    show_cv_frame(label, cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
+    show_cv_frame(cameraView, cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
     # cv.imshow("HealBone-Mediapipe-Gait: KinectCamera FOV", cv.resize(frame, (0, 0), fx=0.6, fy=0.6))
     # cv.imshow("HealBone-Mediapipe-Gait: KinectCamera IR", cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6))
     # cv.imshow("HealBone-Mediapipe-Gait: KinectCamera FOV IR", cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
@@ -554,7 +556,7 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
     file.close()
 
 
-def main(show_plot_angle_demo, k4a, time, fps, label):
+def main(show_plot_angle_demo, k4a, time, fps, cameraView):
     use_video_pose_3d = False
 
     global poseDetector, recording, record_frame_count
@@ -564,7 +566,7 @@ def main(show_plot_angle_demo, k4a, time, fps, label):
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
     pts_cams_ndarray, pts_3d_ndarray, fps = read_video_frames(k4a, time, fps, videoFrameHandler=lambda frame: video_frame_handler(frame),
                                                               poseLandmarksProtoCallback=lambda pose_landmarks_proto, frame, deep_frame:
-                                                              pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, label),
+                                                              pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, cameraView),
                                                               poseLandmarksCallback=lambda pose_landmarks:
                                                               pose_landmarks_handler(pose_landmarks))
     if use_video_pose_3d:
@@ -603,7 +605,7 @@ def main(show_plot_angle_demo, k4a, time, fps, label):
     plt.show()
 
 
-def start(time, label):
+def start(time, cameraView):
     show_plot_angle_demo = True
 
     k4a = PyK4A(
@@ -615,7 +617,7 @@ def start(time, label):
         )
     )
     k4a.start()
-    main(show_plot_angle_demo=show_plot_angle_demo, k4a=k4a, time=time, fps=30, label=label)
+    main(show_plot_angle_demo=show_plot_angle_demo, k4a=k4a, time=time, fps=30, cameraView=cameraView)
 
 
 global detectStatus
