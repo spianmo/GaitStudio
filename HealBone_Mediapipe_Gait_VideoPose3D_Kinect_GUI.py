@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Callable, NoReturn, List, Tuple, Any
 
@@ -17,18 +18,20 @@ from mediapipe.python.solutions.pose import PoseLandmark
 from numpy import ndarray
 import seaborn as sns
 from pandas import DataFrame
-from pyk4a import PyK4A, Config
+from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode
 import pyk4a
 
 import Gait_Analysis
 import MainWindow
+from GUISignal import LogSignal
 from acceleration import sensormotionDemo
 from estimator.estimator_test import simple_plot_angles
 from estimator.utils.angle_helper import calc_common_angles
 from estimator.videopose3d_async import VideoPose3DAsync
-from kinect_helpers import depthInMeters, color_depth_image, colorize, smooth_depth_image
+from kinect_helpers import depthInMeters, color_depth_image, colorize, smooth_depth_image, obj2json
 from kinect_smoothing import Denoising_Filter, HoleFilling_Filter
 from MainWindow import Ui_MainWindow
+from widgets.CTitleBar import CTitleBar
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -439,16 +442,19 @@ def read_video_frames(k4a, time, fps, videoFrameHandler: Callable[[tuple], tuple
                 break
             if credible_pose(pose_keypoints):
                 if not recording:
+                    logSignal.signal.emit("已识别到所有检测点，开始检测")
                     print("开始检测！")
                     recording = True
                 pts_cams.append(pose_keypoints)
                 record_frame_count += 1
+                logSignal.signal.emit("已检测" + str((record_frame_count * (1 / fps))) + '秒')
                 print("已检测" + str(record_frame_count * (1 / fps)) + '秒')
             else:
                 if recording:
                     recording = False
                     record_frame_count = 0
                     pts_cams = []
+                    logSignal.signal.emit("检测过程被打断！等待重新检测")
                     print("检测过程被打断！等待重新检测")
                     continue
 
@@ -547,7 +553,8 @@ def pose_landmarks_handler(pose_landmarks):
     :param pose_landmarks_index:
     :param pose_landmarks:
     """
-    # print( pose_landmarks)
+    # print(pose_landmarks)
+    # logSignal.signal.emit(str(pose_landmarks))
 
 
 def save_pts(filename: str, pts: ndarray) -> NoReturn:
@@ -572,24 +579,32 @@ def main(show_plot_angle_demo, k4a, time, fps, cameraView):
                                                               pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, cameraView),
                                                               poseLandmarksCallback=lambda pose_landmarks:
                                                               pose_landmarks_handler(pose_landmarks))
+    logSignal.signal.emit("开始2D->3D人体姿势姿势估计计算")
     if use_video_pose_3d:
         # 使用videoPose估计器
+        logSignal.signal.emit("使用FaceBook VideoPose3D姿势估计器")
         estimator_3d = VideoPose3DAsync()
         videopose3d_pose = estimator_3d.estimate(pts_cams_ndarray, fps, w=frame_shape[1], h=frame_shape[0])
     else:
+        logSignal.signal.emit("未使用FaceBook VideoPose姿势估计器，使用Kinect Depth深度数据")
         videopose3d_pose = pts_cams_ndarray
 
     # xx = np.array(pts_cams_ndarray)
 
     chart_data: list = []
 
+    logSignal.signal.emit("正在计算每一帧的3D坐标中的角度")
     for pose_landmark_index, pose_landmark in enumerate(videopose3d_pose):
         # 计算每一帧的3D坐标中的角度
         angle_dict = landmark_to_angle_h36m(pose_landmark) if use_video_pose_3d else landmark_to_angle_mediapipe(pose_landmark)
         chart_data.append(angle_dict)
 
+    logSignal.signal.emit("角度序列计算完成")
     df_angles = pd.DataFrame(chart_data)
 
+    if df_angles.size == 0:
+        logSignal.signal.emit("未检测到步态周期角度序列, 请重新开始检测")
+        return
     df_angles = pd.DataFrame({"TorsoLHip_angle": df_angles["TorsoLHip_angle"], "TorsoRHip_angle": df_angles["TorsoRHip_angle"],
                               "LHip_angle": df_angles["LHip_angle"],
                               "RHip_angle": df_angles["RHip_angle"], "LKnee_angle": df_angles["LKnee_angle"],
@@ -601,24 +616,22 @@ def main(show_plot_angle_demo, k4a, time, fps, cameraView):
     df_angles["Time_in_sec"] = [n / fps for n in range(len(df_angles))]
     if show_plot_angle_demo:
         plot_angles("CAM[Fixed]", pd.DataFrame(df_angles))
+    logSignal.signal.emit("检测序列已分析为角度序列")
+    logSignal.signal.emit(df_angles.to_json())
 
     # 分析步态周期
+    logSignal.signal.emit("正在分析步态周期")
     Gait_Analysis.analysis(df_angles=pd.DataFrame(df_angles), fps=fps, pts_cam=pts_cams_ndarray, analysis_keypoint=PoseLandmark.RIGHT_KNEE)
+    logSignal.signal.emit("分析报告已生成")
+    # plt.show()
 
-    plt.show()
 
-
-def start(time, cameraView):
+def start(time, cameraView, config):
     show_plot_angle_demo = True
-
     k4a = PyK4A(
-        Config(
-            color_resolution=pyk4a.ColorResolution.RES_720P,
-            camera_fps=pyk4a.FPS.FPS_30,
-            depth_mode=pyk4a.DepthMode.NFOV_2X2BINNED,
-            synchronized_images_only=True,
-        )
+        config
     )
+    logSignal.signal.emit(str(obj2json(config)))
     k4a.start()
     main(show_plot_angle_demo=show_plot_angle_demo, k4a=k4a, time=time, fps=30, cameraView=cameraView)
 
@@ -630,6 +643,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         MainWindow.Ui_MainWindow.__init__(self)
+        # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setupUi(self)
         self.btnStart.clicked.connect(self.btnStartClicked)
 
@@ -638,18 +652,34 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         detectStatus = False
         self.btnStart.setText("开始检测")
 
-    def startDetect(self):
+    def startDetect(self, config):
         global detectStatus
         detectStatus = True
         self.btnStart.setText("停止检测")
-        start(int(self.sbTime.text()), [self.cameraFovView, self.cameraIrView, self.cameraIrFovView])
+        start(int(self.sbTime.text()), [self.cameraFovView, self.cameraIrView, self.cameraIrFovView], config)
 
     def btnStartClicked(self):
         global detectStatus
         if detectStatus:
             self.stopDetect()
         else:
-            self.startDetect()
+            config = Config(
+                color_resolution=ColorResolution(self.cbColorResolution.currentIndex() + 1),
+                camera_fps=FPS(self.cbFPS.currentIndex()),
+                depth_mode=DepthMode(self.cbDepthMode.currentIndex() + 1),
+                synchronized_images_only=True,
+            )
+            self.startDetect(config)
+
+    def logViewAppend(self, text):
+        self.outputText.moveCursor(QTextCursor.End, QTextCursor.MoveMode.MoveAnchor)
+        local_time_asctimes = time.strftime("%Y-%m-%d %H:%M:%S ==> ", time.localtime(time.time()))
+        self.outputText.insertPlainText(local_time_asctimes + text + '\n')
+        if len(self.outputText.toPlainText()) > 1024 * 1024 * 10:
+            self.outputText.clear()
+        scrollbar: QScrollBar = self.outputText.verticalScrollBar()
+        if scrollbar:
+            scrollbar.setSliderPosition(scrollbar.maximum())
 
 
 if __name__ == '__main__':
@@ -657,5 +687,10 @@ if __name__ == '__main__':
     app = QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
+    # 信号槽
+    logSignal = LogSignal()
+    logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
+    logSignal.signal.emit("HealBone GaitLab 初始化完成")
+
     hbWin.show()
     sys.exit(app.exec_())

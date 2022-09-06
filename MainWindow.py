@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainWindow.ui'
+## Form generated from reading UI file 'MainWindow.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -11,6 +11,8 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+from widgets.QVtkWidget import QVTKWidget
 
 
 class Ui_MainWindow(object):
@@ -31,14 +33,22 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.tabWidget = QTabWidget(self.centralWidget)
         self.tabWidget.setObjectName(u"tabWidget")
+        self.KinectIRFOV = QWidget()
+        self.KinectIRFOV.setObjectName(u"KinectIRFOV")
+        self.cameraIrFovView = QGraphicsView(self.KinectIRFOV)
+        self.cameraIrFovView.setObjectName(u"cameraIrFovView")
+        self.cameraIrFovView.setGeometry(QRect(0, 0, 731, 513))
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cameraIrFovView.sizePolicy().hasHeightForWidth())
+        self.cameraIrFovView.setSizePolicy(sizePolicy)
+        self.tabWidget.addTab(self.KinectIRFOV, "")
         self.KinectFOV = QWidget()
         self.KinectFOV.setObjectName(u"KinectFOV")
         self.cameraFovView = QGraphicsView(self.KinectFOV)
         self.cameraFovView.setObjectName(u"cameraFovView")
         self.cameraFovView.setGeometry(QRect(0, 0, 731, 513))
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cameraFovView.sizePolicy().hasHeightForWidth())
         self.cameraFovView.setSizePolicy(sizePolicy)
         self.tabWidget.addTab(self.KinectFOV, "")
@@ -50,22 +60,10 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.cameraIrView.sizePolicy().hasHeightForWidth())
         self.cameraIrView.setSizePolicy(sizePolicy)
         self.tabWidget.addTab(self.KinectIR, "")
-        self.KinectIRFOV = QWidget()
-        self.KinectIRFOV.setObjectName(u"KinectIRFOV")
-        self.cameraIrFovView = QGraphicsView(self.KinectIRFOV)
-        self.cameraIrFovView.setObjectName(u"cameraIrFovView")
-        self.cameraIrFovView.setGeometry(QRect(0, 0, 731, 513))
-        sizePolicy.setHeightForWidth(self.cameraIrFovView.sizePolicy().hasHeightForWidth())
-        self.cameraIrFovView.setSizePolicy(sizePolicy)
-        self.tabWidget.addTab(self.KinectIRFOV, "")
 
         self.horizontalLayout.addWidget(self.tabWidget)
 
         MainWindow.setCentralWidget(self.centralWidget)
-        self.menuBar = QMenuBar(MainWindow)
-        self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1328, 23))
-        MainWindow.setMenuBar(self.menuBar)
         self.statusBar = QStatusBar(MainWindow)
         self.statusBar.setObjectName(u"statusBar")
         MainWindow.setStatusBar(self.statusBar)
@@ -96,18 +94,52 @@ class Ui_MainWindow(object):
         self.groupBox.setMinimumSize(QSize(256, 0))
         self.btnStart = QPushButton(self.groupBox)
         self.btnStart.setObjectName(u"btnStart")
-        self.btnStart.setGeometry(QRect(130, 24, 111, 32))
+        self.btnStart.setGeometry(QRect(130, 23, 111, 32))
         self.sbTime = QSpinBox(self.groupBox)
         self.sbTime.setObjectName(u"sbTime")
-        self.sbTime.setGeometry(QRect(10, 24, 111, 31))
-        self.sbTime.setValue(4)
+        self.sbTime.setGeometry(QRect(10, 23, 111, 31))
+        self.sbTime.setValue(3)
         self.label = QLabel(self.groupBox)
         self.label.setObjectName(u"label")
-        self.label.setGeometry(QRect(10, 5, 47, 16))
+        self.label.setGeometry(QRect(10, 5, 81, 16))
         font1 = QFont()
         font1.setFamily(u"Arial")
         font1.setPointSize(8)
         self.label.setFont(font1)
+        self.cbFPS = QComboBox(self.groupBox)
+        self.cbFPS.addItem("")
+        self.cbFPS.addItem("")
+        self.cbFPS.addItem("")
+        self.cbFPS.setObjectName(u"cbFPS")
+        self.cbFPS.setGeometry(QRect(10, 78, 111, 31))
+        self.label_2 = QLabel(self.groupBox)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setGeometry(QRect(10, 60, 81, 16))
+        self.label_2.setFont(font1)
+        self.label_3 = QLabel(self.groupBox)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setGeometry(QRect(130, 60, 101, 16))
+        self.label_3.setFont(font1)
+        self.cbDepthMode = QComboBox(self.groupBox)
+        self.cbDepthMode.addItem("")
+        self.cbDepthMode.addItem("")
+        self.cbDepthMode.addItem("")
+        self.cbDepthMode.addItem("")
+        self.cbDepthMode.setObjectName(u"cbDepthMode")
+        self.cbDepthMode.setGeometry(QRect(130, 78, 111, 31))
+        self.label_4 = QLabel(self.groupBox)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setGeometry(QRect(10, 113, 101, 16))
+        self.label_4.setFont(font1)
+        self.cbColorResolution = QComboBox(self.groupBox)
+        self.cbColorResolution.addItem("")
+        self.cbColorResolution.addItem("")
+        self.cbColorResolution.addItem("")
+        self.cbColorResolution.addItem("")
+        self.cbColorResolution.addItem("")
+        self.cbColorResolution.addItem("")
+        self.cbColorResolution.setObjectName(u"cbColorResolution")
+        self.cbColorResolution.setGeometry(QRect(10, 132, 111, 31))
 
         self.verticalLayout_5.addWidget(self.groupBox)
 
@@ -126,6 +158,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(1, 0, 1, 1)
         self.outputText = QPlainTextEdit(self.messagesDockContents)
         self.outputText.setObjectName(u"outputText")
+        self.outputText.setFont(font)
         self.outputText.setFrameShape(QFrame.StyledPanel)
         self.outputText.setFrameShadow(QFrame.Plain)
         self.outputText.setLineWrapMode(QPlainTextEdit.NoWrap)
@@ -145,21 +178,26 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(4, 4, 4, 4)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.frame = QFrame(self.viewerDockContents)
-        self.frame.setObjectName(u"frame")
-        sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
-        self.frame.setSizePolicy(sizePolicy)
-        self.frame.setMinimumSize(QSize(322, 322))
-        self.frame.setAutoFillBackground(False)
+        self.vtkContext = QVTKWidget(self.viewerDockContents)
+        self.vtkContext.setObjectName(u"vtkContext")
+        sizePolicy.setHeightForWidth(self.vtkContext.sizePolicy().hasHeightForWidth())
+        self.vtkContext.setSizePolicy(sizePolicy)
+        self.vtkContext.setMinimumSize(QSize(322, 0))
 
-        self.verticalLayout.addWidget(self.frame)
+        self.verticalLayout.addWidget(self.vtkContext)
 
         self.viewerDock.setWidget(self.viewerDockContents)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.viewerDock)
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 1328, 23))
+        MainWindow.setMenuBar(self.menuBar)
 
         self.retranslateUi(MainWindow)
 
         self.tabWidget.setCurrentIndex(0)
+        self.cbFPS.setCurrentIndex(2)
+        self.cbColorResolution.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -167,13 +205,32 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"HealBone-GaitAnalysis", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.KinectIRFOV), QCoreApplication.translate("MainWindow", u"IR FOV", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.KinectFOV), QCoreApplication.translate("MainWindow", u"FOV", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.KinectIR), QCoreApplication.translate("MainWindow", u"IR", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.KinectIRFOV), QCoreApplication.translate("MainWindow", u"IR FOV", None))
         self.resultsDock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Gait Control Panel", None))
         self.groupBox.setTitle("")
         self.btnStart.setText(QCoreApplication.translate("MainWindow", u"\u5f00\u59cb\u6b65\u6001\u68c0\u6d4b", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"\u68c0\u6d4b\u65f6\u957f", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"\u68c0\u6d4b\u65f6\u957f/sec", None))
+        self.cbFPS.setItemText(0, QCoreApplication.translate("MainWindow", u"FPS_5", None))
+        self.cbFPS.setItemText(1, QCoreApplication.translate("MainWindow", u"FPS_15", None))
+        self.cbFPS.setItemText(2, QCoreApplication.translate("MainWindow", u"FPS_30", None))
+
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"FPS", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"DepthMode", None))
+        self.cbDepthMode.setItemText(0, QCoreApplication.translate("MainWindow", u"NFOV_2X2BINNED", None))
+        self.cbDepthMode.setItemText(1, QCoreApplication.translate("MainWindow", u"NFOV_UNBINNED", None))
+        self.cbDepthMode.setItemText(2, QCoreApplication.translate("MainWindow", u"WFOV_2X2BINNED", None))
+        self.cbDepthMode.setItemText(3, QCoreApplication.translate("MainWindow", u"WFOV_UNBINNED", None))
+
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"ColorResolution", None))
+        self.cbColorResolution.setItemText(0, QCoreApplication.translate("MainWindow", u"RES_720P", None))
+        self.cbColorResolution.setItemText(1, QCoreApplication.translate("MainWindow", u"RES_1080P", None))
+        self.cbColorResolution.setItemText(2, QCoreApplication.translate("MainWindow", u"RES_1440P", None))
+        self.cbColorResolution.setItemText(3, QCoreApplication.translate("MainWindow", u"RES_1536P", None))
+        self.cbColorResolution.setItemText(4, QCoreApplication.translate("MainWindow", u"RES_2160P", None))
+        self.cbColorResolution.setItemText(5, QCoreApplication.translate("MainWindow", u"RES_3072P", None))
+
         self.messagesDock.setWindowTitle(QCoreApplication.translate("MainWindow", u"Analysis Messages", None))
         self.viewerDock.setWindowTitle(QCoreApplication.translate("MainWindow", u"RealTime Human Skeleton Viewer", None))
     # retranslateUi

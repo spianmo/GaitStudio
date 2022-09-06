@@ -10,10 +10,9 @@ Created on 2019年7月15日
 @description: 自定义标题栏
 """
 
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QWindowStateChangeEvent, QFont, QMouseEvent
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, \
-    QLabel, QPushButton, QApplication
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 
 
 __Author__ = 'Irony'
