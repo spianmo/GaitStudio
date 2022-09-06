@@ -484,7 +484,7 @@ def infer_pose(video_frame) -> Any:
         poseDetector = mp_pose.Pose(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
-            model_complexity=2,
+            model_complexity=1,
             smooth_landmarks=True,
             smooth_segmentation=True,
         )
@@ -533,7 +533,9 @@ def pose_landmarks_proto_handler(pose_landmarks_proto, frame, deep_frame, camera
     draw_healbone_logo(frame)
 
     # 窗口展示视频帧
-    show_cv_frame(cameraView, cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
+    show_cv_frame(cameraView[0], cv.resize(frame, (0, 0), fx=0.6, fy=0.6))
+    show_cv_frame(cameraView[1], cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6))
+    show_cv_frame(cameraView[2], cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
     # cv.imshow("HealBone-Mediapipe-Gait: KinectCamera FOV", cv.resize(frame, (0, 0), fx=0.6, fy=0.6))
     # cv.imshow("HealBone-Mediapipe-Gait: KinectCamera IR", cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6))
     # cv.imshow("HealBone-Mediapipe-Gait: KinectCamera FOV IR", cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6))
@@ -611,7 +613,7 @@ def start(time, cameraView):
 
     k4a = PyK4A(
         Config(
-            color_resolution=pyk4a.ColorResolution.RES_1080P,
+            color_resolution=pyk4a.ColorResolution.RES_720P,
             camera_fps=pyk4a.FPS.FPS_30,
             depth_mode=pyk4a.DepthMode.NFOV_2X2BINNED,
             synchronized_images_only=True,
@@ -640,7 +642,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         global detectStatus
         detectStatus = True
         self.btnStart.setText("停止检测")
-        start(int(self.sbTime.text()), self.cameraView)
+        start(int(self.sbTime.text()), [self.cameraFovView, self.cameraIrView, self.cameraIrFovView])
 
     def btnStartClicked(self):
         global detectStatus

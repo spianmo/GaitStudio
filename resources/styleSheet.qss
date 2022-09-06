@@ -1,98 +1,261 @@
-*{
-    font-family: 微软雅黑;
-    color: #BBBBBB;
-    background-color: #2F2F2F;
+*
+{
+	font-family:微软雅黑;
+	color:#BBB;
+	background-color:#2F2F2F;
 }
 
-QMainWindow {
-    background-color: #2F2F2F;
+QMainWindow
+{
+	background-color:#2F2F2F;
 }
 
-QLabel#cameraView {
-	background-color: black;
+QLabel#cameraView
+{
+	background-color:#000;
 }
 
-QLabel, QGroupBox {
-    color: #BBBBBB;
+QLabel,QGroupBox
+{
+	color:#BBB;
 }
 
-QGroupBox {
-    border: 1px solid #424242;
-    border-radius: 5px;
-    margin-top: 1ex;
+QGroupBox
+{
+	border:1px solid #424242;
+	border-radius:5px;
+	margin-top:1ex;
 }
 
-QPushButton {
+QPushButton
+{
+	background-color:#212121;
+	border-radius:6px;
+}
+
+QSpinBox
+{
+	padding-right:15px;
+	border:1px solid #212121;
+	border-radius:5px;
+	background:#444;
+	padding-left:2px;
+}
+
+QSpinBox:hover
+{
+	background-color:#3b3b3b;
+}
+
+QSpinBox::up-button
+{
+	subcontrol-origin:border;
+	subcontrol-position:top right;
+	border:none;
+	width:12px;
+	margin-top:2px;
+	margin-right:1px;
+	margin-bottom:0;
+	padding-right:2px;
+}
+
+QSpinBox::down-button
+{
+	subcontrol-origin:border;
+	subcontrol-position:bottom right;
+	border:none;
+	width:12px;
+	margin-top:0;
+	margin-right:1px;
+	margin-bottom:2px;
+	padding-right:2px;
+}
+
+QScrollBar:vertical
+{
+	width:12px;
+	border:1px solid rgba(0,0,0,50);
+	padding-top:15px;
+	padding-bottom:15px;
+	margin:0;
+}
+
+QScrollBar::handle:vertical
+{
+	width:16px;
+	background: #616161;
+	min-height:20px;
+	border-radius: 4px;
+}
+
+QScrollBar::sub-line:vertical
+{
+	height:15px;
+	border-image:url(resources/up.png);
+	subcontrol-position:top;
+}
+
+QScrollBar::sub-line:vertical:hover
+{
+	height:15px;
+	background:rgba(0,0,0,25%);
+	subcontrol-position:top;
+}
+
+QScrollBar::add-line:vertical
+{
+	height:15px;
+	border-image:url(resources/down.png);
+	subcontrol-position:bottom;
+}
+
+QScrollBar::add-line:vertical:hover
+{
+	height:15px;
+	background:rgba(0,0,0,25%);
+	subcontrol-position:bottom;
+}
+
+QScrollBar::up-arrow:vertical
+{
+	max-height:16px;
+	min-width:17px;
+	border-width:0;
+}
+
+QScrollBar::down-arrow:vertical
+{
+	border-style:outset;
+	border-width:0;
+}
+
+QScrollBar:horizontal
+{
+	height:12px;
+	border:1px solid rgba(0,0,0,50);
+	padding-left:15px;
+	padding-right:15px;
+	margin:0;
+}
+
+QScrollBar::handle:horizontal
+{
+	height:16px;
+	background: #616161;
+	min-width:20px;
+	border-radius: 4px;
+}
+
+QScrollBar::sub-line:horizontal
+{
+	width:15px;
+	border-image:url(resources/left.png);
+	subcontrol-position:left;
+}
+
+QScrollBar::sub-line:horizontal:hover
+{
+	width:15px;
+	background:rgba(0,0,0,25%);
+	subcontrol-position:left;
+}
+
+QScrollBar::add-line:horizontal
+{
+	width:15px;
+	border-image:url(resources/right.png);
+	subcontrol-position:right;
+}
+
+QScrollBar::add-line:horizontal:hover
+{
+	width:15px;
+	background:rgba(0,0,0,25%);
+	subcontrol-position:right;
+}
+
+QTabWidget::pane
+{
+	border:none;
+	border-radius:5px;
+}
+
+QTabBar::tab
+{
+	background:#212121;
+	border:1px solid #212121;
+	border-radius:5px;
+	border-top-left-radius:4px;
+	border-top-right-radius:4px;
+	min-width:60px;
+	padding:2px;
+}
+
+#KinectFOV,#KinectIR,#KinectIRFOV
+{
+	background-color:#212121;
+	border-radius:5px;
+}
+
+#tabWidget QTabBar::tab
+{
+	background:#424242;
+	border-top-left-radius:4px;
+	border-top-right-radius:4px;
+	border-bottom-left-radius:0;
+	border-bottom-right-radius:0;
+	min-width:60px;
+	padding:2px;
+}
+
+#tabWidget QTabBar::tab:selected
+{
+	background-color:#757575;
+}
+
+QPushButton:hover,#tabWidget QTabBar::tab:hover
+{
+	background-color:#616161;
+}
+
+QSpinBox::up-button:hover,QSpinBox::down-button:hover
+{
+	border:none;
+}
+
+QSpinBox::up-arrow,QSpinBox::up-arrow:hover,QSpinBox::up-arrow:disabled,QSpinBox::up-arrow:off
+{
+	image:url(resources/up.png);
+}
+
+QSpinBox::down-arrow,QSpinBox::down-arrow:hover,QSpinBox::down-arrow:disabled,QSpinBox::down-arrow:off
+{
+	image:url(resources/down.png);
+}
+
+QScrollBar::handle:vertical:hover,QScrollBar::handle:horizontal:hover
+{
+	background:#757575;
+	border-color: #757575;
+	border-radius: 4px;
+}
+
+QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical,QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal
+{
+	background:#424242;
+}
+
+QGraphicsView {
     background-color: #212121;
-    border-radius: 6px;
+    border-width: 1px;
+    border-radius: 5px;
+    border-style: inset;
+    border-color: #424242;
 }
 
-QPushButton:hover{
-    background-color: #424242;
-}
-
-QSpinBox {
-padding-right: 15px;
-border:1px solid #212121;
-border-radius:5px;
-background:#444444;
-padding-left:2px;
-}
-
-QSpinBox:hover {
-    background-color: rgb(59,59,59);
-}
-
-QSpinBox::up-button { /* 向上按钮 */
-	subcontrol-origin: border; /* 起始位置 */
-	subcontrol-position: top right; /* 居于右上角 */
-	border: none;
-	width: 12px;
-	margin-top: 2px;
-	margin-right: 1px;
-	margin-bottom: 0px;
-	padding-right:2px;
-}
-
-QSpinBox::up-button:hover {
-	border: none;
-}
-
-QSpinBox::up-arrow { /* 向上箭头，图片大小为8x8 */
-	image: url(resources/up.png);
-}
-
-QSpinBox::up-arrow:hover {
-	image: url(resources/up.png);
-}
-
-QSpinBox::up-arrow:disabled, QSpinBox::up-arrow:off {
-	image: url(resources/up.png);
-}
-
-QSpinBox::down-button { /* 向下按钮 */
-	subcontrol-origin: border;
-	subcontrol-position: bottom right;
-	border: none;
-	width: 12px;
-	margin-top: 0px;
-	margin-right: 1px;
-	margin-bottom: 2px;
-	padding-right:2px;
-}
-
-QSpinBox::down-button:hover {
-	border: none;
-}
-
-QSpinBox::down-arrow { /* 向下箭头 */
-	image: url(resources/down.png);
-}
-
-QSpinBox::down-arrow:hover {
-	image: url(resources/down.png);
-}
-
-QSpinBox::down-arrow:disabled, QSpinBox::down-arrow:off {
-	image: url(resources/down.png);
+QPlainTextEdit {
+    border-width: 1px;
+    border-radius: 5px;
+    border-style: inset;
+    border-color: #424242;
 }

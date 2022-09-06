@@ -460,7 +460,7 @@ def infer_pose(video_frame) -> Any:
         poseDetector = mp_pose.Pose(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
-            model_complexity=2,
+            model_complexity=1,
             smooth_landmarks=True,
             smooth_segmentation=True,
         )
