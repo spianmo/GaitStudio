@@ -660,7 +660,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                                          (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
         self.cameraFovView.setGeometry(self.cameraFovView.x(), self.cameraFovView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                        (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
-        self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width(),
+        self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
 
     def resizeEvent(self, event: QResizeEvent):
