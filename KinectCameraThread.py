@@ -225,6 +225,10 @@ class KinectCaptureThread(QThread):
                 frame.flags.writeable = True
                 frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
+                if not self.recordFlag or len(self.detect_frames) == (self.captureConfig.fps * self.captureConfig.detectionTime):
+                    self.k4a.stop()
+                    break
+
                 if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                         pose_world_landmarks_proto is None:
                     self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
@@ -258,9 +262,6 @@ class KinectCaptureThread(QThread):
                     else:
                         pose_keypoints = [[-1, -1, -1, -1]] * len(KEYPOINT_DETECTED)
 
-                if not self.recordFlag or len(self.detect_frames) == (self.captureConfig.fps * self.captureConfig.detectionTime):
-                    self.k4a.stop()
-                    break
                 if self.credible_pose(pose_keypoints):
                     if not self.detectFlag:
                         self.emitLog("已识别到所有检测点，开始检测")
@@ -287,7 +288,7 @@ class KinectCaptureThread(QThread):
         """
         self.poseDetector.close()
         if self.k4a.opened:
-            self.k4a.close()
+            self.k4a.stop()
         self.quit()
 
     def videoFrameHandler(self, video_frame):
