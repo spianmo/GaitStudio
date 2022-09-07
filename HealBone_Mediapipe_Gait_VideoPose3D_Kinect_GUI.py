@@ -345,7 +345,7 @@ global recording, record_frame_count
 def show_cv_frame(cameraView, frame):
     """
     将cv的frame显示到label上
-    :param label:
+    :param cameraView:
     :param frame:
     """
     shrink = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -354,7 +354,7 @@ def show_cv_frame(cameraView, frame):
                    shrink.shape[0],
                    shrink.shape[1] * 3,
                    QImage.Format_RGB888)
-    jpg_out = QPixmap(QtImg).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatioByExpanding)
+    jpg_out = QPixmap(QtImg).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatio)
     scene = QGraphicsScene()  # 创建场景
     scene.addItem(QGraphicsPixmapItem(jpg_out))
     cameraView.setScene(scene)  # 将场景添加至视图
@@ -486,15 +486,6 @@ def infer_pose(video_frame) -> Any:
     :return
     """
     global poseDetector
-    if not poseDetector:
-        poseDetector = mp_pose.Pose(
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
-            model_complexity=1,
-            smooth_landmarks=True,
-            smooth_segmentation=True,
-        )
-
     return poseDetector.process(video_frame)
 
 
@@ -569,8 +560,8 @@ def save_pts(filename: str, pts: ndarray) -> NoReturn:
 def main(show_plot_angle_demo, k4a, time, fps, cameraView):
     use_video_pose_3d = False
 
-    global poseDetector, recording, record_frame_count
-    poseDetector = None
+    global recording, record_frame_count
+
     recording = False
     record_frame_count = 0
     # opencv读取视频source，并使用mediapipe进行KeyPoints推理
@@ -617,7 +608,7 @@ def main(show_plot_angle_demo, k4a, time, fps, cameraView):
     if show_plot_angle_demo:
         plot_angles("CAM[Fixed]", pd.DataFrame(df_angles))
     logSignal.signal.emit("检测序列已分析为角度序列")
-    logSignal.signal.emit(df_angles.to_json())
+    logSignal.signal.emit(df_angles.to_markdown())
 
     # 分析步态周期
     logSignal.signal.emit("正在分析步态周期")
@@ -626,13 +617,27 @@ def main(show_plot_angle_demo, k4a, time, fps, cameraView):
     # plt.show()
 
 
-def start(time, cameraView, config):
+def start(time, cameraView, k4aConfig, mpConfig):
     show_plot_angle_demo = True
     k4a = PyK4A(
-        config
+        k4aConfig
     )
-    logSignal.signal.emit(str(obj2json(config)))
+    logSignal.signal.emit(str(obj2json(k4aConfig)))
     k4a.start()
+    global poseDetector
+    try:
+        if poseDetector:
+            poseDetector.reset()
+    except:
+        poseDetector = None
+
+    if not poseDetector:
+        poseDetector = mp_pose.Pose(
+            min_detection_confidence=mpConfig["min_detection_confidence"],
+            min_tracking_confidence=mpConfig["min_tracking_confidence"],
+            model_complexity=mpConfig["model_complexity"],
+            smooth_landmarks=mpConfig["smooth_landmarks"]
+        )
     main(show_plot_angle_demo=show_plot_angle_demo, k4a=k4a, time=time, fps=30, cameraView=cameraView)
 
 
@@ -643,39 +648,64 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         MainWindow.Ui_MainWindow.__init__(self)
+        self.isInit = False
         # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setupUi(self)
+        self.tabifyDockWidget(self.viewerDock, self.angleViewerDock)
         self.btnStart.clicked.connect(self.btnStartClicked)
+
+    def resizeCameraView(self, tabWidth=-1, tabHeight=-1):
+        tabWidgetSize: QSize = self.tabWidget.geometry().size()
+        self.cameraIrFovView.setGeometry(self.cameraIrFovView.x(), self.cameraIrFovView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
+                                         (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
+        self.cameraFovView.setGeometry(self.cameraFovView.x(), self.cameraFovView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
+                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
+        self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width(),
+                                      (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
+
+    def resizeEvent(self, event: QResizeEvent):
+        if self.isInit:
+            self.resizeCameraView()
+        else:
+            self.isInit = True
+            self.resizeCameraView(740, 535)
 
     def stopDetect(self):
         global detectStatus
         detectStatus = False
         self.btnStart.setText("开始检测")
 
-    def startDetect(self, config):
+    def startDetect(self, k4aConfig, mpConfig):
         global detectStatus
         detectStatus = True
         self.btnStart.setText("停止检测")
-        start(int(self.sbTime.text()), [self.cameraFovView, self.cameraIrView, self.cameraIrFovView], config)
+        start(int(self.sbTime.text()), [self.cameraFovView, self.cameraIrView, self.cameraIrFovView], k4aConfig, mpConfig)
 
     def btnStartClicked(self):
         global detectStatus
         if detectStatus:
             self.stopDetect()
         else:
-            config = Config(
+            k4aConfig = Config(
                 color_resolution=ColorResolution(self.cbColorResolution.currentIndex() + 1),
                 camera_fps=FPS(self.cbFPS.currentIndex()),
                 depth_mode=DepthMode(self.cbDepthMode.currentIndex() + 1),
                 synchronized_images_only=True,
             )
-            self.startDetect(config)
+            mpConfig = {
+                "min_detection_confidence": round(self.hsMinDetectionConfidence.sliderPosition() / self.hsMinDetectionConfidence.maximum(), 1),
+                "min_tracking_confidence": round(self.hsMinTrackingConfidence.sliderPosition() / self.hsMinTrackingConfidence.maximum(), 1),
+                "model_complexity": self.cbModelComplexity.currentIndex(),
+                "smooth_landmarks": self.cbSmoothLandmarks.isChecked()
+            }
+            self.startDetect(k4aConfig, mpConfig)
 
     def logViewAppend(self, text):
         self.outputText.moveCursor(QTextCursor.End, QTextCursor.MoveMode.MoveAnchor)
         local_time_asctimes = time.strftime("%Y-%m-%d %H:%M:%S ==> ", time.localtime(time.time()))
-        self.outputText.insertPlainText(local_time_asctimes + text + '\n')
-        if len(self.outputText.toPlainText()) > 1024 * 1024 * 10:
+        self.outputText.setMarkdown(
+            self.outputText.toMarkdown(QTextDocument.MarkdownFeature.MarkdownDialectGitHub) + local_time_asctimes + text + '\n')
+        if len(self.outputText.toHtml()) > 1024 * 1024 * 10:
             self.outputText.clear()
         scrollbar: QScrollBar = self.outputText.verticalScrollBar()
         if scrollbar:

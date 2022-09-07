@@ -56,8 +56,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>731</width>
-          <height>513</height>
+          <width>740</width>
+          <height>515</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -77,8 +77,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>731</width>
-          <height>513</height>
+          <width>740</width>
+          <height>515</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -98,8 +98,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>731</width>
-          <height>513</height>
+          <width>740</width>
+          <height>515</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -138,6 +138,9 @@
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Gait Control Panel</string>
@@ -304,22 +307,22 @@
         </property>
         <item>
          <property name="text">
-          <string>NFOV_2X2BINNED</string>
+          <string>NFOV_2X2BD</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>NFOV_UNBINNED</string>
+          <string>NFOV_UNBD</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>WFOV_2X2BINNED</string>
+          <string>WFOV_2X2BD</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>WFOV_UNBINNED</string>
+          <string>WFOV_UNBD</string>
          </property>
         </item>
        </widget>
@@ -385,6 +388,166 @@
          </property>
         </item>
        </widget>
+       <widget class="QLabel" name="label_5">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>112</y>
+          <width>111</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>ModelComplexity</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="cbModelComplexity">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>130</y>
+          <width>111</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>1</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>LOW</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>MIDDLE</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>HIGH</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QSlider" name="hsMinDetectionConfidence">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>240</y>
+          <width>231</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="pageStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="sliderPosition">
+         <number>50</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_6">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>219</y>
+          <width>151</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Min Detection Confidence</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_7">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>169</y>
+          <width>151</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Min Tracking Confidence</string>
+        </property>
+       </widget>
+       <widget class="QSlider" name="hsMinTrackingConfidence">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>190</y>
+          <width>231</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="pageStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="sliderPosition">
+         <number>50</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="cbSmoothLandmarks">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>270</y>
+          <width>171</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Smooth Landmarks</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="tristate">
+         <bool>false</bool>
+        </property>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -424,7 +587,7 @@
       <number>1</number>
      </property>
      <item>
-      <widget class="QPlainTextEdit" name="outputText">
+      <widget class="QTextEdit" name="outputText">
        <property name="font">
         <font>
          <family>Arial</family>
@@ -436,9 +599,6 @@
        <property name="frameShadow">
         <enum>QFrame::Plain</enum>
        </property>
-       <property name="lineWrapMode">
-        <enum>QPlainTextEdit::NoWrap</enum>
-       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>
@@ -448,6 +608,9 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="viewerDock">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -502,6 +665,15 @@
      <height>23</height>
     </rect>
    </property>
+  </widget>
+  <widget class="QDockWidget" name="angleViewerDock">
+   <property name="windowTitle">
+    <string>RealTime Angles Viewer</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="angleViewerDockContents"/>
   </widget>
  </widget>
  <layoutdefault spacing="4" margin="4"/>

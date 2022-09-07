@@ -155,7 +155,7 @@ QTabWidget::pane {
     border-radius: 5px;
 }
 
-QTabBar::tab {
+#tabWidget QTabBar::tab {
     background: #212121;
     border: 1px solid #212121;
     border-radius: 5px;
@@ -260,4 +260,44 @@ QComboBox QAbstractItemView {
 QDockWidget::close-button:hover, QDockWidget::float-button:hover {
     background: #616161;
     border-radius: 6px;
+}
+
+QSlider::groove:horizontal {
+    height: 8px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    left: 0px;
+    right: 0px;
+    border:0px;
+    border-radius:4px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4);
+}
+
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
+    border: 1px solid #5c5c5c;
+    width: 12px;
+    height: 18px;
+    border-radius: 2px;
+    margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+}
+
+QSlider::sub-page:horizontal{
+    background: #616161;
+    border: 0px;
+    border-radius: 4px;
+}
+
+
+QTabBar::tab {
+    border: none;
+    background: #424242;
+    min-width: 60px;
+    padding: 2px 4px 2px 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: #757575;
+}
+
+QTabBar::tab:hover {
+    background-color: #616161;
 }
