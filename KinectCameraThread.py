@@ -162,14 +162,15 @@ class KinectCaptureThread(QThread):
         :param deep_frame:
         """
         combined_image = cv.addWeighted(rgb_frame, 0.5, colorize(deep_frame), 0.5, 0)
-        mp_drawing.draw_landmarks(combined_image, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
-                                  landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+        if pose_landmarks_proto is not None:
+            mp_drawing.draw_landmarks(combined_image, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
+                                      landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
-        mp_drawing.draw_landmarks(rgb_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
-                                  landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+            mp_drawing.draw_landmarks(rgb_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
+                                      landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
-        mp_drawing.draw_landmarks(deep_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
-                                  landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+            mp_drawing.draw_landmarks(deep_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
+                                      landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
         # 绘制HealBone图标
         self.drawHealboneLogo(combined_image)
@@ -226,6 +227,7 @@ class KinectCaptureThread(QThread):
 
                 if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                         pose_world_landmarks_proto is None:
+                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
                     continue
                 # 将归一化的坐标转换为原始坐标
                 pose_keypoints = []
