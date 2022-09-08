@@ -85,6 +85,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.angleViewerDock.raise_()
         """
+        角度Dock事件过滤器
+        """
+        self.angleViewerDock.installEventFilter(self)
+        """
         构建QTGraph实时显示角度
         """
         self.anglePltLayouts: List[List[pg.PlotWidget]] = []
@@ -96,10 +100,22 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].useOpenGL(True)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0], anglesCube["ylim"][1])
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showGrid(x=True, y=True)
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(120)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(250)
                 self.angleViewerDockScrollAreaContentsLayout.addWidget(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
 
         self.btnStart.clicked.connect(self.btnStartClicked)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.WindowStateChange and watched == self.angleViewerDock:
+            if self.angleViewerDock.isFloating() and event.type() == QEvent.Resize and watched == self.angleViewerDock:
+                for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+                    for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(int(event.size().height() / 6 - 20))
+            if not self.angleViewerDock.isFloating() and event.type() == QEvent.Resize and watched == self.angleViewerDock:
+                for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+                    for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(int(event.size().height() / 2 - 20))
+        return super().eventFilter(watched, event)
 
     def resizeCameraView(self, tabWidth=-1, tabHeight=-1):
         tabWidgetSize: QSize = self.tabWidget.geometry().size()

@@ -14,6 +14,6 @@ class QMaximumDockWidget(QDockWidget):
             if self.isFloating():
                 w: QWidget = QWidget()
                 self.setMaximumSize(w.maximumSize())
-                self.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint | Qt.WindowMaximizeButtonHint | Qt.WindowMinimizeButtonHint)
+                self.setWindowFlags(Qt.Dialog | Qt.WindowMaximizeButtonHint | Qt.WindowMinimizeButtonHint)
                 self.show()
         return super().event(event)
