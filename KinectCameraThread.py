@@ -9,7 +9,7 @@ from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode
 import cv2 as cv
 import mediapipe as mp
 
-from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal
+from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -69,6 +69,7 @@ class KinectCaptureThread(QThread):
         self.signal_keypoints: KeyPointsSignal = KeyPointsSignal()
         self.signal_angles: AngleDictSignal = AngleDictSignal()
         self.signal_log: LogSignal = LogSignal()
+        self.signal_detectInterrupt = DetectInterruptSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -120,6 +121,9 @@ class KinectCaptureThread(QThread):
 
     def emitAngles(self, angleDict):
         self.signal_angles.signal.emit(angleDict)
+
+    def emitDetectInterrupt(self, empty):
+        self.signal_detectInterrupt.signal.emit(empty)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -265,6 +269,7 @@ class KinectCaptureThread(QThread):
                 if self.credible_pose(pose_keypoints):
                     if not self.detectFlag:
                         self.emitLog("已识别到所有检测点，开始检测")
+                        self.emitDetectInterrupt("empty")
                         print("开始检测！")
                         self.detectFlag = True
                     self.detect_frames.append(pose_keypoints)
@@ -364,6 +369,10 @@ class KinectCaptureThread(QThread):
         LAnkle_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.LEFT_ANKLE)
         # 右踝关节坐标
         RAnkle_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.RIGHT_ANKLE)
+        # 左脚拇指坐标
+        LBigToe_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.LEFT_FOOT_INDEX)
+        # 右脚拇指坐标
+        RBigToe_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.RIGHT_FOOT_INDEX)
 
         # 躯干向量
         Torso_vector = MidHip_coor - Nose_coor
@@ -377,6 +386,10 @@ class KinectCaptureThread(QThread):
         LTibia_vector = LAnkle_coor - LKnee_coor
         # 右胫骨向量
         RTibia_vector = RAnkle_coor - RKnee_coor
+        # 左足部向量
+        LFoot_vector = LBigToe_coor - LAnkle_coor
+        # 右足部向量
+        RFoot_vector = RBigToe_coor - RAnkle_coor
 
         # 躯干与胯骨的夹角
         TorsoLHip_angle = self.vectors_to_angle(Torso_vector, Hip_vector, supplementaryAngle=True)
@@ -402,9 +415,15 @@ class KinectCaptureThread(QThread):
         LKnee_angle = self.vectors_to_angle(LTibia_vector, LFemur_vector, supplementaryAngle=True)
         # 右胫骨与右股骨的夹角
         RKnee_angle = self.vectors_to_angle(RTibia_vector, RFemur_vector, supplementaryAngle=True)
+        # 左踝与左胫骨的夹角
+        LAnkle_angle = self.vectors_to_angle(LFoot_vector, LTibia_vector, supplementaryAngle=False)
+        # 右踝与右胫骨的夹角
+        RAnkle_angle = self.vectors_to_angle(RFoot_vector, RTibia_vector, supplementaryAngle=False)
 
         dict_angles = {"TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
                        "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
                        "TorsoLFemur_angle": TorsoLFemur_angle, "TorsoRFemur_angle": TorsoRFemur_angle,
-                       "LTibiaSelf_vector": LTibiaSelf_vector, "RTibiaSelf_vector": RTibiaSelf_vector}
+                       "LTibiaSelf_vector": LTibiaSelf_vector, "RTibiaSelf_vector": RTibiaSelf_vector,
+                       "frame_index": len(self.detect_frames), "time_index": round(len(self.detect_frames) * 1 / self.captureConfig.fps, 2),
+                       "LAnkle_angle": LAnkle_angle, "RAnkle_angle": RAnkle_angle}
         return dict_angles

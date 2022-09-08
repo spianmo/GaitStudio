@@ -8,7 +8,6 @@ class LogSignal(QObject):
     signal = Signal(str)
 
 
-
 class VideoFramesSignal(QObject):
     signal = Signal(list)
 
@@ -19,3 +18,7 @@ class KeyPointsSignal(QObject):
 
 class AngleDictSignal(QObject):
     signal = Signal(dict)
+
+
+class DetectInterruptSignal(QObject):
+    signal = Signal(str)

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>HealBone-GaitAnalysis</string>
+   <string>HealBone GaitStudio</string>
   </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonIconOnly</enum>
@@ -56,7 +56,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>740</width>
+          <width>670</width>
           <height>515</height>
          </rect>
         </property>
@@ -77,7 +77,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>740</width>
+          <width>734</width>
           <height>515</height>
          </rect>
         </property>
@@ -98,7 +98,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>740</width>
+          <width>734</width>
           <height>515</height>
          </rect>
         </property>
@@ -188,8 +188,8 @@
        <widget class="QPushButton" name="btnStart">
         <property name="geometry">
          <rect>
-          <x>130</x>
-          <y>23</y>
+          <x>136</x>
+          <y>30</y>
           <width>111</width>
           <height>32</height>
          </rect>
@@ -201,8 +201,8 @@
        <widget class="QSpinBox" name="sbTime">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>23</y>
+          <x>15</x>
+          <y>30</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -214,8 +214,8 @@
        <widget class="QLabel" name="label">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>5</y>
+          <x>15</x>
+          <y>12</y>
           <width>81</width>
           <height>16</height>
          </rect>
@@ -233,8 +233,8 @@
        <widget class="QComboBox" name="cbFPS">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>78</y>
+          <x>15</x>
+          <y>85</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -261,8 +261,8 @@
        <widget class="QLabel" name="label_2">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>60</y>
+          <x>15</x>
+          <y>67</y>
           <width>81</width>
           <height>16</height>
          </rect>
@@ -280,8 +280,8 @@
        <widget class="QLabel" name="label_3">
         <property name="geometry">
          <rect>
-          <x>130</x>
-          <y>60</y>
+          <x>136</x>
+          <y>67</y>
           <width>101</width>
           <height>16</height>
          </rect>
@@ -299,8 +299,8 @@
        <widget class="QComboBox" name="cbDepthMode">
         <property name="geometry">
          <rect>
-          <x>130</x>
-          <y>78</y>
+          <x>136</x>
+          <y>85</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -329,8 +329,8 @@
        <widget class="QLabel" name="label_4">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>113</y>
+          <x>15</x>
+          <y>120</y>
           <width>101</width>
           <height>16</height>
          </rect>
@@ -346,10 +346,13 @@
         </property>
        </widget>
        <widget class="QComboBox" name="cbColorResolution">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>132</y>
+          <x>15</x>
+          <y>139</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -391,8 +394,8 @@
        <widget class="QLabel" name="label_5">
         <property name="geometry">
          <rect>
-          <x>130</x>
-          <y>112</y>
+          <x>136</x>
+          <y>119</y>
           <width>111</width>
           <height>16</height>
          </rect>
@@ -410,8 +413,8 @@
        <widget class="QComboBox" name="cbModelComplexity">
         <property name="geometry">
          <rect>
-          <x>130</x>
-          <y>130</y>
+          <x>136</x>
+          <y>137</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -438,8 +441,8 @@
        <widget class="QSlider" name="hsMinDetectionConfidence">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>240</y>
+          <x>15</x>
+          <y>247</y>
           <width>231</width>
           <height>22</height>
          </rect>
@@ -460,12 +463,12 @@
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
-       <widget class="QLabel" name="label_6">
+       <widget class="QLabel" name="tvMinDetectionConfidence">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>219</y>
-          <width>151</width>
+          <x>15</x>
+          <y>226</y>
+          <width>221</width>
           <height>16</height>
          </rect>
         </property>
@@ -476,15 +479,15 @@
          </font>
         </property>
         <property name="text">
-         <string>Min Detection Confidence</string>
+         <string>Min Detection Confidence (0.5)</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_7">
+       <widget class="QLabel" name="tvMinTrackingConfidence">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>169</y>
-          <width>151</width>
+          <x>15</x>
+          <y>176</y>
+          <width>211</width>
           <height>16</height>
          </rect>
         </property>
@@ -495,14 +498,14 @@
          </font>
         </property>
         <property name="text">
-         <string>Min Tracking Confidence</string>
+         <string>Min Tracking Confidence (0.5)</string>
         </property>
        </widget>
        <widget class="QSlider" name="hsMinTrackingConfidence">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>190</y>
+          <x>15</x>
+          <y>197</y>
           <width>231</width>
           <height>22</height>
          </rect>
@@ -526,8 +529,8 @@
        <widget class="QCheckBox" name="cbSmoothLandmarks">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>270</y>
+          <x>15</x>
+          <y>277</y>
           <width>171</width>
           <height>21</height>
          </rect>
@@ -540,6 +543,150 @@
         </property>
         <property name="text">
          <string>Smooth Landmarks</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="tristate">
+         <bool>false</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="tvAnglesRangeFrames">
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>314</y>
+          <width>201</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Angles-Viewer Range (60 Frames)</string>
+        </property>
+       </widget>
+       <widget class="QSlider" name="hsAnglesViewerRange">
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>337</y>
+          <width>231</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="minimum">
+         <number>10</number>
+        </property>
+        <property name="maximum">
+         <number>120</number>
+        </property>
+        <property name="pageStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>60</number>
+        </property>
+        <property name="sliderPosition">
+         <number>60</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+       <widget class="QLabel" name="tvAnglesItemVisibleNum">
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>364</y>
+          <width>201</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Angle-Items Visible Num (3 Items)</string>
+        </property>
+       </widget>
+       <widget class="QSlider" name="hsAnglesViewerItems">
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>387</y>
+          <width>231</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="minimum">
+         <number>10</number>
+        </property>
+        <property name="maximum">
+         <number>80</number>
+        </property>
+        <property name="pageStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>30</number>
+        </property>
+        <property name="sliderPosition">
+         <number>30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="cbPatientBtn">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>422</y>
+          <width>91</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Patient Mode</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="tristate">
+         <bool>false</bool>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="cbPlotAlignBtn">
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>422</y>
+          <width>111</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Plot Align Button</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -714,7 +861,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>320</width>
+          <width>383</width>
           <height>356</height>
          </rect>
         </property>

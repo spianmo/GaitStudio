@@ -67,12 +67,12 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 ]
             }
         ]
+        anglesViewerRange = 60
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
         MainWindow.Ui_MainWindow.__init__(self)
         self.threadCapture: KinectCaptureThread = None
-        self.isInit = False
         self.viewModel = self.HealBoneViewModel()
         # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setupUi(self)
@@ -89,23 +89,81 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.angleViewerDock.installEventFilter(self)
         """
+        Tab事件过滤器
+        """
+        self.tabWidget.installEventFilter(self)
+        """
         构建QTGraph实时显示角度
         """
         self.anglePltLayouts: List[List[pg.PlotWidget]] = []
+        self.anglePltDataList: List[List[List]] = []
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             self.anglePltLayouts.append([])
+            self.anglePltDataList.append([])
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                label_style = {'color': '#EEE', 'font-size': '12px', 'font-family': '微软雅黑'}
+
+                self.anglePltDataList[anglesCubeIndex].append([[], []])
                 self.anglePltLayouts[anglesCubeIndex].append(pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setTitle(anglesCube["title"] + " " + angleCube[1], **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setAntialiasing(True)
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].useOpenGL(True)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0], anglesCube["ylim"][1])
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showGrid(x=True, y=True)
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(250)
+
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(180)
+
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('left', angleCube[3], **label_style)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('bottom', angleCube[2], **label_style)
+                # self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].hideButtons()
                 self.angleViewerDockScrollAreaContentsLayout.addWidget(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
+        """
+        Linked X label
+        """
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                """
+                第一行第一个exclude
+                """
+                if anglesCubeIndex == 0 and angleCubeIndex == 0:
+                    continue
+                """
+                关联前一行
+                """
+                # if anglesCubeIndex != 0 and angleCubeIndex == 0:
+                #     self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXLink(self.anglePltLayouts[anglesCubeIndex - 1][0])
+                """
+                每一行第一个exclude
+                """
+                if angleCubeIndex == 0:
+                    continue
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXLink(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex - 1])
 
         self.btnStart.clicked.connect(self.btnStartClicked)
+        self.hsAnglesViewerRange.valueChanged.connect(self.changeHsAnglesViewerRange)
+        self.hsAnglesViewerItems.valueChanged.connect(self.changeHsAnglesViewerItems)
+        self.hsMinTrackingConfidence.valueChanged.connect(self.changeMinTrackingConfidence)
+        self.hsMinDetectionConfidence.valueChanged.connect(self.changeMinDetectionConfidence)
+
+    def changeHsAnglesViewerRange(self):
+        self.tvAnglesRangeFrames.setText("Angles-Viewer Range (" + str(self.hsAnglesViewerRange.value()) + " Frames)")
+        self.viewModel.anglesViewerRange = int(self.hsAnglesViewerRange.value())
+
+    def changeMinTrackingConfidence(self):
+        self.tvMinTrackingConfidence.setText("Min Tracking Confidence (" + str(round(self.hsMinTrackingConfidence.value() / 100, 1)) + ")")
+
+    def changeMinDetectionConfidence(self):
+        self.tvMinDetectionConfidence.setText("Min Detection Confidence (" + str(round(self.hsMinDetectionConfidence.value() / 100, 1)) + ")")
+
+    def changeHsAnglesViewerItems(self):
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                self.tvAnglesItemVisibleNum.setText("Angle-Items Visible Num (" + str(int(self.hsAnglesViewerItems.value() / 10)) + " Items)")
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(
+                    int(self.angleViewerDock.size().height() / int(self.hsAnglesViewerItems.value() / 10) - 20))
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Resize and watched == self.tabWidget:
+            self.resizeCameraView()
         if event.type() == QEvent.WindowStateChange and watched == self.angleViewerDock:
             if self.angleViewerDock.isFloating() and event.type() == QEvent.Resize and watched == self.angleViewerDock:
                 for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
@@ -114,7 +172,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
             if not self.angleViewerDock.isFloating() and event.type() == QEvent.Resize and watched == self.angleViewerDock:
                 for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
                     for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
-                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(int(event.size().height() / 2 - 20))
+                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(int(event.size().height() / 3 - 20))
         return super().eventFilter(watched, event)
 
     def resizeCameraView(self, tabWidth=-1, tabHeight=-1):
@@ -126,15 +184,26 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
 
-    def resizeEvent(self, event: QResizeEvent):
-        if self.isInit:
-            self.resizeCameraView()
-        else:
-            self.isInit = True
-            self.resizeCameraView(740, 535)
-
     def plotFrameAngles(self, angles: dict):
-        print(angles)
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["time_index"])
+                self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1].append(angles[angleCube[1]])
+                if len(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0]) > self.viewModel.anglesViewerRange:
+                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].pop(0)
+                if len(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1]) > self.viewModel.anglesViewerRange:
+                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1].pop(0)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                                                                                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                                                                                         pen=({'color': "r", "width": 1.5}), clear=True)
+
+    def clearAnglesViewer(self):
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                self.anglePltDataList[anglesCubeIndex][angleCubeIndex] = [[], []]
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                                                                                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                                                                                         pen=({'color': "r", "width": 1.5}), clear=True)
 
     def displayCVFrames(self, frames):
         self.displayCVFrame(self.cameraIrFovView, frames[2])
@@ -177,11 +246,26 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         透传子线程传出的角度dict
         """
         self.threadCapture.signal_angles.signal.connect(self.plotFrameAngles)
+        """
+        打断时清空角度视图
+        """
+        self.threadCapture.signal_detectInterrupt.signal.connect(self.clearAnglesViewer)
         self.threadCapture.start()
+
+    def enableDetectForm(self, enable=True):
+        self.sbTime.setEnabled(enable)
+        self.cbFPS.setEnabled(enable)
+        self.cbDepthMode.setEnabled(enable)
+        self.cbColorResolution.setEnabled(enable)
+        self.cbModelComplexity.setEnabled(enable)
+        self.hsMinTrackingConfidence.setEnabled(enable)
+        self.hsMinDetectionConfidence.setEnabled(enable)
+        self.cbSmoothLandmarks.setEnabled(enable)
 
     def btnStartClicked(self):
         if self.viewModel.detectStatus:
             self.stopDetect()
+            self.enableDetectForm(enable=True)
         else:
             k4aConfig = {
                 "color_resolution": self.cbColorResolution.currentIndex() + 1,
@@ -199,7 +283,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 "fps": int(self.cbFPS.currentText().split("_")[1]),
                 "detectionTime": int(self.sbTime.text())
             }
+            self.clearAnglesViewer()
             self.startDetect(k4aConfig, mpConfig, captureConfig)
+            self.enableDetectForm(enable=False)
 
     def logViewAppend(self, text):
         self.outputText.moveCursor(QTextCursor.End, QTextCursor.MoveMode.MoveAnchor)
