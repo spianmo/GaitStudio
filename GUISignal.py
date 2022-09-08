@@ -26,3 +26,7 @@ class DetectInterruptSignal(QObject):
 
 class DetectFinishSignal(QObject):
     signal = Signal(str)
+
+
+class DetectExitSignal(QObject):
+    signal = Signal(str)

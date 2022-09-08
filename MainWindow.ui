@@ -67,6 +67,22 @@
          </sizepolicy>
         </property>
        </widget>
+       <widget class="QFrame" name="logoFrame">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>160</y>
+          <width>481</width>
+          <height>191</height>
+         </rect>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+       </widget>
       </widget>
       <widget class="QWidget" name="KinectFOV">
        <attribute name="title">
@@ -88,6 +104,22 @@
          </sizepolicy>
         </property>
        </widget>
+       <widget class="QFrame" name="logoFrame_2">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>160</y>
+          <width>481</width>
+          <height>191</height>
+         </rect>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+       </widget>
       </widget>
       <widget class="QWidget" name="KinectIR">
        <attribute name="title">
@@ -107,6 +139,22 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+       </widget>
+       <widget class="QFrame" name="logoFrame_3">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>160</y>
+          <width>481</width>
+          <height>191</height>
+         </rect>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
        </widget>
       </widget>
@@ -897,6 +945,28 @@
      <height>23</height>
     </rect>
    </property>
+  </widget>
+  <widget class="QDockWidget" name="anglesDataFrameDock">
+   <property name="minimumSize">
+    <size>
+     <width>100</width>
+     <height>38</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Angles DataFrame</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <property name="minimumSize">
+     <size>
+      <width>100</width>
+      <height>0</height>
+     </size>
+    </property>
+   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="4" margin="4"/>

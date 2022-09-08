@@ -9,7 +9,7 @@ from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode
 import cv2 as cv
 import mediapipe as mp
 
-from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal
+from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -71,6 +71,7 @@ class KinectCaptureThread(QThread):
         self.signal_log: LogSignal = LogSignal()
         self.signal_detectInterrupt = DetectInterruptSignal()
         self.signal_detectFinish = DetectFinishSignal()
+        self.signal_detectExit = DetectExitSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -128,6 +129,9 @@ class KinectCaptureThread(QThread):
 
     def emitDetectFinish(self, empty="empty"):
         self.signal_detectFinish.signal.emit(empty)
+
+    def emitDetectExit(self, empty="empty"):
+        self.signal_detectExit.signal.emit(empty)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -295,7 +299,7 @@ class KinectCaptureThread(QThread):
         """
         释放MediaPipe姿势估计器
         """
-        self.emitDetectFinish()
+        self.emitDetectExit()
         self.poseDetector.close()
         if self.k4a.opened:
             self.k4a.stop()

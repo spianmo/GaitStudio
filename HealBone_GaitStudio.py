@@ -110,6 +110,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 self.anglePltLayouts[anglesCubeIndex].append(pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setTitle(anglesCube["title"] + " " + angleCube[1], **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setAntialiasing(True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, 100)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0], anglesCube["ylim"][1])
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showGrid(x=True, y=True)
 
@@ -164,6 +165,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin.setFloating(True)
         self.patientWin.setHidden(True)
         self.patientWin.setMinimumSize(QSize(741, 515))
+        self.showStatusMessage("Info: Healbone GaitStudio组件加载完毕")
+
+    def showStatusMessage(self, text, timeout=2000):
+        self.statusBar.showMessage(text, timeout)
 
     def changeCbPatientBtn(self):
         self.viewModel.patientMode = self.cbPatientBtn.isChecked()
@@ -288,6 +293,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.threadCapture.signal_detectInterrupt.signal.connect(self.clearAnglesViewer)
         """
+        透传子线程DetectExit
+        """
+        self.threadCapture.signal_detectExit.signal.connect(self.detectExit)
+        """
         透传子线程DetectFinish
         """
         self.threadCapture.signal_detectFinish.signal.connect(self.detectFinish)
@@ -303,13 +312,16 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.hsMinDetectionConfidence.setEnabled(enable)
         self.cbSmoothLandmarks.setEnabled(enable)
 
-    def detectFinish(self):
+    def detectExit(self):
         if self.viewModel.patientMode:
             self.patientWin.hide()
         self.viewModel.detectStatus = False
         self.enableDetectForm(enable=True)
         self.btnStart.setText("开始检测")
-        self.logViewAppend("检测完成，报告分析中...")
+        self.logViewAppend("Pose Detect线程已结束")
+
+    def detectFinish(self):
+        self.logViewAppend("Pose Detect完成, 结果分析中...")
 
     def btnStartClicked(self):
         if self.viewModel.detectStatus:
@@ -334,6 +346,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 "detectionTime": int(self.sbTime.text())
             }
             self.clearAnglesViewer()
+            self.logoFrame.hide()
+            self.logoFrame_2.hide()
+            self.logoFrame_3.hide()
             self.startDetect(k4aConfig, mpConfig, captureConfig)
             if self.viewModel.patientMode:
                 self.patientWin.show()
@@ -358,7 +373,7 @@ if __name__ == '__main__':
     # 信号槽
     logSignal = LogSignal()
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
-    logSignal.signal.emit("HealBone GaitLab 初始化完成")
+    logSignal.signal.emit("HealBone GaitStudio 初始化完成")
 
     hbWin.show()
     sys.exit(app.exec_())

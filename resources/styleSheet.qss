@@ -305,3 +305,9 @@ QTabBar::tab:hover {
 QTextEdit {
     border: none;
 }
+
+QFrame#logoFrame, QFrame#logoFrame_2, QFrame#logoFrame_3 {
+    background-color: #212121;
+    border: none;
+    border-image: url(resources/gait.png);
+}

@@ -720,7 +720,7 @@ if __name__ == '__main__':
     # 信号槽
     logSignal = LogSignal()
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
-    logSignal.signal.emit("HealBone GaitLab 初始化完成")
+    logSignal.signal.emit("HealBone GaitStudio 初始化完成")
 
     hbWin.show()
     sys.exit(app.exec_())
