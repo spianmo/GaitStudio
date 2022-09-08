@@ -56,7 +56,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>670</width>
+          <width>741</width>
           <height>515</height>
          </rect>
         </property>
@@ -664,7 +664,7 @@
          <string>Patient Mode</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="tristate">
          <bool>false</bool>
@@ -861,7 +861,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>383</width>
+          <width>320</width>
           <height>356</height>
          </rect>
         </property>

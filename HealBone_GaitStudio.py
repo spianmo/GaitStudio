@@ -68,6 +68,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
             }
         ]
         anglesViewerRange = 60
+        patientMode = False
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
@@ -114,7 +115,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('left', angleCube[3], **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('bottom', angleCube[2], **label_style)
-                # self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].hideButtons()
                 self.angleViewerDockScrollAreaContentsLayout.addWidget(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
         """
         Linked X label
@@ -143,6 +143,19 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.hsAnglesViewerItems.valueChanged.connect(self.changeHsAnglesViewerItems)
         self.hsMinTrackingConfidence.valueChanged.connect(self.changeMinTrackingConfidence)
         self.hsMinDetectionConfidence.valueChanged.connect(self.changeMinDetectionConfidence)
+        self.cbPlotAlignBtn.stateChanged.connect(self.changeCbPlotAlign)
+        self.cbPatientBtn.stateChanged.connect(self.changeCbPatientBtn)
+
+    def changeCbPatientBtn(self):
+        self.viewModel.patientMode = self.cbPatientBtn.isChecked()
+
+    def changeCbPlotAlign(self):
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                if self.cbPlotAlignBtn.isChecked():
+                    self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showButtons()
+                else:
+                    self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].hideButtons()
 
     def changeHsAnglesViewerRange(self):
         self.tvAnglesRangeFrames.setText("Angles-Viewer Range (" + str(self.hsAnglesViewerRange.value()) + " Frames)")
@@ -209,6 +222,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.displayCVFrame(self.cameraIrFovView, frames[2])
         self.displayCVFrame(self.cameraFovView, frames[1])
         self.displayCVFrame(self.cameraIrView, frames[0])
+        if self.viewModel.patientMode:
+            # TODO: 展示Patient视图
+            print("展示Patient视图")
 
     def displayCVFrame(self, cameraView, frame):
         """
