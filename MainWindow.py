@@ -13,6 +13,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from widgets.QVtkWidget import QVTKWidget
+from widgets.QMaximumDockWidget import QMaximumDockWidget
 
 
 class Ui_MainWindow(object):
@@ -229,16 +230,45 @@ class Ui_MainWindow(object):
 
         self.viewerDock.setWidget(self.viewerDockContents)
         MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.viewerDock)
+        self.angleViewerDock = QMaximumDockWidget(MainWindow)
+        self.angleViewerDock.setObjectName(u"angleViewerDock")
+        self.angleViewerDock.setFloating(False)
+        self.angleViewerDock.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
+        self.angleViewerDockContents = QWidget()
+        self.angleViewerDockContents.setObjectName(u"angleViewerDockContents")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.angleViewerDockContents.sizePolicy().hasHeightForWidth())
+        self.angleViewerDockContents.setSizePolicy(sizePolicy2)
+        self.angleViewerDockContents.setMinimumSize(QSize(0, 0))
+        self.angleViewerDockContents.setMaximumSize(QSize(16777215, 16777215))
+        self.angleViewerDockContentsVerticalLayout = QVBoxLayout(self.angleViewerDockContents)
+        self.angleViewerDockContentsVerticalLayout.setSpacing(4)
+        self.angleViewerDockContentsVerticalLayout.setContentsMargins(4, 4, 4, 4)
+        self.angleViewerDockContentsVerticalLayout.setObjectName(u"angleViewerDockContentsVerticalLayout")
+        self.angleViewerDockContentsVerticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.angleViewerDockScrollArea = QScrollArea(self.angleViewerDockContents)
+        self.angleViewerDockScrollArea.setObjectName(u"angleViewerDockScrollArea")
+        self.angleViewerDockScrollArea.setWidgetResizable(True)
+        self.angleViewerDockScrollAreaContents = QWidget()
+        self.angleViewerDockScrollAreaContents.setObjectName(u"angleViewerDockScrollAreaContents")
+        self.angleViewerDockScrollAreaContents.setGeometry(QRect(0, 0, 320, 356))
+        self.angleViewerDockScrollAreaContentsLayout = QVBoxLayout(self.angleViewerDockScrollAreaContents)
+        self.angleViewerDockScrollAreaContentsLayout.setSpacing(4)
+        self.angleViewerDockScrollAreaContentsLayout.setContentsMargins(4, 4, 4, 4)
+        self.angleViewerDockScrollAreaContentsLayout.setObjectName(u"angleViewerDockScrollAreaContentsLayout")
+        self.angleViewerDockScrollAreaContentsLayout.setContentsMargins(0, 0, 0, 0)
+        self.angleViewerDockScrollArea.setWidget(self.angleViewerDockScrollAreaContents)
+
+        self.angleViewerDockContentsVerticalLayout.addWidget(self.angleViewerDockScrollArea)
+
+        self.angleViewerDock.setWidget(self.angleViewerDockContents)
+        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.angleViewerDock)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
         self.menuBar.setGeometry(QRect(0, 0, 1328, 23))
         MainWindow.setMenuBar(self.menuBar)
-        self.angleViewerDock = QDockWidget(MainWindow)
-        self.angleViewerDock.setObjectName(u"angleViewerDock")
-        self.angleViewerDockContents = QWidget()
-        self.angleViewerDockContents.setObjectName(u"angleViewerDockContents")
-        self.angleViewerDock.setWidget(self.angleViewerDockContents)
-        MainWindow.addDockWidget(Qt.RightDockWidgetArea, self.angleViewerDock)
 
         self.retranslateUi(MainWindow)
 

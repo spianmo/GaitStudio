@@ -656,6 +656,91 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QMaximumDockWidget" name="angleViewerDock">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>RealTime Angles Viewer</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="angleViewerDockContents">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>16777215</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <layout class="QVBoxLayout" name="angleViewerDockContentsVerticalLayout">
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QScrollArea" name="angleViewerDockScrollArea">
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="angleViewerDockScrollAreaContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>320</width>
+          <height>356</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="angleViewerDockScrollAreaContentsLayout">
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -666,15 +751,6 @@
     </rect>
    </property>
   </widget>
-  <widget class="QDockWidget" name="angleViewerDock">
-   <property name="windowTitle">
-    <string>RealTime Angles Viewer</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="angleViewerDockContents"/>
-  </widget>
  </widget>
  <layoutdefault spacing="4" margin="4"/>
  <customwidgets>
@@ -682,6 +758,12 @@
    <class>QVTKWidget</class>
    <extends>QWidget</extends>
    <header>widgets.QVtkWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QMaximumDockWidget</class>
+   <extends>QDockWidget</extends>
+   <header>widgets.QMaximumDockWidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

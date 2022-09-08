@@ -1,10 +1,13 @@
 import sys
 import time
+from typing import List
+
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+import pyqtgraph as pg
+from pyqtgraph import FillBetweenItem
 
-from pyk4a import Config, ColorResolution, FPS, DepthMode
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
@@ -14,16 +17,88 @@ import cv2 as cv
 class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     class HealBoneViewModel(object):
         detectStatus = False
+        anglesCheckCube = [
+            {
+                "title": "膝关节角度变化周期",
+                "ylim": (0, 180),
+                "axis": [
+                    ["Time_in_sec", "LKnee_angle", "时间（秒）", "L 膝关节角度 (°)"],
+                    ["Time_in_sec", "RKnee_angle", "时间（秒）", "R 膝关节角度 (°)"]
+                ]
+            },
+            {
+                "title": "髋关节角度变化周期（内收外展）",
+                "ylim": (0, 180),
+                "axis": [
+                    ["Time_in_sec", "LHip_angle", "时间（秒）", "L 髋关节角度 (°)"],
+                    ["Time_in_sec", "RHip_angle", "时间（秒）", "R 髋关节角度 (°)"]
+                ]
+            },
+            {
+                "title": "髋关节角度变化周期（屈曲伸展）",
+                "ylim": (0, 180),
+                "axis": [
+                    ["Time_in_sec", "TorsoLFemur_angle", "时间（秒）", "L 髋关节角度 (°)"],
+                    ["Time_in_sec", "TorsoRFemur_angle", "时间（秒）", "R 髋关节角度 (°)"]
+                ]
+            },
+            {
+                "title": "髋关节角度变化周期（外旋内旋）",
+                "ylim": (0, 180),
+                "axis": [
+                    ["Time_in_sec", "LTibiaSelf_vector", "时间（秒）", "L 髋关节角度 (°)"],
+                    ["Time_in_sec", "RTibiaSelf_vector", "时间（秒）", "R 髋关节角度 (°)"]
+                ]
+            },
+            {
+                "title": "躯干髋关节角度变化周期",
+                "ylim": (0, 180),
+                "axis": [
+                    ["Time_in_sec", "TorsoLHip_angle", "时间（秒）", "躯干 L 髋关节角度 (°)"],
+                    ["Time_in_sec", "TorsoRHip_angle", "时间（秒）", "躯干 R 髋关节角度 (°)"]
+                ]
+            },
+            {
+                "title": "踝关节角度变化周期",
+                "ylim": (0, 180),
+                "axis": [
+                    ["Time_in_sec", "LAnkle_angle", "时间（秒）", "L 踝关节角度 (°)"],
+                    ["Time_in_sec", "RAnkle_angle", "时间（秒）", "R 踝关节角度 (°)"]
+                ]
+            }
+        ]
 
-    def __init__(self):
-        QMainWindow.__init__(self)
+    def __init__(self, *args):
+        QMainWindow.__init__(self, *args)
         MainWindow.Ui_MainWindow.__init__(self)
         self.threadCapture: KinectCaptureThread = None
         self.isInit = False
         self.viewModel = self.HealBoneViewModel()
         # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setupUi(self)
-        self.tabifyDockWidget(self.viewerDock, self.angleViewerDock)
+        """
+        合并右侧悬浮窗口
+        """
+        self.tabifyDockWidget(self.angleViewerDock, self.viewerDock)
+        """
+        焦点角度窗口
+        """
+        self.angleViewerDock.raise_()
+        """
+        构建QTGraph实时显示角度
+        """
+        self.anglePltLayouts: List[List[pg.PlotWidget]] = []
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            self.anglePltLayouts.append([])
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                self.anglePltLayouts[anglesCubeIndex].append(pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setAntialiasing(True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].useOpenGL(True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0], anglesCube["ylim"][1])
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showGrid(x=True, y=True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(120)
+                self.angleViewerDockScrollAreaContentsLayout.addWidget(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
+
         self.btnStart.clicked.connect(self.btnStartClicked)
 
     def resizeCameraView(self, tabWidth=-1, tabHeight=-1):
@@ -41,6 +116,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.isInit = True
             self.resizeCameraView(740, 535)
+
+    def plotFrameAngles(self, angles: dict):
+        print(angles)
 
     def displayCVFrames(self, frames):
         self.displayCVFrame(self.cameraIrFovView, frames[2])
@@ -79,6 +157,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         透传子线程传出的待显示的视频帧
         """
         self.threadCapture.signal_frames.signal.connect(self.displayCVFrames)
+        """
+        透传子线程传出的角度dict
+        """
+        self.threadCapture.signal_angles.signal.connect(self.plotFrameAngles)
         self.threadCapture.start()
 
     def btnStartClicked(self):

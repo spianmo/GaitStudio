@@ -127,3 +127,4 @@ zipp==3.8.1
 
 setuptools~=60.2.0
 PySide2~=5.15.2.1
+pyqtgraph~=0.12.4
