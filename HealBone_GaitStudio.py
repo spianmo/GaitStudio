@@ -7,6 +7,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import pyqtgraph as pg
 from pyqtgraph import FillBetweenItem
+from qtmodernredux import QtModernRedux
 
 import MainWindow
 from GUISignal import LogSignal
@@ -367,13 +368,13 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    app = QApplication()
+    app = QtModernRedux.QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
     # 信号槽
     logSignal = LogSignal()
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
     logSignal.signal.emit("HealBone GaitStudio 初始化完成")
-
-    hbWin.show()
+    mw = QtModernRedux.wrap(hbWin)
+    mw.show()
     sys.exit(app.exec_())
