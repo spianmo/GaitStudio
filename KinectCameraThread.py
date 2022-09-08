@@ -9,7 +9,7 @@ from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode
 import cv2 as cv
 import mediapipe as mp
 
-from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal
+from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -70,6 +70,7 @@ class KinectCaptureThread(QThread):
         self.signal_angles: AngleDictSignal = AngleDictSignal()
         self.signal_log: LogSignal = LogSignal()
         self.signal_detectInterrupt = DetectInterruptSignal()
+        self.signal_detectFinish = DetectFinishSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -122,8 +123,11 @@ class KinectCaptureThread(QThread):
     def emitAngles(self, angleDict):
         self.signal_angles.signal.emit(angleDict)
 
-    def emitDetectInterrupt(self, empty):
+    def emitDetectInterrupt(self, empty="empty"):
         self.signal_detectInterrupt.signal.emit(empty)
+
+    def emitDetectFinish(self, empty="empty"):
+        self.signal_detectFinish.signal.emit(empty)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -269,7 +273,7 @@ class KinectCaptureThread(QThread):
                 if self.credible_pose(pose_keypoints):
                     if not self.detectFlag:
                         self.emitLog("已识别到所有检测点，开始检测")
-                        self.emitDetectInterrupt("empty")
+                        self.emitDetectInterrupt()
                         print("开始检测！")
                         self.detectFlag = True
                     self.detect_frames.append(pose_keypoints)
@@ -291,6 +295,7 @@ class KinectCaptureThread(QThread):
         """
         释放MediaPipe姿势估计器
         """
+        self.emitDetectFinish()
         self.poseDetector.close()
         if self.k4a.opened:
             self.k4a.stop()

@@ -22,3 +22,7 @@ class AngleDictSignal(QObject):
 
 class DetectInterruptSignal(QObject):
     signal = Signal(str)
+
+
+class DetectFinishSignal(QObject):
+    signal = Signal(str)

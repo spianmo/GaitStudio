@@ -163,11 +163,11 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin.setWidget(self.cameraPatientView)
         self.patientWin.setFloating(True)
         self.patientWin.setHidden(True)
-
+        self.patientWin.setMinimumSize(QSize(741, 515))
 
     def changeCbPatientBtn(self):
         self.viewModel.patientMode = self.cbPatientBtn.isChecked()
-        if self.viewModel.patientMode:
+        if self.viewModel.patientMode and self.viewModel.detectStatus:
             self.patientWin.setHidden(False)
         else:
             self.patientWin.setHidden(True)
@@ -287,6 +287,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         打断时清空角度视图
         """
         self.threadCapture.signal_detectInterrupt.signal.connect(self.clearAnglesViewer)
+        """
+        透传子线程DetectFinish
+        """
+        self.threadCapture.signal_detectFinish.signal.connect(self.detectFinish)
         self.threadCapture.start()
 
     def enableDetectForm(self, enable=True):
@@ -299,10 +303,19 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.hsMinDetectionConfidence.setEnabled(enable)
         self.cbSmoothLandmarks.setEnabled(enable)
 
+    def detectFinish(self):
+        if self.viewModel.patientMode:
+            self.patientWin.hide()
+        self.viewModel.detectStatus = False
+        self.enableDetectForm(enable=True)
+        self.btnStart.setText("开始检测")
+        self.logViewAppend("检测完成，报告分析中...")
+
     def btnStartClicked(self):
         if self.viewModel.detectStatus:
             self.stopDetect()
             self.enableDetectForm(enable=True)
+            self.patientWin.hide()
         else:
             k4aConfig = {
                 "color_resolution": self.cbColorResolution.currentIndex() + 1,
@@ -322,6 +335,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
             }
             self.clearAnglesViewer()
             self.startDetect(k4aConfig, mpConfig, captureConfig)
+            if self.viewModel.patientMode:
+                self.patientWin.show()
             self.enableDetectForm(enable=False)
 
     def logViewAppend(self, text):
