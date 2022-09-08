@@ -13,6 +13,8 @@ from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 import cv2 as cv
 
+from widgets.QMaximumDockWidget import QMaximumDockWidget
+
 
 class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     class HealBoneViewModel(object):
@@ -145,9 +147,30 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.hsMinDetectionConfidence.valueChanged.connect(self.changeMinDetectionConfidence)
         self.cbPlotAlignBtn.stateChanged.connect(self.changeCbPlotAlign)
         self.cbPatientBtn.stateChanged.connect(self.changeCbPatientBtn)
+        """
+        创建隐藏的患者视图窗口
+        """
+        self.cameraPatientView = QGraphicsView(self.KinectIRFOV)
+        self.cameraPatientView.setObjectName(u"cameraPatientView")
+        self.cameraPatientView.setGeometry(QRect(0, 0, 741, 515))
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cameraPatientView.sizePolicy().hasHeightForWidth())
+        self.cameraPatientView.setSizePolicy(sizePolicy)
+        self.patientWin = QMaximumDockWidget(self)
+        self.patientWin.setWindowTitle("PatientView")
+        self.patientWin.setWidget(self.cameraPatientView)
+        self.patientWin.setFloating(True)
+        self.patientWin.setHidden(True)
+
 
     def changeCbPatientBtn(self):
         self.viewModel.patientMode = self.cbPatientBtn.isChecked()
+        if self.viewModel.patientMode:
+            self.patientWin.setHidden(False)
+        else:
+            self.patientWin.setHidden(True)
 
     def changeCbPlotAlign(self):
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
@@ -222,9 +245,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.displayCVFrame(self.cameraIrFovView, frames[2])
         self.displayCVFrame(self.cameraFovView, frames[1])
         self.displayCVFrame(self.cameraIrView, frames[0])
-        if self.viewModel.patientMode:
-            # TODO: 展示Patient视图
-            print("展示Patient视图")
+        self.displayCVFrame(self.cameraPatientView, frames[0])
 
     def displayCVFrame(self, cameraView, frame):
         """

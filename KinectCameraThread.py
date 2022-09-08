@@ -191,7 +191,7 @@ class KinectCaptureThread(QThread):
         self.emitLog("Kinect配置: " + str(obj2json(self.k4aConfig)))
         self.emitLog("姿势估计器配置: " + str(obj2json(self.mpConfig)))
         self.emitLog("captureConfig配置: " + str(obj2json(self.captureConfig)))
-        self.emitLog("等待人体进入检测范围...")
+        self.emitLog("等待目标进入检测范围...")
         while True:
             self.mutex.lock()
             capture = self.k4a.get_capture()
