@@ -7,7 +7,6 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import pyqtgraph as pg
 from pyqtgraph import FillBetweenItem
-from qtmodernredux import QtModernRedux
 
 import MainWindow
 from GUISignal import LogSignal
@@ -70,7 +69,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 ]
             }
         ]
-        anglesViewerRange = 60
+        anglesViewerRange = 2
         patientMode = False
 
     def __init__(self, *args):
@@ -111,7 +110,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 self.anglePltLayouts[anglesCubeIndex].append(pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setTitle(anglesCube["title"] + " " + angleCube[1], **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setAntialiasing(True)
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, 100)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0], anglesCube["ylim"][1])
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showGrid(x=True, y=True)
 
@@ -231,12 +230,18 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["time_index"])
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1].append(angles[angleCube[1]])
-                if len(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0]) > self.viewModel.anglesViewerRange:
-                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].pop(0)
-                if len(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1]) > self.viewModel.anglesViewerRange:
-                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1].pop(0)
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
-                                                                                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                """
+                折线图自动滚动
+                """
+                if self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] > self.viewModel.anglesViewerRange:
+                    print("范围:" + str(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] - self.viewModel.anglesViewerRange) + " " +
+                          str(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1]))
+                    self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(
+                        self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] - self.viewModel.anglesViewerRange,
+                        self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1])
+
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(x=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                                                                                         y=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
                                                                                          pen=({'color': "r", "width": 1.5}), clear=True)
 
     def clearAnglesViewer(self):
@@ -368,13 +373,13 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    app = QtModernRedux.QApplication()
+    app = QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
     # 信号槽
     logSignal = LogSignal()
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
     logSignal.signal.emit("HealBone GaitStudio 初始化完成")
-    mw = QtModernRedux.wrap(hbWin)
-    mw.show()
+
+    hbWin.show()
     sys.exit(app.exec_())
