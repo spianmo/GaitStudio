@@ -1,3 +1,4 @@
+import time
 import traceback
 from typing import List, Tuple, NoReturn, Any
 
@@ -11,7 +12,7 @@ import cv2 as cv
 import mediapipe as mp
 
 from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal, \
-    KinectErrorSignal
+    KinectErrorSignal, PatientTipsSignal, FPSSignal
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -59,7 +60,6 @@ KEYPOINT_DETECTED = [
 
 
 class KinectCaptureThread(QThread):
-
     class KinectCaptureConfig(object):
         def __init__(self, fps, detectionTime):
             self.fps = fps
@@ -75,6 +75,8 @@ class KinectCaptureThread(QThread):
         self.signal_detectFinish = DetectFinishSignal()
         self.signal_detectExit = DetectExitSignal()
         self.signal_kinectError = KinectErrorSignal()
+        self.signal_fpsSignal = FPSSignal()
+        self.signal_patientTipsSignal = PatientTipsSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -111,9 +113,12 @@ class KinectCaptureThread(QThread):
         self.detect_frames: List = []
         self.emitLog(str(obj2json(k4aConfig)))
         self.mutex = QMutex()
+        self.detectStartTime = time.time()
 
     def stopCapture(self):
         self.recordFlag = False
+        if self.k4a.is_running:
+            self.k4a.stop()
 
     def emitLog(self, logStr: str):
         self.signal_log.signal.emit(logStr)
@@ -138,6 +143,12 @@ class KinectCaptureThread(QThread):
 
     def emitKinectError(self, empty="empty"):
         self.signal_kinectError.signal.emit(empty)
+
+    def emitFPS(self, fps: str):
+        self.signal_fpsSignal.signal.emit("FPS " + fps)
+
+    def emitPatientTips(self, tips):
+        self.signal_patientTipsSignal.signal.emit(tips)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -208,6 +219,9 @@ class KinectCaptureThread(QThread):
             self.emitLog("captureConfig配置: " + str(obj2json(self.captureConfig)))
             self.emitLog("等待目标进入检测范围...")
             while True:
+                start_time = time.time()
+                if not self.k4a.opened:
+                    break
                 self.mutex.lock()
                 capture = self.k4a.get_capture()
                 self.mutex.unlock()
@@ -244,13 +258,25 @@ class KinectCaptureThread(QThread):
                     frame.flags.writeable = True
                     frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
-                    if not self.recordFlag or len(self.detect_frames) == (self.captureConfig.fps * self.captureConfig.detectionTime):
-                        self.k4a.stop()
-                        break
+                    """
+                    判断是否检测结束
+                    """
+                    if not self.recordFlag or (time.time() - self.detectStartTime) > self.captureConfig.detectionTime:
+                        if self.detectFlag:
+                            self.emitDetectFinish()
+                            self.emitLog("检测结束")
+                            self.k4a.stop()
+                            break
 
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
                         self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+                        if self.detectFlag:
+                            self.detectStartTime = time.time()
+                            self.detectFlag = False
+                            self.detect_frames = []
+                            self.emitLog("检测过程中断！等待重新检测")
+                            print("检测过程被中断！等待重新检测")
                         continue
                     # 将归一化的坐标转换为原始坐标
                     pose_keypoints = []
@@ -285,11 +311,12 @@ class KinectCaptureThread(QThread):
                         if not self.detectFlag:
                             self.emitLog("已识别到所有检测点，开始检测")
                             self.emitDetectInterrupt()
+                            self.detectStartTime = time.time()
                             print("开始检测！")
                             self.detectFlag = True
                         self.detect_frames.append(pose_keypoints)
-                        self.emitLog("已检测" + str(round(len(self.detect_frames) * (1 / self.captureConfig.fps), 2)) + '秒')
-                        print("已检测" + str(round(len(self.detect_frames) * (1 / self.captureConfig.fps), 2)) + '秒')
+                        self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
+                        print("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         self.emitKeyPoints(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
                     else:
@@ -303,6 +330,7 @@ class KinectCaptureThread(QThread):
                     self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
 
                 del capture
+                self.emitFPS(str(round(1 / (time.time() - start_time))))
         except K4AException as e:
             self.emitLog(repr(e))
             self.emitLog(traceback.format_exc())
@@ -441,7 +469,7 @@ class KinectCaptureThread(QThread):
         # 右踝与右胫骨的夹角
         RAnkle_angle = self.vectors_to_angle(RFoot_vector, RTibia_vector, supplementaryAngle=False)
 
-        dict_angles = {"frame_index": len(self.detect_frames), "time_index": round(len(self.detect_frames) * 1 / self.captureConfig.fps, 2),
+        dict_angles = {"frame_index": len(self.detect_frames), "time_index": (time.time() - self.detectStartTime),
                        "TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
                        "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
                        "TorsoLFemur_angle": TorsoLFemur_angle, "TorsoRFemur_angle": TorsoRFemur_angle,

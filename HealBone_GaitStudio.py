@@ -71,7 +71,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 ]
             }
         ]
-        anglesViewerRange = 2
+        anglesViewerRange = 6
         patientMode = False
 
     def __init__(self, *args):
@@ -193,8 +193,12 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                     self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].hideButtons()
 
     def changeHsAnglesViewerRange(self):
-        self.tvAnglesRangeFrames.setText("Angles-Viewer Range (" + str(self.hsAnglesViewerRange.value()) + " Frames)")
+        self.tvAnglesRangeFrames.setText("Angles-Viewer Range (" + str(self.hsAnglesViewerRange.value()) + " sec)")
         self.viewModel.anglesViewerRange = int(self.hsAnglesViewerRange.value())
+        for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
+            for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
+                label_style = {'color': '#EEE', 'font-size': '12px', 'font-family': '微软雅黑'}
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
 
     def changeMinTrackingConfidence(self):
         self.tvMinTrackingConfidence.setText("Min Tracking Confidence (" + str(round(self.hsMinTrackingConfidence.value() / 100, 1)) + ")")
@@ -258,6 +262,11 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
                                                                                          self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
                                                                                          pen=({'color': "r", "width": 1.5}), clear=True)
+        """
+        清空表格
+        """
+        self.anglesDataFrame = pd.DataFrame()
+        self.anglesDataFrameTable.set_data(self.anglesDataFrame)
 
     def displayCVFrames(self, frames):
         if self.hideLogoFrame:
@@ -323,7 +332,21 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.threadCapture.signal_kinectError.signal.connect(
             lambda x: self.showErrorMessage(title="Kinect Error", content="Kinect设备打开失败, 请检查Kinect是否被其他进程占用"))
+        """
+        FPSEvent
+        """
+        self.threadCapture.signal_fpsSignal.signal.connect(self.showFps)
+        """
+        PatientTips
+        """
+        self.threadCapture.signal_patientTipsSignal.signal.connect(self.showPatientTips)
         self.threadCapture.start()
+
+    def showFps(self, fpsStr):
+        print(fpsStr)
+
+    def showPatientTips(self, tips):
+        print(tips)
 
     def showErrorMessage(self, title="Error", content=""):
         self.showStatusMessage(content)

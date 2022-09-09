@@ -31,5 +31,14 @@ class DetectFinishSignal(QObject):
 class DetectExitSignal(QObject):
     signal = Signal(str)
 
+
 class KinectErrorSignal(QObject):
+    signal = Signal(str)
+
+
+class FPSSignal(QObject):
+    signal = Signal(str)
+
+
+class PatientTipsSignal(QObject):
     signal = Signal(str)

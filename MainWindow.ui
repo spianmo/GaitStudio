@@ -256,7 +256,7 @@
          </rect>
         </property>
         <property name="value">
-         <number>3</number>
+         <number>8</number>
         </property>
        </widget>
        <widget class="QLabel" name="label">
@@ -615,7 +615,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Angles-Viewer Range (60 Frames)</string>
+         <string>Angles-Viewer Range (6 sec)</string>
         </property>
        </widget>
        <widget class="QSlider" name="hsAnglesViewerRange">
@@ -628,19 +628,19 @@
          </rect>
         </property>
         <property name="minimum">
-         <number>10</number>
+         <number>1</number>
         </property>
         <property name="maximum">
-         <number>100</number>
+         <number>50</number>
         </property>
         <property name="pageStep">
          <number>1</number>
         </property>
         <property name="value">
-         <number>20</number>
+         <number>6</number>
         </property>
         <property name="sliderPosition">
-         <number>20</number>
+         <number>6</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

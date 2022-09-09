@@ -30,7 +30,7 @@ class DataFrameTable(QTableWidget):
         self.setColumnCount(table_col)
         for row in range(table_row):
             for col in range(table_col):
-                if col == 0:
+                if col == table_col - 1:
                     continue
-                item = QTableWidgetItem(str(round(self.df.iloc[row, col], 8)))
+                item = QTableWidgetItem(str(round(self.df.iloc[row, col + 1], 8)))
                 self.setItem(row, col, item)
