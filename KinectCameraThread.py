@@ -1,3 +1,4 @@
+import traceback
 from typing import List, Tuple, NoReturn, Any
 
 import numpy as np
@@ -5,11 +6,12 @@ from PySide2.QtCore import QThread, QMutex
 from PySide2.QtGui import QPixmap
 from mediapipe.python.solutions.pose import PoseLandmark
 from numpy import ndarray
-from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode
+from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode, K4AException
 import cv2 as cv
 import mediapipe as mp
 
-from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal
+from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal, \
+    KinectErrorSignal
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -72,6 +74,7 @@ class KinectCaptureThread(QThread):
         self.signal_detectInterrupt = DetectInterruptSignal()
         self.signal_detectFinish = DetectFinishSignal()
         self.signal_detectExit = DetectExitSignal()
+        self.signal_kinectError = KinectErrorSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -132,6 +135,9 @@ class KinectCaptureThread(QThread):
 
     def emitDetectExit(self, empty="empty"):
         self.signal_detectExit.signal.emit(empty)
+
+    def emitKinectError(self, empty="empty"):
+        self.signal_kinectError.signal.emit(empty)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -195,107 +201,113 @@ class KinectCaptureThread(QThread):
         ]
 
     def run(self):
-        self.k4a.start()
-        self.emitLog("Kinect配置: " + str(obj2json(self.k4aConfig)))
-        self.emitLog("姿势估计器配置: " + str(obj2json(self.mpConfig)))
-        self.emitLog("captureConfig配置: " + str(obj2json(self.captureConfig)))
-        self.emitLog("等待目标进入检测范围...")
-        while True:
-            self.mutex.lock()
-            capture = self.k4a.get_capture()
-            self.mutex.unlock()
+        try:
+            self.k4a.start()
+            self.emitLog("Kinect配置: " + str(obj2json(self.k4aConfig)))
+            self.emitLog("姿势估计器配置: " + str(obj2json(self.mpConfig)))
+            self.emitLog("captureConfig配置: " + str(obj2json(self.captureConfig)))
+            self.emitLog("等待目标进入检测范围...")
+            while True:
+                self.mutex.lock()
+                capture = self.k4a.get_capture()
+                self.mutex.unlock()
 
-            """
-            原始的RGBA视频帧
-            """
-            frame = capture.color[:, :, :3]
+                """
+                原始的RGBA视频帧
+                """
+                frame = capture.color[:, :, :3]
 
-            depth_image_raw = capture.transformed_depth
+                depth_image_raw = capture.transformed_depth
 
-            """
-            # OpenCV自带的去噪修复，帧率太低
-            # depth_image_raw = smooth_depth_image(depth_image_raw, max_hole_size=10)
+                """
+                # OpenCV自带的去噪修复，帧率太低
+                # depth_image_raw = smooth_depth_image(depth_image_raw, max_hole_size=10)
 
-            # 孔洞填充滤波器
-            # hole_filter = HoleFilling_Filter(flag='min')
-            # depth_image_raw = hole_filter.smooth_image(depth_image_raw)
-            # 去噪滤波器
-            # noise_filter = Denoising_Filter(flag='modeling', theta=60)
-            # depth_image_raw = noise_filter.smooth_image(depth_image_raw)
-            """
+                # 孔洞填充滤波器
+                # hole_filter = HoleFilling_Filter(flag='min')
+                # depth_image_raw = hole_filter.smooth_image(depth_image_raw)
+                # 去噪滤波器
+                # noise_filter = Denoising_Filter(flag='modeling', theta=60)
+                # depth_image_raw = noise_filter.smooth_image(depth_image_raw)
+                """
 
-            # 深度图像数据归一化为米
-            depth_image = depthInMeters(depth_image_raw)
+                # 深度图像数据归一化为米
+                depth_image = depthInMeters(depth_image_raw)
 
-            if np.any(capture.depth):
+                if np.any(capture.depth):
 
-                # 将BGR转换为RGB
-                frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-                # 提升性能，不写入内存
-                frame.flags.writeable = False
-                pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = self.videoFrameHandler(frame)
-                frame.flags.writeable = True
-                frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
+                    # 将BGR转换为RGB
+                    frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                    # 提升性能，不写入内存
+                    frame.flags.writeable = False
+                    pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = self.videoFrameHandler(frame)
+                    frame.flags.writeable = True
+                    frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
-                if not self.recordFlag or len(self.detect_frames) == (self.captureConfig.fps * self.captureConfig.detectionTime):
-                    self.k4a.stop()
-                    break
+                    if not self.recordFlag or len(self.detect_frames) == (self.captureConfig.fps * self.captureConfig.detectionTime):
+                        self.k4a.stop()
+                        break
 
-                if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
-                        pose_world_landmarks_proto is None:
-                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
-                    continue
-                # 将归一化的坐标转换为原始坐标
-                pose_keypoints = []
-
-                for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
-                    if pose_landmark:
-                        # 只处理待检测的关键点，用于后续CheckCube扩展
-                        if PoseLandmark(pose_landmark_index) not in KEYPOINT_DETECTED:
-                            continue
-                        visualize_x = int(round(pose_landmark.x * frame.shape[1]))
-                        visualize_y = int(round(pose_landmark.y * frame.shape[0]))
-                        truth_x = pose_landmark.x
-                        truth_y = pose_landmark.y
-                        # MediaPipe原始的landmark_z不可信
-                        truth_z = pose_landmark.z
-                        deep_axis1 = visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1
-                        deep_axis2 = visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1
-                        deep_z = depth_image[deep_axis1 if deep_axis1 > 0 else 0,
-                                             deep_axis2 if deep_axis2 > 0 else 0]
-                        visibility = pose_landmark.visibility
-                        cv.putText(frame, "Depth:" + str(
-                            round(deep_z, 3)),
-                                   (visualize_x - 10, visualize_y - 10),
-                                   cv.FONT_HERSHEY_SIMPLEX, 0.5, self.BGR(RGB=(102, 153, 250)), 1,
-                                   cv.LINE_AA)
-                        cv.circle(frame, (visualize_x, visualize_y), radius=3, color=self.BGR(RGB=(255, 0, 0)), thickness=-1)
-                        pose_keypoints.append([truth_x, truth_y, deep_z, visibility])
-                    else:
-                        pose_keypoints = [[-1, -1, -1, -1]] * len(KEYPOINT_DETECTED)
-
-                if self.credible_pose(pose_keypoints):
-                    if not self.detectFlag:
-                        self.emitLog("已识别到所有检测点，开始检测")
-                        self.emitDetectInterrupt()
-                        print("开始检测！")
-                        self.detectFlag = True
-                    self.detect_frames.append(pose_keypoints)
-                    self.emitLog("已检测" + str(round(len(self.detect_frames) * (1 / self.captureConfig.fps), 2)) + '秒')
-                    print("已检测" + str(round(len(self.detect_frames) * (1 / self.captureConfig.fps), 2)) + '秒')
-                    self.emitKeyPoints(pose_keypoints)
-                    self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
-                else:
-                    if self.detectFlag:
-                        self.detectFlag = False
-                        self.detect_frames = []
-                        self.emitLog("检测过程被打断！等待重新检测")
-                        print("检测过程被打断！等待重新检测")
+                    if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
+                            pose_world_landmarks_proto is None:
+                        self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
                         continue
+                    # 将归一化的坐标转换为原始坐标
+                    pose_keypoints = []
 
-                self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+                    for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
+                        if pose_landmark:
+                            # 只处理待检测的关键点，用于后续CheckCube扩展
+                            if PoseLandmark(pose_landmark_index) not in KEYPOINT_DETECTED:
+                                continue
+                            visualize_x = int(round(pose_landmark.x * frame.shape[1]))
+                            visualize_y = int(round(pose_landmark.y * frame.shape[0]))
+                            truth_x = pose_landmark.x
+                            truth_y = pose_landmark.y
+                            # MediaPipe原始的landmark_z不可信
+                            truth_z = pose_landmark.z
+                            deep_axis1 = visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1
+                            deep_axis2 = visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1
+                            deep_z = depth_image[deep_axis1 if deep_axis1 > 0 else 0,
+                                                 deep_axis2 if deep_axis2 > 0 else 0]
+                            visibility = pose_landmark.visibility
+                            cv.putText(frame, "Depth:" + str(
+                                round(deep_z, 3)),
+                                       (visualize_x - 10, visualize_y - 10),
+                                       cv.FONT_HERSHEY_SIMPLEX, 0.5, self.BGR(RGB=(102, 153, 250)), 1,
+                                       cv.LINE_AA)
+                            cv.circle(frame, (visualize_x, visualize_y), radius=3, color=self.BGR(RGB=(255, 0, 0)), thickness=-1)
+                            pose_keypoints.append([truth_x, truth_y, deep_z, visibility])
+                        else:
+                            pose_keypoints = [[-1, -1, -1, -1]] * len(KEYPOINT_DETECTED)
 
-            del capture
+                    if self.credible_pose(pose_keypoints):
+                        if not self.detectFlag:
+                            self.emitLog("已识别到所有检测点，开始检测")
+                            self.emitDetectInterrupt()
+                            print("开始检测！")
+                            self.detectFlag = True
+                        self.detect_frames.append(pose_keypoints)
+                        self.emitLog("已检测" + str(round(len(self.detect_frames) * (1 / self.captureConfig.fps), 2)) + '秒')
+                        print("已检测" + str(round(len(self.detect_frames) * (1 / self.captureConfig.fps), 2)) + '秒')
+                        self.emitKeyPoints(pose_keypoints)
+                        self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
+                    else:
+                        if self.detectFlag:
+                            self.detectFlag = False
+                            self.detect_frames = []
+                            self.emitLog("检测过程被打断！等待重新检测")
+                            print("检测过程被打断！等待重新检测")
+                            continue
+
+                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+
+                del capture
+        except K4AException as e:
+            self.emitLog(repr(e))
+            self.emitLog(traceback.format_exc())
+            self.emitLog("Kinect设备打开失败, 请检查Kinect是否被其他进程占用")
+            self.emitKinectError()
         """
         释放MediaPipe姿势估计器
         """
@@ -429,10 +441,10 @@ class KinectCaptureThread(QThread):
         # 右踝与右胫骨的夹角
         RAnkle_angle = self.vectors_to_angle(RFoot_vector, RTibia_vector, supplementaryAngle=False)
 
-        dict_angles = {"TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
+        dict_angles = {"frame_index": len(self.detect_frames), "time_index": round(len(self.detect_frames) * 1 / self.captureConfig.fps, 2),
+                       "TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
                        "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
                        "TorsoLFemur_angle": TorsoLFemur_angle, "TorsoRFemur_angle": TorsoRFemur_angle,
                        "LTibiaSelf_vector": LTibiaSelf_vector, "RTibiaSelf_vector": RTibiaSelf_vector,
-                       "frame_index": len(self.detect_frames), "time_index": round(len(self.detect_frames) * 1 / self.captureConfig.fps, 2),
                        "LAnkle_angle": LAnkle_angle, "RAnkle_angle": RAnkle_angle}
         return dict_angles

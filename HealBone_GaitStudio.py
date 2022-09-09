@@ -2,17 +2,19 @@ import sys
 import time
 from typing import List
 
+import pandas as pd
+from PySide2 import QtCore
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import pyqtgraph as pg
-from pyqtgraph import FillBetweenItem
 
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 import cv2 as cv
 
+from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
 
@@ -166,6 +168,11 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin.setHidden(True)
         self.patientWin.setMinimumSize(QSize(741, 515))
         self.showStatusMessage("Info: Healbone GaitStudio组件加载完毕")
+        self.anglesDataFrame = pd.DataFrame()
+        self.dockWidgetContentsLayout = QVBoxLayout(self.anglesDockWidgetContents)
+        self.anglesDataFrameTable = DataFrameTable(self.anglesDataFrame)
+        self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
+        self.hideLogoFrame = True
 
     def showStatusMessage(self, text, timeout=2000):
         self.statusBar.showMessage(text, timeout)
@@ -226,6 +233,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
 
     def plotFrameAngles(self, angles: dict):
+        self.anglesDataFrame = pd.concat([self.anglesDataFrame, pd.DataFrame([angles])], ignore_index=True)
+        self.anglesDataFrameTable.set_data(self.anglesDataFrame)
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["time_index"])
@@ -234,8 +243,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 折线图自动滚动
                 """
                 if self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] > self.viewModel.anglesViewerRange:
-                    print("范围:" + str(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] - self.viewModel.anglesViewerRange) + " " +
-                          str(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1]))
                     self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(
                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] - self.viewModel.anglesViewerRange,
                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1])
@@ -253,6 +260,11 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                                                                                          pen=({'color': "r", "width": 1.5}), clear=True)
 
     def displayCVFrames(self, frames):
+        if self.hideLogoFrame:
+            self.hideLogoFrame = False
+            self.logoFrame.hide()
+            self.logoFrame_2.hide()
+            self.logoFrame_3.hide()
         self.displayCVFrame(self.cameraIrFovView, frames[2])
         self.displayCVFrame(self.cameraFovView, frames[1])
         self.displayCVFrame(self.cameraIrView, frames[0])
@@ -306,7 +318,16 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         透传子线程DetectFinish
         """
         self.threadCapture.signal_detectFinish.signal.connect(self.detectFinish)
+        """
+        KinectError
+        """
+        self.threadCapture.signal_kinectError.signal.connect(
+            lambda x: self.showErrorMessage(title="Kinect Error", content="Kinect设备打开失败, 请检查Kinect是否被其他进程占用"))
         self.threadCapture.start()
+
+    def showErrorMessage(self, title="Error", content=""):
+        self.showStatusMessage(content)
+        QMessageBox.critical(self, title, content)
 
     def enableDetectForm(self, enable=True):
         self.sbTime.setEnabled(enable)
@@ -352,9 +373,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 "detectionTime": int(self.sbTime.text())
             }
             self.clearAnglesViewer()
-            self.logoFrame.hide()
-            self.logoFrame_2.hide()
-            self.logoFrame_3.hide()
             self.startDetect(k4aConfig, mpConfig, captureConfig)
             if self.viewModel.patientMode:
                 self.patientWin.show()

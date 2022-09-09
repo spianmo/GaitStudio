@@ -25,6 +25,9 @@ QGroupBox {
 QPushButton {
     background-color: #212121;
     border-radius: 6px;
+    min-width:100px;/*控件最小宽度*/
+    min-height:24px;/*控件最小高度*/
+    margin: 2px;
 }
 
 QSpinBox {
@@ -310,4 +313,45 @@ QFrame#logoFrame, QFrame#logoFrame_2, QFrame#logoFrame_3 {
     background-color: #212121;
     border: none;
     border-image: url(resources/gait.png);
+}
+
+QTableView
+{
+    background-color:#2F2F2F;
+    border:1px solid #2b2b2b;
+    font-family: Times;
+}
+
+QTableView::item{
+background:#2F2F2F;
+}
+
+QTableView::item:hover{
+color:#ffffff;
+background:#616161;
+}
+
+QTableView::item:selected{
+color:#ffffff;
+background:#616161;
+}
+
+
+QHeaderView {
+     color: #BDBDBD;
+     font: 9pt;
+     background-color: #2B2B2B;
+     min-height:29px;
+     margin: 0px;
+}
+
+QHeaderView::section, QTableCornerButton:section{
+    margin:0px;
+    font-weight:bold;
+    border:1px solid #2b2b2b;
+    border-left-width:0px;
+    border-right-width:1px;
+    border-top-width:0px;
+    border-bottom-width:1px;
+    background:#2B2B2B;
 }
