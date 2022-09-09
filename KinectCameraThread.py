@@ -265,11 +265,13 @@ class KinectCaptureThread(QThread):
                         if self.detectFlag:
                             self.emitDetectFinish()
                             self.emitLog("检测结束")
+                            self.emitPatientTips("检测完成，等待生成报告")
                             self.k4a.stop()
                             break
 
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
+                        self.emitPatientTips("请进入相机范围")
                         self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
                         if self.detectFlag:
                             self.detectStartTime = time.time()
@@ -310,20 +312,25 @@ class KinectCaptureThread(QThread):
                     if self.credible_pose(pose_keypoints):
                         if not self.detectFlag:
                             self.emitLog("已识别到所有检测点，开始检测")
+                            self.emitPatientTips("已识别到所有检测点，开始检测，请开始行走")
                             self.emitDetectInterrupt()
                             self.detectStartTime = time.time()
                             print("开始检测！")
                             self.detectFlag = True
                         self.detect_frames.append(pose_keypoints)
+                        self.emitPatientTips("已检测" + str(round(time.time() - self.detectStartTime, 1)) + '秒，剩余' + str(
+                            round(self.captureConfig.detectionTime - (time.time() - self.detectStartTime), 1)) + '秒')
                         self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         print("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         self.emitKeyPoints(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
                     else:
+                        self.emitPatientTips("调整姿势使身体和四肢完全包含在相机视图中")
                         if self.detectFlag:
                             self.detectFlag = False
                             self.detect_frames = []
                             self.emitLog("检测过程被打断！等待重新检测")
+                            self.emitPatientTips("检测过程被打断！重新调整姿势，并等待重新检测")
                             print("检测过程被打断！等待重新检测")
                             continue
 

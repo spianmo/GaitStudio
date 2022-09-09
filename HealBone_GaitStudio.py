@@ -164,6 +164,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin = QMaximumDockWidget(self)
         self.patientWin.setWindowTitle("PatientView")
         self.patientWin.setWidget(self.cameraPatientView)
+
+        self.patientWin.setFeatures(QDockWidget.DockWidgetFloatable)
+        self.patientWin.setAllowedAreas(Qt.NoDockWidgetArea)
+
         self.patientWin.setFloating(True)
         self.patientWin.setHidden(True)
         self.patientWin.setMinimumSize(QSize(741, 515))
@@ -290,9 +294,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                        shrink.shape[1] * 3,
                        QImage.Format_RGB888)
         jpg_out = QPixmap(QtImg).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatioByExpanding)
-        scene = QGraphicsScene()  # 创建场景
-        scene.addItem(QGraphicsPixmapItem(jpg_out))
-        cameraView.setScene(scene)  # 将场景添加至视图
+        if cameraView.scene() is None:
+            cameraView.setScene(QGraphicsScene())
+        cameraView.scene().addItem(QGraphicsPixmapItem(jpg_out))  # 将场景添加至视图
 
     def stopDetect(self):
         self.viewModel.detectStatus = False
@@ -342,11 +346,31 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.threadCapture.signal_patientTipsSignal.signal.connect(self.showPatientTips)
         self.threadCapture.start()
 
+    def drawFPSText(self, cameraView, fpsStr):
+        textItem = QGraphicsTextItem()
+        textItem.setPlainText(fpsStr)
+        textItem.setFont(QFont("微软雅黑", 12))
+        textItem.setDefaultTextColor(Qt.green)
+        textItem.setPos(10, 5)
+        if cameraView.scene() is None:
+            cameraView.setScene(QGraphicsScene())
+        cameraView.scene().addItem(textItem)
+
     def showFps(self, fpsStr):
-        print(fpsStr)
+        self.drawFPSText(self.cameraIrFovView, fpsStr)
+        self.drawFPSText(self.cameraPatientView, fpsStr)
+        self.drawFPSText(self.cameraIrView, fpsStr)
+        self.drawFPSText(self.cameraFovView, fpsStr)
 
     def showPatientTips(self, tips):
-        print(tips)
+        textItem = QGraphicsTextItem()
+        textItem.setPlainText(tips)
+        textItem.setFont(QFont("微软雅黑", 32))
+        textItem.setDefaultTextColor(Qt.red)
+        textItem.setPos(self.patientWin.window().width() / 2 - len(tips) * 32 / 2, self.patientWin.window().height() / 2 - 32)
+        if self.cameraPatientView.scene() is None:
+            self.cameraPatientView.setScene(QGraphicsScene())
+        self.cameraPatientView.scene().addItem(textItem)
 
     def showErrorMessage(self, title="Error", content=""):
         self.showStatusMessage(content)
