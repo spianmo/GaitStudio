@@ -3,22 +3,17 @@ import time
 from typing import List
 
 import pandas as pd
-from PySide2 import QtCore
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import pyqtgraph as pg
-from mediapipe.python.solutions.pose import PoseLandmark
 from qtmodernredux import QtModernRedux
 
-import Gait_Analysis_GUI
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 import cv2 as cv
 
-from widgets.CTitleBar import CTitleBar
-from widgets.FramelessWindow import FramelessWindow
 from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -87,7 +82,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         无边框窗口
         """
-        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+        if use_modern_ui:
+            self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setupUi(self)
 
         """
@@ -249,6 +245,12 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                                        (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
         self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
+        self.logoFrame.setGeometry(self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
+                                   self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
+        self.logoFrame_2.setGeometry(self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
+                                     self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
+        self.logoFrame_3.setGeometry(self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
+                                     self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
 
     def receiveKeyPoints(self, pose_keypoints):
         self.pts_cams.append(pose_keypoints)
@@ -466,8 +468,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    use_modern_ui = True
 
-    app = QtModernRedux.QApplication(sys.argv)
+    app = QtModernRedux.QApplication(sys.argv) if use_modern_ui else QApplication(sys.argv)
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
     # 信号槽
@@ -475,6 +478,9 @@ if __name__ == '__main__':
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
     logSignal.signal.emit("HealBone GaitStudio 初始化完成")
 
-    _hbWin = QtModernRedux.wrap(hbWin)
-    _hbWin.show()
+    if use_modern_ui:
+        _hbWin = QtModernRedux.wrap(hbWin)
+        _hbWin.show()
+    else:
+        hbWin.show()
     sys.exit(app.exec_())
