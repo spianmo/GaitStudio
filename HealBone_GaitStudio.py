@@ -455,7 +455,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
     def logViewAppend(self, text):
         self.outputText.moveCursor(QTextCursor.End, QTextCursor.MoveMode.MoveAnchor)
-        local_time_asctimes = time.strftime("%Y-%m-%d %H:%M:%S ==> ", time.localtime(time.time()))
+        local_time_asctimes = time.strftime("%Y-%m-%d %H:%M:%S ", time.localtime(time.time()))
         self.outputText.setMarkdown(
             self.outputText.toMarkdown(QTextDocument.MarkdownFeature.MarkdownDialectGitHub) + local_time_asctimes + text + '\n')
         if len(self.outputText.toHtml()) > 1024 * 1024 * 10:
@@ -469,7 +469,7 @@ if __name__ == '__main__':
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
-    app = QApplication()
+    app = QtModernRedux.QApplication(sys.argv)
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
     # 信号槽
@@ -477,9 +477,6 @@ if __name__ == '__main__':
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
     logSignal.signal.emit("HealBone GaitStudio 初始化完成")
 
-    _hbWin = FramelessWindow()
-    _hbWin.setWindowTitle("HealBone GaitStudio")
-    _hbWin.setWidget(hbWin)
-    _hbWin.resize(1328, 803)
+    _hbWin = QtModernRedux.wrap(hbWin)
     _hbWin.show()
     sys.exit(app.exec_())
