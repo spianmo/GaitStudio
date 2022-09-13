@@ -1,2 +1,4 @@
 pyinstaller -F -n HealBone-GaitAnalysis  --noconsole --hidden-import opencv-python --hidden-import matplotlib.backends.backend_svg HealBone_Mediapipe_Gait_VideoPose3D.py
 pyinstaller -n HealBone-GaitAnalysis  --noconsole --hidden-import opencv-python --hidden-import matplotlib.backends.backend_svg HealBone_Mediapipe_Gait_VideoPose3D.py
+
+pyinstaller -n HealBone-GaitAnalysis  --noconsole --hidden-import opencv-python --hidden-import matplotlib.backends.backend_svg --hidden-import pyqtgraph.graphicsItems.ViewBox.axisCtrlTemplate_pyqt5 --hidden-import pyqtgraph.graphicsItems.PlotItem.plotConfigTemplate_pyqt5 --hidden-import pyqtgraph.imageview.ImageViewTemplate_pyqt5 --hidden-import pyqtgraph.graphicsItems.ViewBox.axisCtrlTemplate_pyside2 --hidden-import pyqtgraph.graphicsItems.PlotItem.plotConfigTemplate_pyside2 --hidden-import pyqtgraph.imageview.ImageViewTemplate_pyside2 HealBone_GaitStudio.py

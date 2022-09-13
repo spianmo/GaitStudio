@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1328, 803)
+        MainWindow.resize(1328, 855)
         MainWindow.setToolButtonStyle(Qt.ToolButtonIconOnly)
         MainWindow.setDocumentMode(False)
         MainWindow.setTabShape(QTabWidget.Rounded)
@@ -307,7 +307,7 @@ class Ui_MainWindow(object):
         self.angleViewerDockScrollArea.setWidgetResizable(True)
         self.angleViewerDockScrollAreaContents = QWidget()
         self.angleViewerDockScrollAreaContents.setObjectName(u"angleViewerDockScrollAreaContents")
-        self.angleViewerDockScrollAreaContents.setGeometry(QRect(0, 0, 320, 356))
+        self.angleViewerDockScrollAreaContents.setGeometry(QRect(0, 0, 320, 393))
         self.angleViewerDockScrollAreaContentsLayout = QVBoxLayout(self.angleViewerDockScrollAreaContents)
         self.angleViewerDockScrollAreaContentsLayout.setSpacing(4)
         self.angleViewerDockScrollAreaContentsLayout.setContentsMargins(4, 4, 4, 4)

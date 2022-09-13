@@ -114,6 +114,7 @@ class KinectCaptureThread(QThread):
         self.emitLog(str(obj2json(k4aConfig)))
         self.mutex = QMutex()
         self.detectStartTime = time.time()
+        self.logo = cv.imread('./logo.png')
 
     def stopCapture(self):
         self.recordFlag = False
@@ -173,10 +174,9 @@ class KinectCaptureThread(QThread):
         """
         add HealBone Logo to CV-Frame
         """
-        logo = cv.imread('./logo.png')
         width = 123 * 2
         height = int(width / 4.3)
-        logo = cv.resize(logo, (width, height))
+        logo = cv.resize(self.logo, (width, height))
         img2gray = cv.cvtColor(logo, cv.COLOR_BGR2GRAY)
         ret, mask = cv.threshold(img2gray, 1, 255, cv.THRESH_BINARY)
         roi = frame[-height - 10:-10, -width - 10:-10]

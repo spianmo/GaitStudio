@@ -289,6 +289,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.anglesDataFrameTable.set_data(self.anglesDataFrame)
 
     def displayCVFrames(self, frames):
+        # todo: 严重的内存泄露待排查
         if self.hideLogoFrame:
             self.hideLogoFrame = False
             self.logoFrame.hide()
@@ -479,7 +480,7 @@ if __name__ == '__main__':
     logSignal.signal.emit("HealBone GaitStudio 初始化完成")
 
     if use_modern_ui:
-        _hbWin = QtModernRedux.wrap(hbWin)
+        _hbWin = QtModernRedux.wrap(hbWin, titlebar_color=QColor('#303030'))
         _hbWin.show()
     else:
         hbWin.show()
