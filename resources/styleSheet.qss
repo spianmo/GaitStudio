@@ -355,3 +355,67 @@ QHeaderView::section, QTableCornerButton:section{
     border-bottom-width:1px;
     background:#2B2B2B;
 }
+
+/*标题栏颜色*/
+CTitleBar {
+    background: rgb(65, 148, 216);
+}
+/*标题栏圆角*/
+CTitleBar {
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+}
+#CTitleBar_buttonClose {
+    /*需要把右侧的关闭按钮考虑进去*/
+    border-top-right-radius: 5px;
+}
+/*底部圆角和背景*/
+#bottomWidget {
+    background: white;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+/*最小化、最大化、还原按钮*/
+CTitleBar > QPushButton {
+    background: transparent;
+}
+CTitleBar > QPushButton:hover {
+    background: rgba(0, 0, 0, 30);
+}
+CTitleBar > QPushButton:pressed {
+    background: rgba(0, 0, 0, 60);
+}
+/*关闭按钮*/
+#CTitleBar_buttonClose:hover {
+    color: white;
+    background: rgb(232, 17, 35);
+}
+#CTitleBar_buttonClose:pressed {
+    color: white;
+    background: rgb(165, 69, 106);
+}
+
+TitleBar {
+    background-color: #212121;
+}
+/*最小化最大化关闭按钮通用默认背景*/
+#buttonMinimum,#buttonMaximum,#buttonClose {
+    border: none;
+    background-color: rgb(54, 157, 180);
+}
+/*悬停*/
+#buttonMinimum:hover,#buttonMaximum:hover {
+    background-color: rgb(48, 141, 162);
+}
+#buttonClose:hover {
+    color: white;
+    background-color: rgb(232, 17, 35);
+}
+/*鼠标按下不放*/
+#buttonMinimum:pressed,#buttonMaximum:pressed {
+    background-color: rgb(44, 125, 144);
+}
+#buttonClose:pressed {
+    color: white;
+    background-color: rgb(161, 73, 92);
+}

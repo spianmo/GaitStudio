@@ -476,7 +476,7 @@ class KinectCaptureThread(QThread):
         # 右踝与右胫骨的夹角
         RAnkle_angle = self.vectors_to_angle(RFoot_vector, RTibia_vector, supplementaryAngle=False)
 
-        dict_angles = {"frame_index": len(self.detect_frames), "time_index": (time.time() - self.detectStartTime),
+        dict_angles = {"frame_index": len(self.detect_frames), "Time_in_sec": (time.time() - self.detectStartTime),
                        "TorsoLHip_angle": TorsoLHip_angle, "TorsoRHip_angle": TorsoRHip_angle, "LHip_angle": LHip_angle,
                        "RHip_angle": RHip_angle, "LKnee_angle": LKnee_angle, "RKnee_angle": RKnee_angle,
                        "TorsoLFemur_angle": TorsoLFemur_angle, "TorsoRFemur_angle": TorsoRFemur_angle,

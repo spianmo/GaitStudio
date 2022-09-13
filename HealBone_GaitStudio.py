@@ -8,12 +8,17 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import pyqtgraph as pg
+from mediapipe.python.solutions.pose import PoseLandmark
+from qtmodernredux import QtModernRedux
 
+import Gait_Analysis_GUI
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 import cv2 as cv
 
+from widgets.CTitleBar import CTitleBar
+from widgets.FramelessWindow import FramelessWindow
 from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -79,8 +84,12 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         MainWindow.Ui_MainWindow.__init__(self)
         self.threadCapture: KinectCaptureThread = None
         self.viewModel = self.HealBoneViewModel()
-        # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+        """
+        无边框窗口
+        """
+        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.setupUi(self)
+
         """
         合并右侧悬浮窗口
         """
@@ -177,6 +186,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.anglesDataFrameTable = DataFrameTable(self.anglesDataFrame)
         self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
         self.hideLogoFrame = True
+        self.pts_cams = []
 
     def showStatusMessage(self, text, timeout=2000):
         self.statusBar.showMessage(text, timeout)
@@ -240,12 +250,15 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
 
+    def receiveKeyPoints(self, pose_keypoints):
+        self.pts_cams.append(pose_keypoints)
+
     def plotFrameAngles(self, angles: dict):
         self.anglesDataFrame = pd.concat([self.anglesDataFrame, pd.DataFrame([angles])], ignore_index=True)
         self.anglesDataFrameTable.set_data(self.anglesDataFrame)
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
-                self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["time_index"])
+                self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["Time_in_sec"])
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1].append(angles[angleCube[1]])
                 """
                 折线图自动滚动
@@ -260,6 +273,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                                                                                          pen=({'color': "r", "width": 1.5}), clear=True)
 
     def clearAnglesViewer(self):
+        self.pts_cams = []
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex] = [[], []]
@@ -344,6 +358,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         PatientTips
         """
         self.threadCapture.signal_patientTipsSignal.signal.connect(self.showPatientTips)
+        """
+        signal_keypoints
+        """
+        self.threadCapture.signal_keypoints.signal.connect(self.receiveKeyPoints)
         self.threadCapture.start()
 
     def drawFPSText(self, cameraView, fpsStr):
@@ -376,6 +394,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.showStatusMessage(content)
         QMessageBox.critical(self, title, content)
 
+    def showInfoMessage(self, title="Info", content=""):
+        self.showStatusMessage(content)
+        QMessageBox.information(self, title, content)
+
     def enableDetectForm(self, enable=True):
         self.sbTime.setEnabled(enable)
         self.cbFPS.setEnabled(enable)
@@ -395,7 +417,13 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.logViewAppend("Pose Detect线程已结束")
 
     def detectFinish(self):
+        """
+        检测结束，进入分析报告流程
+        :return:
+        """
         self.logViewAppend("Pose Detect完成, 结果分析中...")
+        self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
+        # Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
     def btnStartClicked(self):
         if self.viewModel.detectStatus:
@@ -438,6 +466,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
     app = QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
@@ -446,5 +477,9 @@ if __name__ == '__main__':
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
     logSignal.signal.emit("HealBone GaitStudio 初始化完成")
 
-    hbWin.show()
+    _hbWin = FramelessWindow()
+    _hbWin.setWindowTitle("HealBone GaitStudio")
+    _hbWin.setWidget(hbWin)
+    _hbWin.resize(1328, 803)
+    _hbWin.show()
     sys.exit(app.exec_())
