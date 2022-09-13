@@ -124,7 +124,7 @@ class KinectCaptureThread(QThread):
     def emitLog(self, logStr: str):
         self.signal_log.signal.emit(logStr)
 
-    def emitVideoFrames(self, frames: List[QPixmap]):
+    def emitVideoFrames(self, frames: List[ndarray]):
         self.signal_frames.signal.emit(frames)
 
     def emitKeyPoints(self, frames: List[List]):
@@ -206,9 +206,9 @@ class KinectCaptureThread(QThread):
         self.drawHealboneLogo(rgb_frame)
 
         return [
-            cv.resize(rgb_frame, (0, 0), fx=0.6, fy=0.6),
-            cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6),
-            cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6)
+            cv.cvtColor(cv.resize(rgb_frame, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
+            cv.cvtColor(cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
+            cv.cvtColor(cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB)
         ]
 
     def run(self):

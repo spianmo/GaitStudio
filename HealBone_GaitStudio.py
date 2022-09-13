@@ -6,6 +6,7 @@ import pandas as pd
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+import qimage2ndarray
 import pyqtgraph as pg
 from qtmodernredux import QtModernRedux
 
@@ -298,22 +299,20 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.displayCVFrame(self.cameraIrFovView, frames[2])
         self.displayCVFrame(self.cameraFovView, frames[1])
         self.displayCVFrame(self.cameraIrView, frames[0])
-        self.displayCVFrame(self.cameraPatientView, frames[0])
+        if self.viewModel.patientMode:
+            self.displayCVFrame(self.cameraPatientView, frames[0])
 
     def displayCVFrame(self, cameraView, frame):
         """
         将cv的frame显示到label上
         """
-        shrink = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-        QtImg = QImage(shrink.data,
-                       shrink.shape[1],
-                       shrink.shape[0],
-                       shrink.shape[1] * 3,
-                       QImage.Format_RGB888)
-        jpg_out = QPixmap(QtImg).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatioByExpanding)
+        image = qimage2ndarray.array2qimage(frame)  # Solution for memory leak
+        jpg_out = QPixmap.fromImage(image).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatioByExpanding)
         if cameraView.scene() is None:
             cameraView.setScene(QGraphicsScene())
-        cameraView.scene().addItem(QGraphicsPixmapItem(jpg_out))  # 将场景添加至视图
+        qGraphicsPixmapItem = QGraphicsPixmapItem(jpg_out)
+        cameraView.scene().clear()
+        cameraView.scene().addItem(qGraphicsPixmapItem)  # 将场景添加至视图
 
     def stopDetect(self):
         self.viewModel.detectStatus = False
