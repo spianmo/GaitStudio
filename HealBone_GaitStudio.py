@@ -466,8 +466,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
     app = QtModernRedux.QApplication(sys.argv)
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
