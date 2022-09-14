@@ -76,6 +76,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         ]
         anglesViewerRange = 6
         patientMode = False
+        currentPatientTips = ""
+        fpsStr = ""
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
@@ -285,6 +287,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
                                                                                          self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
                                                                                          pen=({'color': "r", "width": 1.5}), clear=True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
         """
         清空表格
         """
@@ -292,7 +295,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.anglesDataFrameTable.set_data(self.anglesDataFrame)
 
     def displayCVFrames(self, frames):
-        # todo: 严重的内存泄露待排查
         if self.hideLogoFrame:
             self.hideLogoFrame = False
             self.logoFrame.hide()
@@ -303,6 +305,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.displayCVFrame(self.cameraIrView, frames[0])
         if self.viewModel.patientMode:
             self.displayCVFrame(self.cameraPatientView, frames[0])
+            self.drawPatientText(self.viewModel.currentPatientTips)
 
     def displayCVFrame(self, cameraView, frame):
         """
@@ -315,6 +318,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         qGraphicsPixmapItem = QGraphicsPixmapItem(jpg_out)
         cameraView.scene().clear()
         cameraView.scene().addItem(qGraphicsPixmapItem)  # 将场景添加至视图
+        self.drawFPSText(cameraView, self.viewModel.fpsStr)
 
     def stopDetect(self):
         self.viewModel.detectStatus = False
@@ -371,28 +375,29 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def drawFPSText(self, cameraView, fpsStr):
         textItem = QGraphicsTextItem()
         textItem.setPlainText(fpsStr)
-        textItem.setFont(QFont("微软雅黑", 20))
+        textItem.setFont(QFont("微软雅黑", 16))
         textItem.setDefaultTextColor(Qt.green)
         textItem.setPos(10, 5)
         if cameraView.scene() is None:
             cameraView.setScene(QGraphicsScene())
         cameraView.scene().addItem(textItem)
 
-    def showFps(self, fpsStr):
-        self.drawFPSText(self.cameraIrFovView, fpsStr)
-        self.drawFPSText(self.cameraPatientView, fpsStr)
-        self.drawFPSText(self.cameraIrView, fpsStr)
-        self.drawFPSText(self.cameraFovView, fpsStr)
-
-    def showPatientTips(self, tips):
+    def drawPatientText(self, tips):
         textItem = QGraphicsTextItem()
         textItem.setPlainText(tips)
-        textItem.setFont(QFont("微软雅黑", 32))
+        font_size = 36
+        textItem.setFont(QFont("微软雅黑", font_size))
         textItem.setDefaultTextColor(Qt.red)
-        textItem.setPos(self.patientWin.window().width() / 2 - len(tips) * 32 / 2, self.patientWin.window().height() / 2 - 32)
+        textItem.setPos(self.patientWin.window().width() / 2 - len(tips) * font_size / 2, self.patientWin.window().height() / 2 - font_size)
         if self.cameraPatientView.scene() is None:
             self.cameraPatientView.setScene(QGraphicsScene())
         self.cameraPatientView.scene().addItem(textItem)
+
+    def showFps(self, fpsStr):
+        self.viewModel.fpsStr = fpsStr
+
+    def showPatientTips(self, tips):
+        self.viewModel.currentPatientTips = tips
 
     def showErrorMessage(self, title="Error", content=""):
         self.showStatusMessage(content)
@@ -427,7 +432,13 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.logViewAppend("Pose Detect完成, 结果分析中...")
         self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
-        Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE)
+        try:
+            Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE,
+                                       use_modern_ui=use_modern_ui)
+        except AssertionError as e:
+            self.logViewAppend(repr(e))
+            self.logViewAppend("分析样本数量未达分析标准，请增大检测时长或在规定周期内保证有效动作")
+            self.showErrorMessage(content="分析样本数量未达分析标准，请增大检测时长或在规定周期内保证有效动作")
 
     def btnStartClicked(self):
         if self.viewModel.detectStatus:
@@ -470,9 +481,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    use_modern_ui = True
+    use_modern_ui = False
 
-    app = QtModernRedux.QApplication(sys.argv) if use_modern_ui else QApplication(sys.argv)
+    app = QtModernRedux.QApplication(sys.argv) if use_modern_ui else QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
     # 信号槽

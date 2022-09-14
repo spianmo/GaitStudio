@@ -502,10 +502,10 @@
          <number>1</number>
         </property>
         <property name="value">
-         <number>50</number>
+         <number>90</number>
         </property>
         <property name="sliderPosition">
-         <number>50</number>
+         <number>90</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -527,7 +527,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Min Detection Confidence (0.5)</string>
+         <string>Min Detection Confidence (0.9)</string>
         </property>
        </widget>
        <widget class="QLabel" name="tvMinTrackingConfidence">

@@ -222,9 +222,7 @@ class KinectCaptureThread(QThread):
                 start_time = time.time()
                 if not self.k4a.opened:
                     break
-                self.mutex.lock()
                 capture = self.k4a.get_capture()
-                self.mutex.unlock()
 
                 """
                 原始的RGBA视频帧

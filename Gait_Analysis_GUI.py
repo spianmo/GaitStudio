@@ -20,6 +20,7 @@ from widgets.QPDFViewer import PDFViewer
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置-黑体
 plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
 
+plt.ioff()
 
 def get_local_format_time(timestamp):
     local_time = time.localtime()
@@ -514,7 +515,7 @@ def calculateAccelerationListFrame(point_list: list, frames_time_sec_raw) -> Tup
         [acceleration[2] for acceleration in accelerations])
 
 
-def analysis(df_angles: DataFrame, pts_cam: list, analysis_keypoint):
+def analysis(df_angles: DataFrame, pts_cam: list, analysis_keypoint, use_modern_ui):
     sensormotionDrawing = []
     frames_time_sec_raw = df_angles["Time_in_sec"].to_list()
     """
@@ -591,7 +592,7 @@ def analysis(df_angles: DataFrame, pts_cam: list, analysis_keypoint):
     report = HealBoneGaitReport('report_output/' + data_name + '.pdf', SpatiotemporalData=[
         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
         ["Number of step\n步数", str(step_count), "-", "-"],
-        ["Cadence\n步频", str((cadence / 60).round(2)), "steps/sec", "2.274±0.643"],
+        ["Cadence\n步频", str(round(cadence / 60 / 1000, 2)), "steps/sec", "2.274±0.643"],
         ["Stride time\n跨步时间", str((step_time / 1000).round(2)), "sec", "0.901±0.293"],
         ["Step time variability(SD)\n步长时间变化(标准差)", str(step_time_sd.round(2)), "-", "-"],
         ["Step time variability(CoV)\n步长时间变化系数", str((step_time_cov * 100).round(2)), "CoV(%)", "22.847±22.72"],
@@ -661,6 +662,6 @@ def analysis(df_angles: DataFrame, pts_cam: list, analysis_keypoint):
     report.exportPDF()
 
     df_angles.to_excel("report_output/" + data_name + ".xlsx")
-    v = QtModernRedux.wrap(PDFViewer(title=data_name, pdf=f'./report_output/{data_name}.pdf'), transparent_window=False)
+    v = QtModernRedux.wrap(PDFViewer(title=data_name, pdf=f'./report_output/{data_name}.pdf'),
+                           transparent_window=False) if use_modern_ui else PDFViewer(title=data_name, pdf=f'./report_output/{data_name}.pdf')
     v.exec_()
-

@@ -1,7 +1,7 @@
 * {
     font-family: 微软雅黑;
     color: #BBB;
-/*    background-color: #2F2F2F;*/
+    background-color: #2F2F2F;
 }
 
 QDialog, QFrame, QDockWidget, QStatusBar {
@@ -9,7 +9,7 @@ QDialog, QFrame, QDockWidget, QStatusBar {
 }
 
 QMainWindow {
-/*    background-color: #2F2F2F;*/
+    background-color: #2F2F2F;
 }
 
 QLabel#cameraView {
