@@ -115,7 +115,7 @@ class Ui_MainWindow(object):
         self.sbTime = QSpinBox(self.groupBox)
         self.sbTime.setObjectName(u"sbTime")
         self.sbTime.setGeometry(QRect(15, 30, 111, 31))
-        self.sbTime.setValue(8)
+        self.sbTime.setValue(15)
         self.label = QLabel(self.groupBox)
         self.label.setObjectName(u"label")
         self.label.setGeometry(QRect(15, 12, 81, 16))

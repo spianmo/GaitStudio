@@ -8,8 +8,10 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import qimage2ndarray
 import pyqtgraph as pg
+from mediapipe.python.solutions.pose import PoseLandmark
 from qtmodernredux import QtModernRedux
 
+import Gait_Analysis_GUI
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
@@ -369,7 +371,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def drawFPSText(self, cameraView, fpsStr):
         textItem = QGraphicsTextItem()
         textItem.setPlainText(fpsStr)
-        textItem.setFont(QFont("微软雅黑", 12))
+        textItem.setFont(QFont("微软雅黑", 20))
         textItem.setDefaultTextColor(Qt.green)
         textItem.setPos(10, 5)
         if cameraView.scene() is None:
@@ -425,7 +427,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.logViewAppend("Pose Detect完成, 结果分析中...")
         self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
-        # Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE)
+        Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE)
 
     def btnStartClicked(self):
         if self.viewModel.detectStatus:

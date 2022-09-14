@@ -11,9 +11,11 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import sensormotion as sm
 import statsmodels.api as smapi
+from qtmodernredux import QtModernRedux
 from svglib.svglib import svg2rlg
 
 from reports.GenarateGaitReport import HealBoneGaitReport
+from widgets.QPDFViewer import PDFViewer
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 中文字体设置-黑体
 plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
@@ -512,22 +514,22 @@ def calculateAccelerationListFrame(point_list: list, frames_time_sec_raw) -> Tup
         [acceleration[2] for acceleration in accelerations])
 
 
-def analysis(df_angles: DataFrame, pts_cam: ndarray, analysis_keypoint):
+def analysis(df_angles: DataFrame, pts_cam: list, analysis_keypoint):
     sensormotionDrawing = []
     frames_time_sec_raw = df_angles["Time_in_sec"].to_list()
     """
     3D空间下对指定analysis_keypoint的加速度进行分解
     """
     accelerations_x, accelerations_y, accelerations_z = calculateAccelerationListFrame(
-        [keypoints[analysis_keypoint.value] for keypoints in list(pts_cam)], frames_time_sec_raw)
-    sampling_rate = 30
-    frames_time_sec = np.array(frames_time_sec_raw)
+        [keypoints[analysis_keypoint.value] for keypoints in pts_cam], frames_time_sec_raw)
+    sampling_rate = 10
+    frames_time_sec = np.array(frames_time_sec_raw[1:])
 
     """
     绘制加速度视图
     """
 
-    b, a = sm.signal.build_filter(10, sampling_rate, 'low', filter_order=4)
+    b, a = sm.signal.build_filter(3, sampling_rate, 'low', filter_order=4)
 
     # 滤波器过滤信号
     x_f = sm.signal.filter_signal(b, a, accelerations_x)  # ML medio-lateral
@@ -535,6 +537,7 @@ def analysis(df_angles: DataFrame, pts_cam: ndarray, analysis_keypoint):
     z_f = sm.signal.filter_signal(b, a, accelerations_z)  # AP antero-posterior
 
     sensormotionDrawing.append(polt_accelerations(frames_time_sec, accelerations_x, accelerations_y, accelerations_z, x_f, y_f, z_f))
+
 
     """
     计算基于自相关的指标，例如步长规律性、步幅规律性和步长对称性。
@@ -584,7 +587,8 @@ def analysis(df_angles: DataFrame, pts_cam: ndarray, analysis_keypoint):
     if not report_output.is_dir():
         os.makedirs(report_output)
 
-    report = HealBoneGaitReport('report_output/GaitReport-' + get_local_format_time(time.time()) + '.pdf', SpatiotemporalData=[
+    data_name = f"GaitReport-{get_local_format_time(time.time())}"
+    report = HealBoneGaitReport('report_output/' + data_name + '.pdf', SpatiotemporalData=[
         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
         ["Number of step\n步数", str(step_count), "-", "-"],
         ["Cadence\n步频", str((cadence / 60).round(2)), "steps/sec", "2.274±0.643"],
@@ -655,4 +659,8 @@ def analysis(df_angles: DataFrame, pts_cam: ndarray, analysis_keypoint):
         # }
     ], ROMGraph=polt_angle_plots(df_angles), SpatiotemporalGraph=sensormotionDrawing)
     report.exportPDF()
-    df_angles.to_excel("report_output/GaitAngle-" + get_local_format_time(time.time()) + ".xlsx")
+
+    df_angles.to_excel("report_output/" + data_name + ".xlsx")
+    v = QtModernRedux.wrap(PDFViewer(title=data_name, pdf=f'./report_output/{data_name}.pdf'), transparent_window=False)
+    v.exec_()
+

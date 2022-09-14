@@ -117,7 +117,7 @@ class HealBoneGaitReport:
         # ROM关节活动度参数图表页
         self.ROMPage()
 
-        self.doc = SimpleDocTemplate(self.path, pagesize=LETTER)
+        self.doc = SimpleDocTemplate(self.path, pagesize=LETTER, author="NanJin HealBone Lab", title="HealBone Gait Report")
 
     def coverPage(self):
         img = Image(resourcePath + 'static/healbone_banner.png', kind='proportional')
