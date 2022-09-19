@@ -3,16 +3,18 @@ import traceback
 from typing import List, Tuple, NoReturn, Any
 
 import numpy as np
+from PIL import ImageFont
 from PySide2.QtCore import QThread, QMutex
 from PySide2.QtGui import QPixmap
 from mediapipe.python.solutions.pose import PoseLandmark
 from numpy import ndarray
-from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode, K4AException
+from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode, K4AException, ImageFormat
 import cv2 as cv
 import mediapipe as mp
 
 from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal, \
     KinectErrorSignal, PatientTipsSignal, FPSSignal
+from decorator import FpsPerformance
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -87,6 +89,7 @@ class KinectCaptureThread(QThread):
             camera_fps=FPS(k4aConfig["camera_fps"]),
             depth_mode=DepthMode(k4aConfig["depth_mode"]),
             synchronized_images_only=k4aConfig["synchronized_images_only"],
+            color_format=ImageFormat.COLOR_BGRA32
         ))
         self.mpConfig = mpConfig
         self.poseDetector = mp_pose.Pose(
@@ -183,14 +186,18 @@ class KinectCaptureThread(QThread):
         roi[np.where(mask)] = 0
         roi += logo
 
-    def processFrames(self, pose_landmarks_proto, rgb_frame, deep_frame):
+    # @FpsPerformance
+    def processFrames(self, pose_landmarks_proto, rgb_frame, deep_frame, distance):
         """
         多source姿态关键点proto回调函数
         :param pose_landmarks_proto:
         :param rgb_frame:
         :param deep_frame:
         """
+        # TODO: addWeighted和colorize性能瓶颈，但非关键因素
+        patient_frame = rgb_frame
         combined_image = cv.addWeighted(rgb_frame, 0.5, colorize(deep_frame), 0.5, 0)
+        deep_image = colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV)
         if pose_landmarks_proto is not None:
             mp_drawing.draw_landmarks(combined_image, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
                                       landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
@@ -198,17 +205,21 @@ class KinectCaptureThread(QThread):
             mp_drawing.draw_landmarks(rgb_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
                                       landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
-            mp_drawing.draw_landmarks(deep_frame, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
+            mp_drawing.draw_landmarks(deep_image, pose_landmarks_proto, mp_pose.POSE_CONNECTIONS,
                                       landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
         # 绘制HealBone图标
         self.drawHealboneLogo(combined_image)
         self.drawHealboneLogo(rgb_frame)
+        self.drawHealboneLogo(patient_frame)
+        if distance != -1:
+            cv.putText(patient_frame, f"{round(distance, 2)}m", (350, 400), cv.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 11)
 
         return [
             cv.cvtColor(cv.resize(rgb_frame, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
-            cv.cvtColor(cv.resize(colorize(deep_frame, (None, 5000), cv.COLORMAP_HSV), (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
-            cv.cvtColor(cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB)
+            cv.cvtColor(cv.resize(deep_image, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
+            cv.cvtColor(cv.resize(combined_image, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
+            cv.cvtColor(cv.resize(patient_frame, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
         ]
 
     def run(self):
@@ -270,7 +281,8 @@ class KinectCaptureThread(QThread):
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
                         self.emitPatientTips("请进入相机范围")
-                        self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+                        self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw), -1))
+                        self.emitFPS(str(round(1 / (time.time() - start_time))))
                         if self.detectFlag:
                             self.detectStartTime = time.time()
                             self.detectFlag = False
@@ -319,7 +331,6 @@ class KinectCaptureThread(QThread):
                         self.emitPatientTips("已检测" + str(round(time.time() - self.detectStartTime, 1)) + '秒，剩余' + str(
                             round(self.captureConfig.detectionTime - (time.time() - self.detectStartTime), 1)) + '秒')
                         self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
-                        print("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         self.emitKeyPoints(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
                     else:
@@ -332,10 +343,13 @@ class KinectCaptureThread(QThread):
                             print("检测过程被打断！等待重新检测")
                             continue
 
-                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw),
+                                                            (pose_keypoints[23][2] + pose_keypoints[24][2] + pose_keypoints[11][2] +
+                                                             pose_keypoints[12][2]) / 4))
 
                 del capture
                 self.emitFPS(str(round(1 / (time.time() - start_time))))
+
         except K4AException as e:
             self.emitLog(repr(e))
             self.emitLog(traceback.format_exc())
@@ -350,9 +364,17 @@ class KinectCaptureThread(QThread):
             self.k4a.stop()
         self.quit()
 
+    def performance(self, start_time, TAG=""):
+        __time__ = (time.time() - start_time)
+        try:
+            print(f"{TAG} run time {__time__ * 1000}ms, FPS {round(1 / __time__, 2)}")
+        except ZeroDivisionError as e:
+            print(f"{TAG} run time {__time__ * 1000}ms, FPS MAX")
+
+    # @FpsPerformance
     def videoFrameHandler(self, video_frame):
         """
-        每一帧视频帧被读取到时的异步Handler
+        每一帧视频帧被读取到时进行姿势推理的异步Handler
         :param video_frame:
         :returns: pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
         """
@@ -368,6 +390,7 @@ class KinectCaptureThread(QThread):
 
         return pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto
 
+    # @FpsPerformance
     def inferPose(self, video_frame) -> Any:
         """
         推断视频帧中人体姿态

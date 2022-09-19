@@ -2,11 +2,9 @@
     font-family: 微软雅黑;
     color: #BBB;
     background-color: #2F2F2F;
-}
-
-QDialog, QFrame, QDockWidget, QStatusBar {
     border-radius: 4px;
 }
+
 
 QMainWindow {
     background-color: #2F2F2F;

@@ -336,7 +336,7 @@ class Ui_MainWindow(object):
 
         self.tabWidget.setCurrentIndex(0)
         self.cbFPS.setCurrentIndex(2)
-        self.cbColorResolution.setCurrentIndex(1)
+        self.cbColorResolution.setCurrentIndex(0)
         self.cbModelComplexity.setCurrentIndex(1)
 
 

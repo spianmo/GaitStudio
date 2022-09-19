@@ -3,8 +3,11 @@ from typing import Optional, Tuple
 
 import cv2
 import numpy as np
+from numpy import ndarray
 
 from pyk4a import ImageFormat
+
+from decorator import FpsPerformance
 
 
 def color_depth_image(depth_image):
@@ -56,8 +59,8 @@ def colorize(
     return img
 
 
-def depthInMeters(rawDepthArray):
-    return rawDepthArray / 1000
+def depthInMeters(rawDepthArray: ndarray):
+    return np.divide(rawDepthArray, 1000)
 
 
 def obj2json(obj, atom_type: list = None, collect_type: list = None) -> str:

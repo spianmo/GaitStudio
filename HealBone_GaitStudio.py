@@ -2,6 +2,7 @@ import sys
 import time
 from typing import List
 
+import cv2
 import pandas as pd
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -15,8 +16,8 @@ import Gait_Analysis_GUI
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
-import cv2 as cv
 
+from decorator import FpsPerformance
 from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -181,6 +182,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin.setFloating(True)
         self.patientWin.setHidden(True)
         self.patientWin.setMinimumSize(QSize(741, 515))
+        self.patientWin.setMaximumSize(QSize(741, 515))
         self.showStatusMessage("Info: Healbone GaitStudio组件加载完毕")
         self.anglesDataFrame = pd.DataFrame()
         self.dockWidgetContentsLayout = QVBoxLayout(self.anglesDockWidgetContents)
@@ -304,10 +306,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.displayCVFrame(self.cameraFovView, frames[1])
         self.displayCVFrame(self.cameraIrView, frames[0])
         if self.viewModel.patientMode:
-            self.displayCVFrame(self.cameraPatientView, frames[0])
+            self.displayCVFrame(self.cameraPatientView, frames[3], patientMode=True)
             self.drawPatientText(self.viewModel.currentPatientTips)
 
-    def displayCVFrame(self, cameraView, frame):
+    def displayCVFrame(self, cameraView, frame, patientMode=False):
         """
         将cv的frame显示到label上
         """
@@ -318,6 +320,11 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         qGraphicsPixmapItem = QGraphicsPixmapItem(jpg_out)
         cameraView.scene().clear()
         cameraView.scene().addItem(qGraphicsPixmapItem)  # 将场景添加至视图
+        if patientMode:
+            layer = QPixmap("./resources/layer.png")
+            layerItem = QGraphicsPixmapItem(layer)
+            layerItem.setPos(self.patientWin.window().width() / 2 - (layer.width() / 2), self.patientWin.window().height() / 2 - (layer.height() / 2))
+            cameraView.scene().addItem(layerItem)
         self.drawFPSText(cameraView, self.viewModel.fpsStr)
 
     def stopDetect(self):
@@ -385,10 +392,12 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def drawPatientText(self, tips):
         textItem = QGraphicsTextItem()
         textItem.setPlainText(tips)
-        font_size = 36
+        # font_size = 36
+        font_size = 24
         textItem.setFont(QFont("微软雅黑", font_size))
         textItem.setDefaultTextColor(Qt.red)
-        textItem.setPos(self.patientWin.window().width() / 2 - len(tips) * font_size / 2, self.patientWin.window().height() / 2 - font_size)
+        # textItem.setPos(self.patientWin.window().width() / 2 - len(tips) * font_size / 2, self.patientWin.window().height() / 2 - font_size)
+        textItem.setPos(10, 30)
         if self.cameraPatientView.scene() is None:
             self.cameraPatientView.setScene(QGraphicsScene())
         self.cameraPatientView.scene().addItem(textItem)
