@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/venv/Lib/site-packages/cv2/cv2.pyd" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8 (HealBone-GaitAnalysis)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (HealBone-GaitAnalysis)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

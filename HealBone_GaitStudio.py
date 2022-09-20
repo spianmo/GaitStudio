@@ -79,6 +79,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         patientMode = False
         currentPatientTips = ""
         fpsStr = ""
+        currentPatientDistance = ""
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
@@ -182,7 +183,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin.setFloating(True)
         self.patientWin.setHidden(True)
         self.patientWin.setMinimumSize(QSize(741, 515))
-        self.patientWin.setMaximumSize(QSize(741, 515))
         self.showStatusMessage("Info: Healbone GaitStudio组件加载完毕")
         self.anglesDataFrame = pd.DataFrame()
         self.dockWidgetContentsLayout = QVBoxLayout(self.anglesDockWidgetContents)
@@ -372,11 +372,15 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         PatientTips
         """
-        self.threadCapture.signal_patientTipsSignal.signal.connect(self.showPatientTips)
+        self.threadCapture.signal_patientTips.signal.connect(self.showPatientTips)
         """
         signal_keypoints
         """
         self.threadCapture.signal_keypoints.signal.connect(self.receiveKeyPoints)
+        """
+        Distance
+        """
+        self.threadCapture.signal_distance.signal.connect(self.showPatientDistance)
         self.threadCapture.start()
 
     def drawFPSText(self, cameraView, fpsStr):
@@ -407,6 +411,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
     def showPatientTips(self, tips):
         self.viewModel.currentPatientTips = tips
+
+    def showPatientDistance(self, distance):
+        self.viewModel.currentPatientDistance = distance
 
     def showErrorMessage(self, title="Error", content=""):
         self.showStatusMessage(content)

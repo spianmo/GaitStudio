@@ -42,3 +42,7 @@ class FPSSignal(QObject):
 
 class PatientTipsSignal(QObject):
     signal = Signal(str)
+
+
+class DistanceSignal(QObject):
+    signal = Signal(str)

@@ -13,7 +13,7 @@ import cv2 as cv
 import mediapipe as mp
 
 from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal, \
-    KinectErrorSignal, PatientTipsSignal, FPSSignal
+    KinectErrorSignal, PatientTipsSignal, FPSSignal, DistanceSignal
 from decorator import FpsPerformance
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
@@ -78,7 +78,8 @@ class KinectCaptureThread(QThread):
         self.signal_detectExit = DetectExitSignal()
         self.signal_kinectError = KinectErrorSignal()
         self.signal_fpsSignal = FPSSignal()
-        self.signal_patientTipsSignal = PatientTipsSignal()
+        self.signal_patientTips = PatientTipsSignal()
+        self.signal_distance = DistanceSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -152,7 +153,10 @@ class KinectCaptureThread(QThread):
         self.signal_fpsSignal.signal.emit("FPS " + fps)
 
     def emitPatientTips(self, tips):
-        self.signal_patientTipsSignal.signal.emit(tips)
+        self.signal_patientTips.signal.emit(tips)
+
+    def emitDistance(self, distance):
+        self.signal_distanceSignal.signal.emit(distance)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -187,7 +191,7 @@ class KinectCaptureThread(QThread):
         roi += logo
 
     # @FpsPerformance
-    def processFrames(self, pose_landmarks_proto, rgb_frame, deep_frame, distance):
+    def processFrames(self, pose_landmarks_proto, rgb_frame, deep_frame):
         """
         多source姿态关键点proto回调函数
         :param pose_landmarks_proto:
@@ -212,8 +216,6 @@ class KinectCaptureThread(QThread):
         self.drawHealboneLogo(combined_image)
         self.drawHealboneLogo(rgb_frame)
         self.drawHealboneLogo(patient_frame)
-        if distance != -1:
-            cv.putText(patient_frame, f"{round(distance, 2)}m", (350, 400), cv.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 11)
 
         return [
             cv.cvtColor(cv.resize(rgb_frame, (0, 0), fx=0.6, fy=0.6), cv.COLOR_BGR2RGB),
@@ -281,7 +283,7 @@ class KinectCaptureThread(QThread):
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
                         self.emitPatientTips("请进入相机范围")
-                        self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw), -1))
+                        self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
                         self.emitFPS(str(round(1 / (time.time() - start_time))))
                         if self.detectFlag:
                             self.detectStartTime = time.time()
@@ -342,10 +344,8 @@ class KinectCaptureThread(QThread):
                             self.emitPatientTips("检测过程被打断！重新调整姿势，并等待重新检测")
                             print("检测过程被打断！等待重新检测")
                             continue
-
-                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw),
-                                                            (pose_keypoints[23][2] + pose_keypoints[24][2] + pose_keypoints[11][2] +
-                                                             pose_keypoints[12][2]) / 4))
+                    self.emitDistance((pose_keypoints[23][2] + pose_keypoints[24][2] + pose_keypoints[11][2] + pose_keypoints[12][2]) / 4)
+                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
 
                 del capture
                 self.emitFPS(str(round(1 / (time.time() - start_time))))
