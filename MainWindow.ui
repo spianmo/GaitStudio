@@ -311,7 +311,7 @@
          <rect>
           <x>15</x>
           <y>67</y>
-          <width>81</width>
+          <width>111</width>
           <height>16</height>
          </rect>
         </property>
@@ -322,7 +322,7 @@
          </font>
         </property>
         <property name="text">
-         <string>FPS</string>
+         <string>Kinect Framerate</string>
         </property>
        </widget>
        <widget class="QLabel" name="label_3">
@@ -355,7 +355,7 @@
         </property>
         <item>
          <property name="text">
-          <string>NFOV_2X2BD</string>
+          <string>NFOV_BD</string>
          </property>
         </item>
         <item>
@@ -365,7 +365,7 @@
         </item>
         <item>
          <property name="text">
-          <string>WFOV_2X2BD</string>
+          <string>WFOV_BD</string>
          </property>
         </item>
         <item>
@@ -743,6 +743,51 @@
          <bool>false</bool>
         </property>
        </widget>
+       <widget class="QLabel" name="label_6">
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>451</y>
+          <width>201</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Postural Assessment</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="cbPosturalAssessment">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>15</x>
+          <y>470</y>
+          <width>231</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>步态分析 - （膝关节/髋关节）</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>下蹲检测 - （膝关节/踝关节）</string>
+         </property>
+        </item>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -910,7 +955,7 @@
           <x>0</x>
           <y>0</y>
           <width>320</width>
-          <height>393</height>
+          <height>378</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="angleViewerDockScrollAreaContentsLayout">
@@ -942,7 +987,7 @@
      <x>0</x>
      <y>0</y>
      <width>1328</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
