@@ -156,7 +156,7 @@ class KinectCaptureThread(QThread):
         self.signal_patientTips.signal.emit(tips)
 
     def emitDistance(self, distance):
-        self.signal_distanceSignal.signal.emit(distance)
+        self.signal_distance.signal.emit(distance)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -260,13 +260,20 @@ class KinectCaptureThread(QThread):
                 depth_image = depthInMeters(depth_image_raw)
 
                 if np.any(capture.depth):
-
                     # 将BGR转换为RGB
                     frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                    # frame_gpu = cv.cuda_GpuMat()
+                    # frame_gpu.upload(frame)
+                    # frame = cv.cuda.cvtColor(frame_gpu, cv.COLOR_BGR2RGB).download()
+
                     # 提升性能，不写入内存
                     frame.flags.writeable = False
                     pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = self.videoFrameHandler(frame)
                     frame.flags.writeable = True
+
+                    # frame_gpu.upload(frame)
+                    # frame = cv.cuda.cvtColor(frame_gpu, cv.COLOR_RGB2BGR).download()
+
                     frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
                     """
@@ -305,7 +312,7 @@ class KinectCaptureThread(QThread):
                             truth_x = pose_landmark.x
                             truth_y = pose_landmark.y
                             # MediaPipe原始的landmark_z不可信
-                            truth_z = pose_landmark.z
+                            discard_z = pose_landmark.z
                             deep_axis1 = visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1
                             deep_axis2 = visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1
                             deep_z = depth_image[deep_axis1 if deep_axis1 > 0 else 0,
@@ -316,7 +323,7 @@ class KinectCaptureThread(QThread):
                                        (visualize_x - 10, visualize_y - 10),
                                        cv.FONT_HERSHEY_SIMPLEX, 0.5, self.BGR(RGB=(102, 153, 250)), 1,
                                        cv.LINE_AA)
-                            cv.circle(frame, (visualize_x, visualize_y), radius=3, color=self.BGR(RGB=(255, 0, 0)), thickness=-1)
+                            # cv.circle(frame, (visualize_x, visualize_y), radius=3, color=self.BGR(RGB=(255, 0, 0)), thickness=-1)
                             pose_keypoints.append([truth_x, truth_y, deep_z, visibility])
                         else:
                             pose_keypoints = [[-1, -1, -1, -1]] * len(KEYPOINT_DETECTED)

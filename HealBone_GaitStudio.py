@@ -451,6 +451,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         try:
             Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE,
                                        use_modern_ui=use_modern_ui)
+
+            # todo: 1、最大下蹲角度（躯干和） 2、躯干和大腿（侧面） 3、脚踝和小腿（余角） 4、肌肉控制情况
         except AssertionError as e:
             self.logViewAppend(repr(e))
             self.logViewAppend("分析样本数量未达分析标准，请增大检测时长或在规定周期内保证有效动作")
