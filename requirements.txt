@@ -128,7 +128,7 @@ stack-data==0.4.0
 statsmodels==0.13.2
 svglib==1.4.1
 sympy==1.10.1
--e git+https://github.com/dmnfarrell/tablexplore.git@47dfda931d6aa55c61d96b420c2a1a7e540e3779#egg=tablexplore
+-e git+https://github.com/dmnfarrell/tablexplore.git#egg=tablexplore
 tabulate==0.8.10
 terminado==0.15.0
 tinycss2==1.1.1
