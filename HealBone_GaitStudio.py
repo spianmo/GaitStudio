@@ -18,6 +18,7 @@ from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 
 from decorator import FpsPerformance
+from evaluate.util import EVALUATE_ALL
 from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -190,6 +191,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
         self.hideLogoFrame = True
         self.pts_cams = []
+        for detectIndex, detectionItem in enumerate(EVALUATE_ALL):
+            self.cbPosturalAssessment.addItem(detectionItem["name"])
 
     def showStatusMessage(self, text, timeout=2000):
         self.statusBar.showMessage(text, timeout)

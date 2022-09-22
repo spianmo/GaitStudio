@@ -243,7 +243,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>开始步态检测</string>
+         <string>开始检测</string>
         </property>
        </widget>
        <widget class="QSpinBox" name="sbTime">
@@ -446,7 +446,7 @@
         <property name="geometry">
          <rect>
           <x>136</x>
-          <y>119</y>
+          <y>120</y>
           <width>111</width>
           <height>16</height>
          </rect>
@@ -465,7 +465,7 @@
         <property name="geometry">
          <rect>
           <x>136</x>
-          <y>137</y>
+          <y>139</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -778,18 +778,8 @@
          </rect>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>-1</number>
         </property>
-        <item>
-         <property name="text">
-          <string>步态分析 - （膝关节/髋关节）</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>下蹲检测 - （膝关节/踝关节）</string>
-         </property>
-        </item>
        </widget>
       </widget>
      </item>
