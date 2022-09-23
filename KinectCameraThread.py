@@ -67,7 +67,7 @@ class KinectCaptureThread(QThread):
         def __init__(self, detectionTime):
             self.detectionTime = detectionTime
 
-    def __init__(self, k4aConfig: dict, mpConfig: dict, captureConfig: dict, extraConfig: dict):
+    def __init__(self, k4aConfig: dict, mpConfig: dict, captureConfig: dict, extraConfig: dict, EvaluateMetadata: dict):
         super(KinectCaptureThread, self).__init__()
         self.signal_frames: VideoFramesSignal = VideoFramesSignal()
         self.signal_keypoints: KeyPointsSignal = KeyPointsSignal()
@@ -102,6 +102,7 @@ class KinectCaptureThread(QThread):
             detectionTime=captureConfig["detectionTime"]
         )
         self.extraConfig = extraConfig
+        self.evaluateMetadata = EvaluateMetadata
         """
         recordFlag控制线程停止
         """
@@ -229,6 +230,8 @@ class KinectCaptureThread(QThread):
             self.emitLog("Kinect配置: " + str(obj2json(self.k4aConfig)))
             self.emitLog("姿势估计器配置: " + str(obj2json(self.mpConfig)))
             self.emitLog("captureConfig配置: " + str(obj2json(self.captureConfig)))
+            self.emitLog("ExtraDetectionDimension: " + str(self.extraConfig))
+            self.emitLog("检测模式: " + str(self.evaluateMetadata))
             self.emitLog("等待目标进入检测范围...")
             while True:
                 start_time = time.time()

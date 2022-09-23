@@ -81,19 +81,19 @@ EvaluateMetadata = [
             RequireCollect.age,
             RequireCollect.gender
         ],
-        "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle]
+        "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
+        "calcRules": "",
+        "result": {},
+        "norms": {}
     },
     {
         "name": "单腿桥SLB",
         "requireCollect": [
-            RequireCollect.name
+            RequireCollect.name,
+            RequireCollect.side
         ],
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-        "calcRules": {
-            "Setup": "",
-            "Ing": "",
-            "End": ""
-        },
+        "calcRules": "",
         "result": {
             "nameEN": "StickTime",
             "nameZH": "坚持时间",
@@ -114,7 +114,8 @@ EvaluateMetadata = [
         "requireCollect": [
             RequireCollect.name,
             RequireCollect.age,
-            RequireCollect.gender
+            RequireCollect.gender,
+            RequireCollect.eyesClosed
         ],
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
