@@ -18,7 +18,8 @@ from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 
 from decorator import FpsPerformance
-from evaluate.util import EVALUATE_ALL
+from evaluate.QRequireCollectDialog import QRequireCollectDialog
+from evaluate.util import EvaluateMetadata
 from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -122,18 +123,22 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 label_style = {'color': '#EEE', 'font-size': '12px', 'font-family': '微软雅黑'}
 
                 self.anglePltDataList[anglesCubeIndex].append([[], []])
-                self.anglePltLayouts[anglesCubeIndex].append(pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setTitle(anglesCube["title"] + " " + angleCube[1], **label_style)
+                self.anglePltLayouts[anglesCubeIndex].append(
+                    pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setTitle(anglesCube["title"] + " " + angleCube[1],
+                                                                               **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setAntialiasing(True)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0], anglesCube["ylim"][1])
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setYRange(anglesCube["ylim"][0],
+                                                                                anglesCube["ylim"][1])
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].showGrid(x=True, y=True)
 
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(180)
 
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('left', angleCube[3], **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('bottom', angleCube[2], **label_style)
-                self.angleViewerDockScrollAreaContentsLayout.addWidget(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
+                self.angleViewerDockScrollAreaContentsLayout.addWidget(
+                    self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
         """
         Linked X label
         """
@@ -154,7 +159,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 """
                 if angleCubeIndex == 0:
                     continue
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXLink(self.anglePltLayouts[anglesCubeIndex][angleCubeIndex - 1])
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXLink(
+                    self.anglePltLayouts[anglesCubeIndex][angleCubeIndex - 1])
 
         self.btnStart.clicked.connect(self.btnStartClicked)
         self.hsAnglesViewerRange.valueChanged.connect(self.changeHsAnglesViewerRange)
@@ -191,7 +197,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
         self.hideLogoFrame = True
         self.pts_cams = []
-        for detectIndex, detectionItem in enumerate(EVALUATE_ALL):
+        for detectIndex, detectionItem in enumerate(EvaluateMetadata):
             self.cbPosturalAssessment.addItem(detectionItem["name"])
 
     def showStatusMessage(self, text, timeout=2000):
@@ -221,15 +227,18 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
 
     def changeMinTrackingConfidence(self):
-        self.tvMinTrackingConfidence.setText("Min Tracking Confidence (" + str(round(self.hsMinTrackingConfidence.value() / 100, 1)) + ")")
+        self.tvMinTrackingConfidence.setText(
+            "Min Tracking Confidence (" + str(round(self.hsMinTrackingConfidence.value() / 100, 1)) + ")")
 
     def changeMinDetectionConfidence(self):
-        self.tvMinDetectionConfidence.setText("Min Detection Confidence (" + str(round(self.hsMinDetectionConfidence.value() / 100, 1)) + ")")
+        self.tvMinDetectionConfidence.setText(
+            "Min Detection Confidence (" + str(round(self.hsMinDetectionConfidence.value() / 100, 1)) + ")")
 
     def changeHsAnglesViewerItems(self):
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
-                self.tvAnglesItemVisibleNum.setText("Angle-Items Visible Num (" + str(int(self.hsAnglesViewerItems.value() / 10)) + " Items)")
+                self.tvAnglesItemVisibleNum.setText(
+                    "Angle-Items Visible Num (" + str(int(self.hsAnglesViewerItems.value() / 10)) + " Items)")
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(
                     int(self.angleViewerDock.size().height() / int(self.hsAnglesViewerItems.value() / 10) - 20))
 
@@ -240,27 +249,35 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
             if self.angleViewerDock.isFloating() and event.type() == QEvent.Resize and watched == self.angleViewerDock:
                 for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
                     for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
-                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(int(event.size().height() / 6 - 20))
+                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(
+                            int(event.size().height() / 6 - 20))
             if not self.angleViewerDock.isFloating() and event.type() == QEvent.Resize and watched == self.angleViewerDock:
                 for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
                     for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
-                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(int(event.size().height() / 3 - 20))
+                        self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setMinimumHeight(
+                            int(event.size().height() / 3 - 20))
         return super().eventFilter(watched, event)
 
     def resizeCameraView(self, tabWidth=-1, tabHeight=-1):
         tabWidgetSize: QSize = self.tabWidget.geometry().size()
-        self.cameraIrFovView.setGeometry(self.cameraIrFovView.x(), self.cameraIrFovView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
+        self.cameraIrFovView.setGeometry(self.cameraIrFovView.x(), self.cameraIrFovView.y(),
+                                         tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                          (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
-        self.cameraFovView.setGeometry(self.cameraFovView.x(), self.cameraFovView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
+        self.cameraFovView.setGeometry(self.cameraFovView.x(), self.cameraFovView.y(),
+                                       tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                        (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
-        self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(), tabWidgetSize.width() if tabWidth == -1 else tabWidth,
+        self.cameraIrView.setGeometry(self.cameraIrView.x(), self.cameraIrView.y(),
+                                      tabWidgetSize.width() if tabWidth == -1 else tabWidth,
                                       (tabWidgetSize.height() - 24) if tabHeight == -1 else tabHeight)
-        self.logoFrame.setGeometry(self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
-                                   self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
-        self.logoFrame_2.setGeometry(self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
-                                     self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
-        self.logoFrame_3.setGeometry(self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
-                                     self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
+        self.logoFrame.setGeometry(
+            self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
+            self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
+        self.logoFrame_2.setGeometry(
+            self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
+            self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
+        self.logoFrame_3.setGeometry(
+            self.tabWidget.geometry().x() + tabWidgetSize.width() / 2 - self.logoFrame.width() / 2,
+            self.tabWidget.geometry().y() + tabWidgetSize.height() / 2 - self.logoFrame.height() / 2, 481, 191)
 
     def receiveKeyPoints(self, pose_keypoints):
         self.pts_cams.append(pose_keypoints)
@@ -277,21 +294,24 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 """
                 if self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] > self.viewModel.anglesViewerRange:
                     self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(
-                        self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1] - self.viewModel.anglesViewerRange,
+                        self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][
+                            -1] - self.viewModel.anglesViewerRange,
                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1])
 
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(x=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
-                                                                                         y=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
-                                                                                         pen=({'color': "r", "width": 1.5}), clear=True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(
+                    x=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                    y=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                    pen=({'color': "r", "width": 1.5}), clear=True)
 
     def clearAnglesViewer(self):
         self.pts_cams = []
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex] = [[], []]
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
-                                                                                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
-                                                                                         pen=({'color': "r", "width": 1.5}), clear=True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(
+                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                    pen=({'color': "r", "width": 1.5}), clear=True)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
         """
         清空表格
@@ -317,7 +337,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         将cv的frame显示到label上
         """
         image = qimage2ndarray.array2qimage(frame)  # Solution for memory leak
-        jpg_out = QPixmap.fromImage(image).scaled(cameraView.width(), cameraView.height(), Qt.KeepAspectRatioByExpanding)
+        jpg_out = QPixmap.fromImage(image).scaled(cameraView.width(), cameraView.height(),
+                                                  Qt.KeepAspectRatioByExpanding)
         if cameraView.scene() is None:
             cameraView.setScene(QGraphicsScene())
         qGraphicsPixmapItem = QGraphicsPixmapItem(jpg_out)
@@ -326,7 +347,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         if patientMode:
             layer = QPixmap("./resources/layer.png")
             layerItem = QGraphicsPixmapItem(layer)
-            layerItem.setPos(self.patientWin.window().width() / 2 - (layer.width() / 2), self.patientWin.window().height() / 2 - (layer.height() / 2))
+            layerItem.setPos(self.patientWin.window().width() / 2 - (layer.width() / 2),
+                             self.patientWin.window().height() / 2 - (layer.height() / 2))
             cameraView.scene().addItem(layerItem)
         self.drawFPSText(cameraView, self.viewModel.fpsStr)
 
@@ -335,10 +357,11 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.threadCapture.stopCapture()
         self.btnStart.setText("开始检测")
 
-    def startDetect(self, k4aConfig, mpConfig, captureConfig):
+    def startDetect(self, k4aConfig, mpConfig, captureConfig, extraConfig):
         self.viewModel.detectStatus = True
         self.btnStart.setText("停止检测")
-        self.threadCapture = KinectCaptureThread(k4aConfig=k4aConfig, mpConfig=mpConfig, captureConfig=captureConfig)
+        self.threadCapture = KinectCaptureThread(k4aConfig=k4aConfig, mpConfig=mpConfig, captureConfig=captureConfig,
+                                                 extraConfig=extraConfig)
         """
         透传子线程中的日志
         """
@@ -367,7 +390,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         KinectError
         """
         self.threadCapture.signal_kinectError.signal.connect(
-            lambda x: self.showErrorMessage(title="Kinect Error", content="Kinect设备打开失败, 请检查Kinect是否被其他进程占用"))
+            lambda x: self.showErrorMessage(title="Kinect Error",
+                                            content="Kinect设备打开失败, 请检查Kinect是否被其他进程占用"))
         """
         FPSEvent
         """
@@ -452,7 +476,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.logViewAppend("Pose Detect完成, 结果分析中...")
         self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
         try:
-            Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams, analysis_keypoint=PoseLandmark.RIGHT_KNEE,
+            Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams,
+                                       analysis_keypoint=PoseLandmark.RIGHT_KNEE,
                                        use_modern_ui=use_modern_ui)
 
             # todo: 1、最大下蹲角度（躯干和） 2、躯干和大腿（侧面） 3、脚踝和小腿（余角） 4、肌肉控制情况
@@ -474,8 +499,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 "synchronized_images_only": True
             }
             mpConfig = {
-                "min_detection_confidence": round(self.hsMinDetectionConfidence.sliderPosition() / self.hsMinDetectionConfidence.maximum(), 1),
-                "min_tracking_confidence": round(self.hsMinTrackingConfidence.sliderPosition() / self.hsMinTrackingConfidence.maximum(), 1),
+                "min_detection_confidence": round(
+                    self.hsMinDetectionConfidence.sliderPosition() / self.hsMinDetectionConfidence.maximum(), 1),
+                "min_tracking_confidence": round(
+                    self.hsMinTrackingConfidence.sliderPosition() / self.hsMinTrackingConfidence.maximum(), 1),
                 "model_complexity": self.cbModelComplexity.currentIndex(),
                 "smooth_landmarks": self.cbSmoothLandmarks.isChecked()
             }
@@ -483,8 +510,15 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 "fps": int(self.cbFPS.currentText().split("_")[1]),
                 "detectionTime": int(self.sbTime.text())
             }
+            collectDialog = QRequireCollectDialog(metadata=EvaluateMetadata[self.cbPosturalAssessment.currentIndex()]["requireCollect"])
+            extraConfig = {}
+            if collectDialog.exec_() == QDialog.Accepted:
+                extraConfig = collectDialog.getResult()
+                print(extraConfig)
+            else:
+                return
             self.clearAnglesViewer()
-            self.startDetect(k4aConfig, mpConfig, captureConfig)
+            self.startDetect(k4aConfig, mpConfig, captureConfig, extraConfig)
             if self.viewModel.patientMode:
                 self.patientWin.show()
             self.enableDetectForm(enable=False)
@@ -493,7 +527,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.outputText.moveCursor(QTextCursor.End, QTextCursor.MoveMode.MoveAnchor)
         local_time_asctimes = time.strftime("%Y-%m-%d %H:%M:%S ", time.localtime(time.time()))
         self.outputText.setMarkdown(
-            self.outputText.toMarkdown(QTextDocument.MarkdownFeature.MarkdownDialectGitHub) + local_time_asctimes + text + '\n')
+            self.outputText.toMarkdown(
+                QTextDocument.MarkdownFeature.MarkdownDialectGitHub) + local_time_asctimes + text + '\n')
         if len(self.outputText.toHtml()) > 1024 * 1024 * 10:
             self.outputText.clear()
         scrollbar: QScrollBar = self.outputText.verticalScrollBar()

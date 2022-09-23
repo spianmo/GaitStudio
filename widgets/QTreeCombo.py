@@ -16,19 +16,20 @@ class TreeComboBox(QComboBox):
         self.setView(tree_view)
 
 
-app = QApplication([])
+if __name__ == '__main__':
+    app = QApplication([])
 
-combo = TreeComboBox()
+    combo = TreeComboBox()
 
-parent_item = QStandardItem(QIcon("../resources/smallscreen.png"), '膝关节')
-parent_item.setSelectable(False)
-parent_item.appendRow([QStandardItem('下蹲')])
+    parent_item = QStandardItem(QIcon("../resources/smallscreen.png"), '膝关节')
+    parent_item.setSelectable(False)
+    parent_item.appendRow([QStandardItem('下蹲')])
 
-model = QStandardItemModel()
-model.appendRow([parent_item])
-model.appendRow([QStandardItem(QIcon("../resources/smallscreen.png"), '髋关节')])
-model.setHeaderData(0, Qt.Horizontal, '评估选项', Qt.DisplayRole)
-combo.setModel(model)
+    model = QStandardItemModel()
+    model.appendRow([parent_item])
+    model.appendRow([QStandardItem(QIcon("../resources/smallscreen.png"), '髋关节')])
+    model.setHeaderData(0, Qt.Horizontal, '评估选项', Qt.DisplayRole)
+    combo.setModel(model)
 
-combo.show()
-app.exec_()
+    combo.show()
+    app.exec_()

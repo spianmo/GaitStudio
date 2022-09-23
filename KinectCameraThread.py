@@ -12,7 +12,8 @@ from pyk4a import PyK4A, Config, ColorResolution, FPS, DepthMode, K4AException, 
 import cv2 as cv
 import mediapipe as mp
 
-from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, DetectFinishSignal, DetectExitSignal, \
+from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, \
+    DetectFinishSignal, DetectExitSignal, \
     KinectErrorSignal, PatientTipsSignal, FPSSignal, DistanceSignal
 from decorator import FpsPerformance
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
@@ -63,11 +64,10 @@ KEYPOINT_DETECTED = [
 
 class KinectCaptureThread(QThread):
     class KinectCaptureConfig(object):
-        def __init__(self, fps, detectionTime):
-            self.fps = fps
+        def __init__(self, detectionTime):
             self.detectionTime = detectionTime
 
-    def __init__(self, k4aConfig: dict, mpConfig: dict, captureConfig: dict):
+    def __init__(self, k4aConfig: dict, mpConfig: dict, captureConfig: dict, extraConfig: dict):
         super(KinectCaptureThread, self).__init__()
         self.signal_frames: VideoFramesSignal = VideoFramesSignal()
         self.signal_keypoints: KeyPointsSignal = KeyPointsSignal()
@@ -83,7 +83,6 @@ class KinectCaptureThread(QThread):
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
-        self.captureConfig = captureConfig
 
         self.k4a: PyK4A = PyK4A(Config(
             color_resolution=ColorResolution(k4aConfig["color_resolution"]),
@@ -100,9 +99,9 @@ class KinectCaptureThread(QThread):
             smooth_landmarks=mpConfig["smooth_landmarks"]
         )
         self.captureConfig = self.KinectCaptureConfig(
-            fps=captureConfig["fps"],
             detectionTime=captureConfig["detectionTime"]
         )
+        self.extraConfig = extraConfig
         """
         recordFlag控制线程停止
         """
@@ -268,7 +267,8 @@ class KinectCaptureThread(QThread):
 
                     # 提升性能，不写入内存
                     frame.flags.writeable = False
-                    pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = self.videoFrameHandler(frame)
+                    pose_landmarks, pose_world_landmarks, pose_landmarks_proto, pose_world_landmarks_proto = self.videoFrameHandler(
+                        frame)
                     frame.flags.writeable = True
 
                     # frame_gpu.upload(frame)
@@ -290,7 +290,8 @@ class KinectCaptureThread(QThread):
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
                         self.emitPatientTips("请进入相机范围")
-                        self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+                        self.emitVideoFrames(
+                            self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
                         self.emitFPS(str(round(1 / (time.time() - start_time))))
                         if self.detectFlag:
                             self.detectStartTime = time.time()
@@ -337,8 +338,10 @@ class KinectCaptureThread(QThread):
                             print("开始检测！")
                             self.detectFlag = True
                         self.detect_frames.append(pose_keypoints)
-                        self.emitPatientTips("已检测" + str(round(time.time() - self.detectStartTime, 1)) + '秒，剩余' + str(
-                            round(self.captureConfig.detectionTime - (time.time() - self.detectStartTime), 1)) + '秒')
+                        self.emitPatientTips(
+                            "已检测" + str(round(time.time() - self.detectStartTime, 1)) + '秒，剩余' + str(
+                                round(self.captureConfig.detectionTime - (time.time() - self.detectStartTime),
+                                      1)) + '秒')
                         self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         self.emitKeyPoints(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
@@ -351,8 +354,10 @@ class KinectCaptureThread(QThread):
                             self.emitPatientTips("检测过程被打断！重新调整姿势，并等待重新检测")
                             print("检测过程被打断！等待重新检测")
                             continue
-                    self.emitDistance((pose_keypoints[23][2] + pose_keypoints[24][2] + pose_keypoints[11][2] + pose_keypoints[12][2]) / 4)
-                    self.emitVideoFrames(self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
+                    self.emitDistance((pose_keypoints[23][2] + pose_keypoints[24][2] + pose_keypoints[11][2] +
+                                       pose_keypoints[12][2]) / 4)
+                    self.emitVideoFrames(
+                        self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
 
                 del capture
                 self.emitFPS(str(round(1 / (time.time() - start_time))))

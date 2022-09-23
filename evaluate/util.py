@@ -2,21 +2,22 @@ from enum import Enum
 
 
 class RequireCollect(Enum):
-    age = 1,
-    gender = 2,
-    side = 3,
+    age = 1
+    gender = 2
+    side = 3
     eyesClosed = 4
+    name = 5
 
 
 class PartAngle(Enum):
-    Knee = 1,
-    Hip = 2,
-    Pelvis = 3,
+    Knee = 1
+    Hip = 2
+    Pelvis = 3
     Ankle = 4
 
 
 class NormType(Enum):
-    RangeDeepDict = 1,
+    RangeDeepDict = 1
     BaseOffsetFloat = 2
 
 
@@ -43,34 +44,40 @@ PART_ANGLE_ALL = {
 InfoForm = {
     RequireCollect.age: {
         "type": "slider",
-        "title": "请选择评估人员年龄",
+        "title": "评测人员年龄{}",
         "range": [1, 100],
+        "defaultValue": 25,
         "step": 1
     },
     RequireCollect.gender: {
         "type": "select",
-        "title": "请选择评估人员性别",
+        "title": "评测人员性别",
         "item": ["男", "女"],
         "_item": ["Male", "Female"]
     },
     RequireCollect.side: {
         "type": "select",
-        "title": "请选择评估动作左右侧",
+        "title": "评估动作左右侧",
         "item": ["左", "右"],
         "_item": ["left", "right"]
     },
     RequireCollect.eyesClosed: {
         "type": "select",
-        "title": "请选择是否闭眼",
+        "title": "评估是否闭眼",
         "item": ["是", "否"],
         "_item": [True, False]
+    },
+    RequireCollect.name: {
+        "type": "input",
+        "title": "受测者姓名"
     }
 }
 
-EVALUATE_ALL = [
+EvaluateMetadata = [
     {
         "name": "步态分析",
         "requireCollect": [
+            RequireCollect.name,
             RequireCollect.age,
             RequireCollect.gender
         ],
@@ -78,6 +85,9 @@ EVALUATE_ALL = [
     },
     {
         "name": "单腿桥SLB",
+        "requireCollect": [
+            RequireCollect.name
+        ],
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
         "calcRules": {
             "Setup": "",
@@ -101,7 +111,11 @@ EVALUATE_ALL = [
     {
         "name": "单腿站SLS",
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-        "infoRequire": [InfoForm[RequireCollect.age]],
+        "requireCollect": [
+            RequireCollect.name,
+            RequireCollect.age,
+            RequireCollect.gender
+        ],
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
         "result": {
