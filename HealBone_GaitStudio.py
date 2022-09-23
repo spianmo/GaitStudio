@@ -357,10 +357,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.threadCapture.stopCapture()
         self.btnStart.setText("开始检测")
 
-    def startDetect(self, k4aConfig, mpConfig, captureConfig, extraConfig, evaluateMetadata):
+    def startDetect(self, k4aConfig, mpConfig, extraConfig, evaluateMetadata):
         self.viewModel.detectStatus = True
         self.btnStart.setText("停止检测")
-        self.threadCapture = KinectCaptureThread(k4aConfig=k4aConfig, mpConfig=mpConfig, captureConfig=captureConfig,
+        self.threadCapture = KinectCaptureThread(k4aConfig=k4aConfig, mpConfig=mpConfig,
                                                  extraConfig=extraConfig, EvaluateMetadata=evaluateMetadata)
         """
         透传子线程中的日志
@@ -451,7 +451,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         QMessageBox.information(self, title, content)
 
     def enableDetectForm(self, enable=True):
-        self.sbTime.setEnabled(enable)
+        self.cbPosturalAssessment.setEnabled(enable)
         self.cbFPS.setEnabled(enable)
         self.cbDepthMode.setEnabled(enable)
         self.cbColorResolution.setEnabled(enable)
@@ -506,10 +506,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 "model_complexity": self.cbModelComplexity.currentIndex(),
                 "smooth_landmarks": self.cbSmoothLandmarks.isChecked()
             }
-            captureConfig = {
-                "fps": int(self.cbFPS.currentText().split("_")[1]),
-                "detectionTime": int(self.sbTime.text())
-            }
             collectDialog = QRequireCollectDialog(
                 metadata=EvaluateMetadata[self.cbPosturalAssessment.currentIndex()]["requireCollect"])
             extraConfig = {}
@@ -519,7 +515,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
             else:
                 return
             self.clearAnglesViewer()
-            self.startDetect(k4aConfig, mpConfig, captureConfig, extraConfig,
+            self.startDetect(k4aConfig, mpConfig, extraConfig,
                              EvaluateMetadata[self.cbPosturalAssessment.currentIndex()])
             if self.viewModel.patientMode:
                 self.patientWin.show()

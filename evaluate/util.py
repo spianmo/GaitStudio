@@ -7,6 +7,7 @@ class RequireCollect(Enum):
     side = 3
     eyesClosed = 4
     name = 5
+    time = 6
 
 
 class PartAngle(Enum):
@@ -70,6 +71,10 @@ InfoForm = {
     RequireCollect.name: {
         "type": "input",
         "title": "受测者姓名"
+    },
+    RequireCollect.time: {
+        "type": "spinbox",
+        "title": "检测时长/sec"
     }
 }
 
@@ -79,10 +84,15 @@ EvaluateMetadata = [
         "requireCollect": [
             RequireCollect.name,
             RequireCollect.age,
-            RequireCollect.gender
+            RequireCollect.gender,
+            RequireCollect.time
         ],
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-        "calcRules": "",
+        "venv": ["$time", "$keypoints"],
+        "calcRules": {
+            "start": "credible_pose({$keypoints})>0.5",
+            "end": "(currentTime() - {$detectStartTime}) > {$time}"
+        },
         "result": {},
         "norms": {}
     },
@@ -93,7 +103,12 @@ EvaluateMetadata = [
             RequireCollect.side
         ],
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-        "calcRules": "",
+        "venv": ["$side", "$L$torso", "$R$torso", "$L$femur", "$R$femur", "$L$tibia", "$R$tibia"],
+        # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
+        "calcRules": {
+            "start": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
+            "end": "!((angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30)"
+        },
         "result": {
             "nameEN": "StickTime",
             "nameZH": "坚持时间",
@@ -117,8 +132,10 @@ EvaluateMetadata = [
             RequireCollect.gender,
             RequireCollect.eyesClosed
         ],
-        # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
-        "calcRules": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
+        "calcRules": {
+            "start": "",
+            "end": ""
+        },
         "result": {
             "nameEN": "StickTime",
             "nameZH": "坚持时间",

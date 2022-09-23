@@ -246,38 +246,6 @@
          <string>开始检测</string>
         </property>
        </widget>
-       <widget class="QSpinBox" name="sbTime">
-        <property name="geometry">
-         <rect>
-          <x>15</x>
-          <y>30</y>
-          <width>111</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="value">
-         <number>15</number>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label">
-        <property name="geometry">
-         <rect>
-          <x>15</x>
-          <y>12</y>
-          <width>81</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>8</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>检测时长/sec</string>
-        </property>
-       </widget>
        <widget class="QComboBox" name="cbFPS">
         <property name="geometry">
          <rect>
@@ -750,7 +718,7 @@
         <property name="geometry">
          <rect>
           <x>15</x>
-          <y>451</y>
+          <y>10</y>
           <width>201</width>
           <height>16</height>
          </rect>
@@ -772,8 +740,8 @@
         <property name="geometry">
          <rect>
           <x>15</x>
-          <y>470</y>
-          <width>231</width>
+          <y>30</y>
+          <width>111</width>
           <height>31</height>
          </rect>
         </property>

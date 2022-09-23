@@ -16,6 +16,7 @@ from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSi
     DetectFinishSignal, DetectExitSignal, \
     KinectErrorSignal, PatientTipsSignal, FPSSignal, DistanceSignal
 from decorator import FpsPerformance
+from evaluate.dsl import *
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -63,11 +64,8 @@ KEYPOINT_DETECTED = [
 
 
 class KinectCaptureThread(QThread):
-    class KinectCaptureConfig(object):
-        def __init__(self, detectionTime):
-            self.detectionTime = detectionTime
 
-    def __init__(self, k4aConfig: dict, mpConfig: dict, captureConfig: dict, extraConfig: dict, EvaluateMetadata: dict):
+    def __init__(self, k4aConfig: dict, mpConfig: dict, extraConfig: dict, EvaluateMetadata: dict):
         super(KinectCaptureThread, self).__init__()
         self.signal_frames: VideoFramesSignal = VideoFramesSignal()
         self.signal_keypoints: KeyPointsSignal = KeyPointsSignal()
@@ -98,11 +96,10 @@ class KinectCaptureThread(QThread):
             model_complexity=mpConfig["model_complexity"],
             smooth_landmarks=mpConfig["smooth_landmarks"]
         )
-        self.captureConfig = self.KinectCaptureConfig(
-            detectionTime=captureConfig["detectionTime"]
-        )
         self.extraConfig = extraConfig
         self.evaluateMetadata = EvaluateMetadata
+        self.venv = {}
+        self.generateVenv(self.evaluateMetadata["requireCollect"])
         """
         recordFlag控制线程停止
         """
@@ -124,6 +121,11 @@ class KinectCaptureThread(QThread):
         self.recordFlag = False
         if self.k4a.is_running:
             self.k4a.stop()
+
+    def generateVenv(self, requireCollect):
+        for infoItem in requireCollect:
+            self.venv[f"${infoItem.name}"] = self.extraConfig[infoItem]
+        print("venv", self.venv)
 
     def emitLog(self, logStr: str):
         self.signal_log.signal.emit(logStr)
@@ -229,7 +231,6 @@ class KinectCaptureThread(QThread):
             self.k4a.start()
             self.emitLog("Kinect配置: " + str(obj2json(self.k4aConfig)))
             self.emitLog("姿势估计器配置: " + str(obj2json(self.mpConfig)))
-            self.emitLog("captureConfig配置: " + str(obj2json(self.captureConfig)))
             self.emitLog("ExtraDetectionDimension: " + str(self.extraConfig))
             self.emitLog("检测模式: " + str(self.evaluateMetadata))
             self.emitLog("等待目标进入检测范围...")
@@ -280,9 +281,10 @@ class KinectCaptureThread(QThread):
                     frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
                     """
-                    判断是否检测结束
+                    ！！判断评估是否结束！！
                     """
-                    if not self.recordFlag or (time.time() - self.detectStartTime) > self.captureConfig.detectionTime:
+                    self.venv["$detectStartTime"] = self.detectStartTime
+                    if not self.recordFlag or DSL(self.evaluateMetadata["calcRules"]["end"], self.venv):
                         if self.detectFlag:
                             self.emitDetectFinish()
                             self.emitLog("检测结束")
@@ -332,7 +334,11 @@ class KinectCaptureThread(QThread):
                         else:
                             pose_keypoints = [[-1, -1, -1, -1]] * len(KEYPOINT_DETECTED)
 
-                    if self.credible_pose(pose_keypoints):
+                    """
+                    ！！判断是否达到评估开始标准！！
+                    """
+                    self.venv["$keypoints"] = pose_keypoints
+                    if DSL(self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
                             self.emitLog("已识别到所有检测点，开始检测")
                             self.emitPatientTips("已识别到所有检测点，开始检测，请开始行走")
@@ -343,7 +349,7 @@ class KinectCaptureThread(QThread):
                         self.detect_frames.append(pose_keypoints)
                         self.emitPatientTips(
                             "已检测" + str(round(time.time() - self.detectStartTime, 1)) + '秒，剩余' + str(
-                                round(self.captureConfig.detectionTime - (time.time() - self.detectStartTime),
+                                round(self.venv["$time"] - (time.time() - self.detectStartTime),
                                       1)) + '秒')
                         self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         self.emitKeyPoints(pose_keypoints)
