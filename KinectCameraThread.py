@@ -169,16 +169,6 @@ class KinectCaptureThread(QThread):
         """
         return RGB[2], RGB[1], RGB[0]
 
-    @staticmethod
-    def credible_pose(keypoints):
-        """
-        检测Pose可信度
-        :param keypoints:
-        :return:
-        """
-        confidences = [keypoint[3] for keypoint in keypoints]
-        return np.array(confidences).min() > 0.5
-
     def drawHealboneLogo(self, frame: ndarray) -> NoReturn:
         """
         add HealBone Logo to CV-Frame
@@ -353,6 +343,7 @@ class KinectCaptureThread(QThread):
                                       1)) + '秒')
                         self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
                         self.emitKeyPoints(pose_keypoints)
+                        self.generateVenvVectors(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
                     else:
                         self.emitPatientTips("调整姿势使身体和四肢完全包含在相机视图中")
@@ -444,6 +435,16 @@ class KinectCaptureThread(QThread):
         theta = np.degrees(np.arccos(x))
         return theta if not supplementaryAngle else 180 - theta
 
+    def generateVenvVectors(self, keypoints):
+        for enumItem in mp_pose.PoseLandmark:
+            self.venv[f"$k{enumItem.value}"] = self.buildVector(keypoints, enumItem)
+        self.venv[f"$torso"] = (self.venv[f"$k23"] + self.venv[f"$k24"]) / 2 - (self.venv[f"$k11"] + self.venv[f"$k12"]) / 2
+        self.venv[f"$L$femur"] = self.venv[f"$26"] - self.venv[f"$24"]
+        self.venv[f"$R$femur"] = self.venv[f"$25"] - self.venv[f"$23"]
+        self.venv[f"$L$tibia"] = self.venv[f"$26"] - self.venv[f"$28"]
+        self.venv[f"$L$tibia"] = self.venv[f"$25"] - self.venv[f"$27"]
+
+
     def calculateAnglesMediaPipe(self, keypoints) -> dict:
         """
         计算单次姿态的所有点的检测夹角
@@ -457,8 +458,7 @@ class KinectCaptureThread(QThread):
         # 右髋关节坐标
         RHip_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.RIGHT_HIP)
         # 左右髋关节中点
-        MidHip_coor = np.array(
-            [(LHip_coor[0] + RHip_coor[0]) / 2, (LHip_coor[1] + RHip_coor[1]) / 2, (LHip_coor[2] + RHip_coor[2]) / 2])
+        MidHip_coor = (LHip_coor + RHip_coor)/2
         # 左膝关节坐标
         LKnee_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.LEFT_KNEE)
         # 右膝关节坐标

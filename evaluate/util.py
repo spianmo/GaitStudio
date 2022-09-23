@@ -103,7 +103,7 @@ EvaluateMetadata = [
             RequireCollect.side
         ],
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-        "venv": ["$side", "$L$torso", "$R$torso", "$L$femur", "$R$femur", "$L$tibia", "$R$tibia"],
+        "venv": ["$torso", "$L$femur", "$R$femur", "$L$tibia", "$R$tibia"],
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": {
             "start": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
