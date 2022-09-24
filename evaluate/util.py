@@ -91,6 +91,7 @@ EvaluateMetadata = [
         "venv": ["$time", "$keypoints"],
         "calcRules": {
             "start": "credible_pose({$keypoints})>0.5",
+            "interrupt": "",
             "end": "(currentTime() - {$detectStartTime}) > {$time}"
         },
         "result": {},
@@ -107,6 +108,7 @@ EvaluateMetadata = [
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": {
             "start": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
+            "interrupt": "",
             "end": "!((angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30)"
         },
         "result": {
@@ -134,6 +136,7 @@ EvaluateMetadata = [
         ],
         "calcRules": {
             "start": "",
+            "interrupt": "",
             "end": ""
         },
         "result": {

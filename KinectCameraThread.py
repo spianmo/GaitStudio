@@ -439,10 +439,10 @@ class KinectCaptureThread(QThread):
         for enumItem in mp_pose.PoseLandmark:
             self.venv[f"$k{enumItem.value}"] = self.buildVector(keypoints, enumItem)
         self.venv[f"$torso"] = (self.venv[f"$k23"] + self.venv[f"$k24"]) / 2 - (self.venv[f"$k11"] + self.venv[f"$k12"]) / 2
-        self.venv[f"$L$femur"] = self.venv[f"$26"] - self.venv[f"$24"]
-        self.venv[f"$R$femur"] = self.venv[f"$25"] - self.venv[f"$23"]
-        self.venv[f"$L$tibia"] = self.venv[f"$26"] - self.venv[f"$28"]
-        self.venv[f"$L$tibia"] = self.venv[f"$25"] - self.venv[f"$27"]
+        self.venv[f"$L$femur"] = self.venv[f"$k26"] - self.venv[f"$k24"]
+        self.venv[f"$R$femur"] = self.venv[f"$k25"] - self.venv[f"$k23"]
+        self.venv[f"$L$tibia"] = self.venv[f"$k26"] - self.venv[f"$k28"]
+        self.venv[f"$L$tibia"] = self.venv[f"$k25"] - self.venv[f"$k27"]
 
 
     def calculateAnglesMediaPipe(self, keypoints) -> dict:
