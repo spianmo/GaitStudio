@@ -91,10 +91,27 @@ EvaluateMetadata = [
         "venv": ["$time", "$keypoints"],
         "calcRules": {
             "start": "credible_pose({$keypoints})>0.5",
-            "interrupt": "",
+            "interrupt": "credible_pose({$keypoints})<=0.5",
             "end": "(currentTime() - {$detectStartTime}) > {$time}"
         },
-        "result": {},
+        "patientTips": {
+            "onBeforeDetect": "调整姿势使身体和四肢完全包含在相机视图中",
+            "onFirstDetect": "已识别到所有检测点，开始检测，请开始行走",
+            "onDetecting": "'已检测' + str(round(currentTime() - {$detectStartTime}, 1)) + '秒，剩余' + str(round({$time} - (currentTime() - {$detectStartTime}),1)) + '秒'",
+            "onDetectingInterrupt": "检测过程被打断！重新调整姿势，并等待重新检测",
+            "onDetectEnd": "检测完成，等待生成报告"
+        },
+        "sequenceLog": {
+            "onBeforeDetect": "调整姿势使身体和四肢完全包含在相机视图中",
+            "onFirstDetect": "已识别到所有检测点，开始检测",
+            "onDetecting": "'已检测' + str(currentTime() - {$detectStartTime}) + '秒'",
+            "onDetectingInterrupt": "检测过程被打断！等待重新检测",
+            "onDetectEnd": "检测结束"
+        },
+        "EchoNumber": "str(({$k23[2]}+{$k24[2]}+{$k11[2]}+{$k12[2]})/4)+'m'",
+        "result": {
+            "analysisReport": "Gait_Analysis"
+        },
         "norms": {}
     },
     {
@@ -108,13 +125,29 @@ EvaluateMetadata = [
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": {
             "start": "(angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30",
-            "interrupt": "",
+            "interrupt": "False",
             "end": "!((angle(ly{$torso},{$torso}) in range(0, 50)) && angle(ly({$femur}),{$femur})>30 && angle(ly({$tibia}),{$tibia})>30)"
         },
+        "patientTips": {
+            "onBeforeDetect": "开始仰卧，双膝弯曲，双脚放在地板上，伸直一条腿，使其与另一条腿保持一条直线，然后收紧腹部，将臀部抬离地板，形成桥式姿势。",
+            "onFirstDetect": "已达到动作要求，开始计时，请坚持",
+            "onDetecting": "'已坚持' + str(round(currentTime() - {$detectStartTime}, 1)) + '秒'",
+            "onDetectingInterrupt": "",
+            "onDetectEnd": "检测完成，等待生成报告"
+        },
+        "sequenceLog": {
+            "onBeforeDetect": "开始仰卧，双膝弯曲，双脚放在地板上，伸直一条腿，使其与另一条腿保持一条直线，然后收紧腹部，将臀部抬离地板，形成桥式姿势。",
+            "onFirstDetect": "已达到动作要求，开始检测",
+            "onDetecting": "'已坚持' + str(currentTime() - {$detectStartTime}) + '秒'",
+            "onDetectingInterrupt": "",
+            "onDetectEnd": "检测结束"
+        },
+        "EchoNumber": "str(round(currentTime() - {$detectStartTime}, 1))+'s'",
         "result": {
             "nameEN": "StickTime",
             "nameZH": "坚持时间",
-            "unit": "sec"
+            "unit": "sec",
+            "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))"
         },
         "norms": {
             "type": NormType.BaseOffsetFloat,
@@ -140,9 +173,11 @@ EvaluateMetadata = [
             "end": ""
         },
         "result": {
+            "analysisReport": "SLS_Analysis",
             "nameEN": "StickTime",
             "nameZH": "坚持时间",
-            "unit": "sec"
+            "unit": "sec",
+            "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))"
         },
         "norms": {
             "type": NormType.RangeDeepDict,

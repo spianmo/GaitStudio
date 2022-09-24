@@ -14,9 +14,9 @@ import mediapipe as mp
 
 from GUISignal import VideoFramesSignal, KeyPointsSignal, AngleDictSignal, LogSignal, DetectInterruptSignal, \
     DetectFinishSignal, DetectExitSignal, \
-    KinectErrorSignal, PatientTipsSignal, FPSSignal, DistanceSignal
+    KinectErrorSignal, PatientTipsSignal, FPSSignal, EchoNumberSignal
 from decorator import FpsPerformance
-from evaluate.dsl import *
+from evaluate.DSLEngine import *
 from kinect_helpers import obj2json, depthInMeters, color_depth_image, colorize
 
 mp_pose = mp.solutions.pose
@@ -77,7 +77,7 @@ class KinectCaptureThread(QThread):
         self.signal_kinectError = KinectErrorSignal()
         self.signal_fpsSignal = FPSSignal()
         self.signal_patientTips = PatientTipsSignal()
-        self.signal_distance = DistanceSignal()
+        self.signal_echoNumer = EchoNumberSignal()
 
         self.k4aConfig = k4aConfig
         self.mpConfig = mpConfig
@@ -115,6 +115,7 @@ class KinectCaptureThread(QThread):
         self.emitLog(str(obj2json(k4aConfig)))
         self.mutex = QMutex()
         self.detectStartTime = time.time()
+        self.venv["$detectStartTime"] = self.detectStartTime
         self.logo = cv.imread('./logo.png')
 
     def stopCapture(self):
@@ -142,8 +143,8 @@ class KinectCaptureThread(QThread):
     def emitDetectInterrupt(self, empty="empty"):
         self.signal_detectInterrupt.signal.emit(empty)
 
-    def emitDetectFinish(self, empty="empty"):
-        self.signal_detectFinish.signal.emit(empty)
+    def emitDetectFinish(self, result):
+        self.signal_detectFinish.signal.emit(result)
 
     def emitDetectExit(self, empty="empty"):
         self.signal_detectExit.signal.emit(empty)
@@ -157,8 +158,8 @@ class KinectCaptureThread(QThread):
     def emitPatientTips(self, tips):
         self.signal_patientTips.signal.emit(tips)
 
-    def emitDistance(self, distance):
-        self.signal_distance.signal.emit(distance)
+    def emitEchoNumer(self, distance):
+        self.signal_echoNumer.signal.emit(distance)
 
     @staticmethod
     def BGR(RGB: Tuple[int, int, int]) -> Tuple[int, int, int]:
@@ -273,12 +274,17 @@ class KinectCaptureThread(QThread):
                     """
                     ！！判断评估是否结束！！
                     """
-                    self.venv["$detectStartTime"] = self.detectStartTime
                     if not self.recordFlag or DSL(self.evaluateMetadata["calcRules"]["end"], self.venv):
                         if self.detectFlag:
-                            self.emitDetectFinish()
-                            self.emitLog("检测结束")
-                            self.emitPatientTips("检测完成，等待生成报告")
+                            self.emitDetectFinish({
+                                self.evaluateMetadata["data"]: DSL(self.evaluateMetadata["result"]["calcRule"],
+                                                                   self.venv) if "calcRule" in self.evaluateMetadata[
+                                    "result"] else "",
+                                "evaluateName": self.evaluateMetadata["name"],
+                                **self.evaluateMetadata["result"]
+                            })
+                            self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])
+                            self.emitPatientTips(self.evaluateMetadata["patientTips"]["onDetectEnd"])
                             self.k4a.stop()
                             break
 
@@ -288,8 +294,12 @@ class KinectCaptureThread(QThread):
                         self.emitVideoFrames(
                             self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
                         self.emitFPS(str(round(1 / (time.time() - start_time))))
+                        """
+                        magic hit
+                        """
                         if self.detectFlag:
                             self.detectStartTime = time.time()
+                            self.venv["$detectStartTime"] = self.detectStartTime
                             self.detectFlag = False
                             self.detect_frames = []
                             self.emitLog("检测过程中断！等待重新检测")
@@ -330,32 +340,32 @@ class KinectCaptureThread(QThread):
                     self.venv["$keypoints"] = pose_keypoints
                     if DSL(self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
-                            self.emitLog("已识别到所有检测点，开始检测")
-                            self.emitPatientTips("已识别到所有检测点，开始检测，请开始行走")
+                            self.emitLog(self.evaluateMetadata["sequenceLog"]["onFirstDetect"])
+                            self.emitPatientTips(self.evaluateMetadata["patientTips"]["onFirstDetect"])
                             self.emitDetectInterrupt()
                             self.detectStartTime = time.time()
-                            print("开始检测！")
+                            self.venv["$detectStartTime"] = self.detectStartTime
                             self.detectFlag = True
                         self.detect_frames.append(pose_keypoints)
-                        self.emitPatientTips(
-                            "已检测" + str(round(time.time() - self.detectStartTime, 1)) + '秒，剩余' + str(
-                                round(self.venv["$time"] - (time.time() - self.detectStartTime),
-                                      1)) + '秒')
-                        self.emitLog("已检测" + str(time.time() - self.detectStartTime) + '秒')
+                        self.emitPatientTips(DSL(self.evaluateMetadata["patientTips"]["onDetecting"], self.venv))
+                        self.emitLog(DSL(self.evaluateMetadata["sequenceLog"]["onDetecting"], self.venv))
                         self.emitKeyPoints(pose_keypoints)
                         self.generateVenvVectors(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
-                    else:
-                        self.emitPatientTips("调整姿势使身体和四肢完全包含在相机视图中")
-                        if self.detectFlag:
-                            self.detectFlag = False
-                            self.detect_frames = []
-                            self.emitLog("检测过程被打断！等待重新检测")
-                            self.emitPatientTips("检测过程被打断！重新调整姿势，并等待重新检测")
-                            print("检测过程被打断！等待重新检测")
-                            continue
-                    self.emitDistance((pose_keypoints[23][2] + pose_keypoints[24][2] + pose_keypoints[11][2] +
-                                       pose_keypoints[12][2]) / 4)
+                    elif self.detectFlag and DSL(self.evaluateMetadata["calcRules"]["interrupt"], self.venv):
+                        self.detectFlag = False
+                        self.detect_frames = []
+                        self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectingInterrupt"])
+                        self.emitPatientTips(self.evaluateMetadata["patientTips"]["onDetectingInterrupt"])
+                        continue
+                    elif not DSL(self.evaluateMetadata["calcRules"]["start"], self.venv):
+                        """
+                        没有达到检测开始标准
+                        """
+                        self.emitLog(self.evaluateMetadata["sequenceLog"]["onBeforeDetect"])
+                        self.emitPatientTips(self.evaluateMetadata["patientTips"]["onBeforeDetect"])
+
+                    self.emitEchoNumer(DSL(self.evaluateMetadata["EchoNumber"], self.venv))
                     self.emitVideoFrames(
                         self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
 
@@ -438,12 +448,12 @@ class KinectCaptureThread(QThread):
     def generateVenvVectors(self, keypoints):
         for enumItem in mp_pose.PoseLandmark:
             self.venv[f"$k{enumItem.value}"] = self.buildVector(keypoints, enumItem)
-        self.venv[f"$torso"] = (self.venv[f"$k23"] + self.venv[f"$k24"]) / 2 - (self.venv[f"$k11"] + self.venv[f"$k12"]) / 2
+        self.venv[f"$torso"] = (self.venv[f"$k23"] + self.venv[f"$k24"]) / 2 - (
+                self.venv[f"$k11"] + self.venv[f"$k12"]) / 2
         self.venv[f"$L$femur"] = self.venv[f"$k26"] - self.venv[f"$k24"]
         self.venv[f"$R$femur"] = self.venv[f"$k25"] - self.venv[f"$k23"]
         self.venv[f"$L$tibia"] = self.venv[f"$k26"] - self.venv[f"$k28"]
         self.venv[f"$L$tibia"] = self.venv[f"$k25"] - self.venv[f"$k27"]
-
 
     def calculateAnglesMediaPipe(self, keypoints) -> dict:
         """
@@ -458,7 +468,7 @@ class KinectCaptureThread(QThread):
         # 右髋关节坐标
         RHip_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.RIGHT_HIP)
         # 左右髋关节中点
-        MidHip_coor = (LHip_coor + RHip_coor)/2
+        MidHip_coor = (LHip_coor + RHip_coor) / 2
         # 左膝关节坐标
         LKnee_coor = self.buildVector(keypoints, mp_pose.PoseLandmark.LEFT_KNEE)
         # 右膝关节坐标

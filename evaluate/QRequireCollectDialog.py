@@ -4,7 +4,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialog, QSlider, QComboBox, QLineEdit, QLabel, QSpinBox
 
 from Dialog import Ui_Dialog
-from evaluate.util import InfoForm, RequireCollect
+from evaluate.EvaluateCore import InfoForm, RequireCollect
 
 
 class ViewModel:

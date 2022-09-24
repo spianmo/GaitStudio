@@ -19,7 +19,7 @@ from KinectCameraThread import KinectCaptureThread
 
 from decorator import FpsPerformance
 from evaluate.QRequireCollectDialog import QRequireCollectDialog
-from evaluate.util import EvaluateMetadata
+from evaluate.EvaluateCore import EvaluateMetadata
 from widgets.QDataFrameTable import DataFrameTable
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -81,7 +81,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         patientMode = False
         currentPatientTips = ""
         fpsStr = ""
-        currentPatientDistance = ""
+        currentPatientEchoNumber = ""
 
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
@@ -407,7 +407,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         Distance
         """
-        self.threadCapture.signal_distance.signal.connect(self.showPatientDistance)
+        self.threadCapture.signal_echoNumer.signal.connect(self.showPatientEchoNumber)
         self.threadCapture.start()
 
     def drawFPSText(self, cameraView, fpsStr):
@@ -439,8 +439,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def showPatientTips(self, tips):
         self.viewModel.currentPatientTips = tips
 
-    def showPatientDistance(self, distance):
-        self.viewModel.currentPatientDistance = distance
+    def showPatientEchoNumber(self, echoNumber):
+        self.viewModel.currentPatientEchoNumber = echoNumber
 
     def showErrorMessage(self, title="Error", content=""):
         self.showStatusMessage(content)
@@ -468,17 +468,25 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.btnStart.setText("开始检测")
         self.logViewAppend("Pose Detect线程已结束")
 
-    def detectFinish(self):
+    def detectFinish(self, result: dict):
         """
         检测结束，进入分析报告流程
         :return:
         """
         self.logViewAppend("Pose Detect完成, 结果分析中...")
         self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
+        if "calcRule" in result:
+            self.showInfoMessage(title=result["evaluateName"],
+                                 content=f"{result['nameZH']}{result['nameEN']}为{result['data']}{result['unit']}")
         try:
-            Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams,
-                                       analysis_keypoint=PoseLandmark.RIGHT_KNEE,
-                                       use_modern_ui=use_modern_ui)
+            if "analysisReport" in result and len(result["analysisReport"]) != 0:
+                analysisReport = result["analysisReport"]
+                if analysisReport == "Gait_Analysis":
+                    Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams,
+                                               analysis_keypoint=PoseLandmark.RIGHT_KNEE,
+                                               use_modern_ui=use_modern_ui)
+                elif analysisReport == "单腿桥SLB":
+                    print("单腿桥报告尚未实现")
 
             # todo: 1、最大下蹲角度（躯干和） 2、躯干和大腿（侧面） 3、脚踝和小腿（余角） 4、肌肉控制情况
         except AssertionError as e:

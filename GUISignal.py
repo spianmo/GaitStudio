@@ -25,7 +25,7 @@ class DetectInterruptSignal(QObject):
 
 
 class DetectFinishSignal(QObject):
-    signal = Signal(str)
+    signal = Signal(dict)
 
 
 class DetectExitSignal(QObject):
@@ -44,5 +44,5 @@ class PatientTipsSignal(QObject):
     signal = Signal(str)
 
 
-class DistanceSignal(QObject):
+class EchoNumberSignal(QObject):
     signal = Signal(str)
