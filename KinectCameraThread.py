@@ -295,6 +295,7 @@ class KinectCaptureThread(QThread):
 
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
+                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         self.emitPatientTips("请进入相机范围")
                         self.emitVideoFrames(
                             self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
@@ -302,38 +303,53 @@ class KinectCaptureThread(QThread):
                         """
                         magic hit
                         """
-                        if self.detectFlag:
-                            self.detectStartTime = time.time()
-                            self.venv["$detectStartTime"] = self.detectStartTime
-                            self.detectFlag = False
-                            self.detect_frames = []
-                            self.emitLog("检测过程中断！等待重新检测")
-                            print("检测过程被中断！等待重新检测")
+                        # if self.detectFlag:
+                        #     self.detectStartTime = time.time()
+                        #     self.venv["$detectStartTime"] = self.detectStartTime
+                        #     self.detectFlag = False
+                        #     self.detect_frames = []
+                        #     self.emitLog("检测过程中断！等待重新检测")
+                        #     print("检测过程被中断！等待重新检测")
                         continue
-                    # 将归一化的坐标转换为原始坐标
+                    """
+                    将归一化的坐标转换为原始坐标
+                    """
                     pose_keypoints = []
 
                     for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
                         if pose_landmark:
-                            # 只处理待检测的关键点，用于后续CheckCube扩展
+                            """
+                            只处理待检测的关键点，用于后续CheckCube扩展
+                            """
                             if PoseLandmark(pose_landmark_index) not in KEYPOINT_DETECTED:
                                 continue
                             visualize_x = int(round(pose_landmark.x * frame.shape[1]))
                             visualize_y = int(round(pose_landmark.y * frame.shape[0]))
                             truth_x = pose_landmark.x
                             truth_y = pose_landmark.y
-                            # MediaPipe原始的landmark_z不可信
+                            """
+                            MediaPipe原始的landmark_z不可信
+                            """
                             discard_z = pose_landmark.z
                             deep_axis1 = visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1
                             deep_axis2 = visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1
                             deep_z = depth_image[deep_axis1 if deep_axis1 > 0 else 0,
                                                  deep_axis2 if deep_axis2 > 0 else 0]
+                            if deep_z == 0:
+                                # TODO: 深度相机读取的Depth为0，可能有强光干扰、黑色漫反射吸光、折射等多种情况，这个时候比较好的办法是根据其他姿势点的已有深度和人体各部位身体距离比例来计算出一个差不多的值
+                                deep_z = self.estimatedDepth(pose_landmark_index, pose_landmarks, depth_image)
+                                cv.putText(frame, "Depth:" + str(
+                                    round(deep_z, 3)),
+                                           (visualize_x - 10, visualize_y - 10),
+                                           cv.FONT_HERSHEY_SIMPLEX, 0.5, self.BGR(RGB=(255, 0, 0)), 1,
+                                           cv.LINE_AA)
+                            else:
+                                cv.putText(frame, "Depth:" + str(
+                                    round(deep_z, 3)),
+                                           (visualize_x - 10, visualize_y - 10),
+                                           cv.FONT_HERSHEY_SIMPLEX, 0.5, self.BGR(RGB=(102, 153, 250)), 1,
+                                           cv.LINE_AA)
                             visibility = pose_landmark.visibility
-                            cv.putText(frame, "Depth:" + str(
-                                round(deep_z, 3)),
-                                       (visualize_x - 10, visualize_y - 10),
-                                       cv.FONT_HERSHEY_SIMPLEX, 0.5, self.BGR(RGB=(102, 153, 250)), 1,
-                                       cv.LINE_AA)
                             # cv.circle(frame, (visualize_x, visualize_y), radius=3, color=self.BGR(RGB=(255, 0, 0)), thickness=-1)
                             pose_keypoints.append([truth_x, truth_y, deep_z, visibility])
                         else:
@@ -344,11 +360,12 @@ class KinectCaptureThread(QThread):
                     """
                     self.venv["$keypoints"] = pose_keypoints
                     self.generateVenvVectors(pose_keypoints)
-                    print(f'f=线段((0,0,0),({self.venv["$torso"][0]},{self.venv["$torso"][1]},{self.venv["$torso"][2]}))')
+                    # print(
+                    #     f'f=线段((0,0,0),({self.venv["$torso"][0]},{self.venv["$torso"][1]},{self.venv["$torso"][2]}))')
+                    # print(
+                    #     f'f=线段((0,0,0),({self.venv["$torso"][0]},{0},{self.venv["$torso"][2]}))')
                     print(
-                        f'f=线段((0,0,0),({self.venv["$torso"][0]},{0},{self.venv["$torso"][2]}))')
-                    print(
-                        f'躯干与地面角度 x:{DSL("angle(lx({$torso}),{$torso}, m=True)", self.venv)} y:{DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv)} z:{DSL("angle(lz({$torso}),{$torso}, m=True)", self.venv)}')
+                        f'躯干与地面角度 y:{DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv)}')
                     if credible_pose(self.venv["$keypoints"], self.evaluateMetadata["calcRules"]["credit"]) and DSL(
                             self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
@@ -456,6 +473,38 @@ class KinectCaptureThread(QThread):
         return np.array(
             [keypoints[keypoint_index][0], keypoints[keypoint_index][1], keypoints[keypoint_index][2]])
 
+    def estimatedDepth(self, pose_landmark_index, pose_landmarks, depth_image):
+        estimated = 0
+        pose_keypoints = []
+        for pose_landmark_index, pose_landmark in enumerate(pose_landmarks):
+            visualize_x = int(round(pose_landmark.x * depth_image.shape[1]))
+            visualize_y = int(round(pose_landmark.y * depth_image.shape[0]))
+            deep_axis1 = visualize_y if visualize_y < depth_image.shape[0] else depth_image.shape[0] - 1
+            deep_axis2 = visualize_x if visualize_x < depth_image.shape[1] else depth_image.shape[1] - 1
+            deep_z = depth_image[deep_axis1 if deep_axis1 > 0 else 0,
+                                 deep_axis2 if deep_axis2 > 0 else 0]
+            pose_keypoints.append([pose_landmark.x, pose_landmark.y, deep_z, pose_landmark.visibility])
+        def findNonValue(all):
+            for item in all:
+                if item[2] != 0:
+                    return item[2]
+
+        if pose_landmark_index in range(0, 10):
+            estimated = findNonValue(pose_keypoints[0:10])
+        if pose_landmark_index in (11, 12, 23, 24):
+            estimated = findNonValue([pose_keypoints[11], pose_keypoints[12], pose_keypoints[23], pose_keypoints[24]])
+        if pose_landmark_index in (14, 16, 22, 20, 18):
+            estimated = findNonValue([pose_keypoints[16], pose_keypoints[22], pose_keypoints[20], pose_keypoints[18]])
+        if pose_landmark_index in (13, 15, 21, 17, 19):
+            estimated = findNonValue([pose_keypoints[15], pose_keypoints[21], pose_keypoints[17], pose_keypoints[19]])
+        if pose_landmark_index in (26, 28, 30, 32):
+            estimated = findNonValue([pose_keypoints[26], pose_keypoints[28], pose_keypoints[30], pose_keypoints[32]])
+        if pose_landmark_index in (25, 27, 29, 31):
+            estimated = findNonValue([pose_keypoints[25], pose_keypoints[27], pose_keypoints[29], pose_keypoints[31]])
+        if estimated == 0 or estimated == None:
+            estimated = findNonValue(pose_keypoints)
+        return estimated if estimated is not None else 0
+
     @staticmethod
     def vectors_to_angle(vector1, vector2, supplementaryAngle=False) -> float:
         """
@@ -472,10 +521,10 @@ class KinectCaptureThread(QThread):
     def generateVenvVectors(self, keypoints):
         for enumItem in mp_pose.PoseLandmark:
             self.venv[f"$k{enumItem.value}"] = self.buildVector(keypoints, enumItem)
-        self.venv["$L$femur"] = list(self.venv[f"$k26"] - self.venv[f"$k24"])
-        self.venv["$R$femur"] = list(self.venv[f"$k25"] - self.venv[f"$k23"])
-        self.venv["$L$tibia"] = list(self.venv[f"$k26"] - self.venv[f"$k28"])
-        self.venv["$R$tibia"] = list(self.venv[f"$k25"] - self.venv[f"$k27"])
+        self.venv["$R$femur"] = list(self.venv[f"$k26"] - self.venv[f"$k24"])
+        self.venv["$L$femur"] = list(self.venv[f"$k25"] - self.venv[f"$k23"])
+        self.venv["$R$tibia"] = list(self.venv[f"$k26"] - self.venv[f"$k28"])
+        self.venv["$L$tibia"] = list(self.venv[f"$k25"] - self.venv[f"$k27"])
         self.venv["$torso"] = list((self.venv["$k23"] + self.venv["$k24"]) / 2 - self.venv["$k0"])
         if "$side" in self.venv:
             self.venv["$femur"] = list(self.venv["$L$femur"]) if self.venv["$side"] == "left" else self.venv["$R$femur"]

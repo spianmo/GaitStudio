@@ -284,8 +284,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.pts_cams.append(pose_keypoints)
 
     def plotFrameAngles(self, angles: dict):
-        self.anglesDataFrame = pd.concat([self.anglesDataFrame, pd.DataFrame([angles])], ignore_index=True)
-        self.anglesDataFrameTable.set_data(self.anglesDataFrame)
+        # TODO: 更新视图卡顿
+        # self.anglesDataFrame = pd.concat([self.anglesDataFrame, pd.DataFrame([angles])], ignore_index=True)
+        # self.anglesDataFrameTable.set_data(self.anglesDataFrame)
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["Time_in_sec"])
