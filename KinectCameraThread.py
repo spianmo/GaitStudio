@@ -344,10 +344,13 @@ class KinectCaptureThread(QThread):
                     """
                     self.venv["$keypoints"] = pose_keypoints
                     self.generateVenvVectors(pose_keypoints)
-                    # print("躯干与地面角度y", DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv))
-                    # print("111111", DSL("angle(ly({$femur}),{$femur}, m=True)", self.venv))
-                    # print("222222", DSL("angle(ly({$tibia}),{$tibia}, m=True)", self.venv))
-                    if DSL(self.evaluateMetadata["calcRules"]["start"], self.venv):
+                    print(f'f=线段((0,0,0),({self.venv["$torso"][0]},{self.venv["$torso"][1]},{self.venv["$torso"][2]}))')
+                    print(
+                        f'f=线段((0,0,0),({self.venv["$torso"][0]},{0},{self.venv["$torso"][2]}))')
+                    print(
+                        f'躯干与地面角度 x:{DSL("angle(lx({$torso}),{$torso}, m=True)", self.venv)} y:{DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv)} z:{DSL("angle(lz({$torso}),{$torso}, m=True)", self.venv)}')
+                    if credible_pose(self.venv["$keypoints"], self.evaluateMetadata["calcRules"]["credit"]) and DSL(
+                            self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onFirstDetect"])
                             self.emitPatientTips(self.evaluateMetadata["patientTips"]["onFirstDetect"])

@@ -91,6 +91,7 @@ EvaluateMetadata = [
         "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
         "venv": ["$time", "$keypoints"],
         "calcRules": {
+            "credit": [i for i in range(33)],
             "start": "credible_pose({$keypoints})>0.5",
             "interrupt": "credible_pose({$keypoints})<=0.5",
             "end": "(currentTime() - {$detectStartTime}) > {$time}"
@@ -128,8 +129,9 @@ EvaluateMetadata = [
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": {
             # "start": "(angle(ly({$torso}),{$torso}) in range(-50, 50))",
-            "start": "angle(ly({$femur}),{$femur}, m=True)>30 and angle(ly({$tibia}),{$tibia}, m=True)>30",
-            # "start": "(angle(ly({$torso}),{$torso}, m=True) in range(-50, 50)) and angle(ly({$femur}),{$femur}, m=True)>30 and angle(ly({$tibia}),{$tibia}, m=True)>30",
+            #"start": "angle(ly({$femur}),{$femur}, m=True)>30 and angle(ly({$tibia}),{$tibia}, m=True)>30",
+            "credit": [11, 12, 23, 24, 25, 26, 27, 28],
+            "start": "(angle(ly({$torso}),{$torso}, m=True) in range(-50, 50)) and angle(ly({$femur}),{$femur}, m=True)>30 and angle(ly({$tibia}),{$tibia}, m=True)>30",
             "interrupt": "False",
             "end": "not (angle(ly({$femur}),{$femur})>30 and angle(ly({$tibia}),{$tibia})>30)"
         },
