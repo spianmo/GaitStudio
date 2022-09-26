@@ -274,13 +274,18 @@ class KinectCaptureThread(QThread):
                     """
                     ！！判断评估是否结束！！
                     """
-                    if not self.recordFlag or DSL(self.evaluateMetadata["calcRules"]["end"], self.venv):
+                    try:
+                        finishFlag = DSL(self.evaluateMetadata["calcRules"]["end"], self.venv)
+                    except:
+                        finishFlag = False
+                    if not self.recordFlag or finishFlag:
                         if self.detectFlag:
                             self.emitDetectFinish({
-                                self.evaluateMetadata["data"]: DSL(self.evaluateMetadata["result"]["calcRule"],
-                                                                   self.venv) if "calcRule" in self.evaluateMetadata[
-                                    "result"] else "",
+                                "data": DSL(self.evaluateMetadata["result"]["calcRule"],
+                                            self.venv) if "calcRule" in self.evaluateMetadata["result"] else "",
                                 "evaluateName": self.evaluateMetadata["name"],
+                                "norms": self.evaluateMetadata["norms"],
+                                "extraParams": self.extraConfig,
                                 **self.evaluateMetadata["result"]
                             })
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])
@@ -338,6 +343,10 @@ class KinectCaptureThread(QThread):
                     ！！判断是否达到评估开始标准！！
                     """
                     self.venv["$keypoints"] = pose_keypoints
+                    self.generateVenvVectors(pose_keypoints)
+                    # print("躯干与地面角度y", DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv))
+                    # print("111111", DSL("angle(ly({$femur}),{$femur}, m=True)", self.venv))
+                    # print("222222", DSL("angle(ly({$tibia}),{$tibia}, m=True)", self.venv))
                     if DSL(self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onFirstDetect"])
@@ -348,9 +357,8 @@ class KinectCaptureThread(QThread):
                             self.detectFlag = True
                         self.detect_frames.append(pose_keypoints)
                         self.emitPatientTips(DSL(self.evaluateMetadata["patientTips"]["onDetecting"], self.venv))
-                        self.emitLog(DSL(self.evaluateMetadata["sequenceLog"]["onDetecting"], self.venv))
+                        # self.emitLog(DSL(self.evaluateMetadata["sequenceLog"]["onDetecting"], self.venv))
                         self.emitKeyPoints(pose_keypoints)
-                        self.generateVenvVectors(pose_keypoints)
                         self.emitAngles(self.calculateAnglesMediaPipe(pose_keypoints))
                     elif self.detectFlag and DSL(self.evaluateMetadata["calcRules"]["interrupt"], self.venv):
                         self.detectFlag = False
@@ -362,7 +370,20 @@ class KinectCaptureThread(QThread):
                         """
                         没有达到检测开始标准
                         """
-                        self.emitLog(self.evaluateMetadata["sequenceLog"]["onBeforeDetect"])
+                        if self.detectFlag and DSL(self.evaluateMetadata["calcRules"]["end"], self.venv):
+                            self.emitDetectFinish({
+                                "data": DSL(self.evaluateMetadata["result"]["calcRule"],
+                                            self.venv) if "calcRule" in self.evaluateMetadata["result"] else "",
+                                "evaluateName": self.evaluateMetadata["name"],
+                                "norms": self.evaluateMetadata["norms"],
+                                "extraParams": self.extraConfig,
+                                **self.evaluateMetadata["result"]
+                            })
+                            self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])
+                            self.emitPatientTips(self.evaluateMetadata["patientTips"]["onDetectEnd"])
+                            self.k4a.stop()
+                            break
+                        # self.emitLog(self.evaluateMetadata["sequenceLog"]["onBeforeDetect"])
                         self.emitPatientTips(self.evaluateMetadata["patientTips"]["onBeforeDetect"])
 
                     self.emitEchoNumer(DSL(self.evaluateMetadata["EchoNumber"], self.venv))
@@ -448,12 +469,14 @@ class KinectCaptureThread(QThread):
     def generateVenvVectors(self, keypoints):
         for enumItem in mp_pose.PoseLandmark:
             self.venv[f"$k{enumItem.value}"] = self.buildVector(keypoints, enumItem)
-        self.venv[f"$torso"] = (self.venv[f"$k23"] + self.venv[f"$k24"]) / 2 - (
-                self.venv[f"$k11"] + self.venv[f"$k12"]) / 2
-        self.venv[f"$L$femur"] = self.venv[f"$k26"] - self.venv[f"$k24"]
-        self.venv[f"$R$femur"] = self.venv[f"$k25"] - self.venv[f"$k23"]
-        self.venv[f"$L$tibia"] = self.venv[f"$k26"] - self.venv[f"$k28"]
-        self.venv[f"$L$tibia"] = self.venv[f"$k25"] - self.venv[f"$k27"]
+        self.venv["$L$femur"] = list(self.venv[f"$k26"] - self.venv[f"$k24"])
+        self.venv["$R$femur"] = list(self.venv[f"$k25"] - self.venv[f"$k23"])
+        self.venv["$L$tibia"] = list(self.venv[f"$k26"] - self.venv[f"$k28"])
+        self.venv["$R$tibia"] = list(self.venv[f"$k25"] - self.venv[f"$k27"])
+        self.venv["$torso"] = list((self.venv["$k23"] + self.venv["$k24"]) / 2 - self.venv["$k0"])
+        if "$side" in self.venv:
+            self.venv["$femur"] = list(self.venv["$L$femur"]) if self.venv["$side"] == "left" else self.venv["$R$femur"]
+            self.venv["$tibia"] = list(self.venv["$L$tibia"]) if self.venv["$side"] == "left" else self.venv["$R$tibia"]
 
     def calculateAnglesMediaPipe(self, keypoints) -> dict:
         """

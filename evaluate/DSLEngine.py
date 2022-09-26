@@ -18,21 +18,23 @@ def vector(keyPoints, keyPointIndex: PoseLandmark) -> ndarray:
 
 
 def angle(vector1, vector2, m=False) -> float:
+    vector1 = np.array(vector1)
+    vector2 = np.array(vector2)
     x = np.dot(vector1, -vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
     theta = np.degrees(np.arccos(x))
     return theta if not m else 180 - theta
 
 
 def lx(vector):
-    return np.array(0, vector[1], vector[2])
+    return [0, vector[1], vector[2]]
 
 
 def ly(vector):
-    return np.array(vector[0], 0, vector[1])
+    return [vector[0], 0, vector[1]]
 
 
 def lz(vector):
-    return np.array(vector[0], vector[1], 0)
+    return [vector[0], vector[1], 0]
 
 
 def credible_pose(keypoints):
@@ -48,6 +50,8 @@ def credible_pose(keypoints):
 def currentTime():
     return time.time()
 
+def _T(npVec):
+    return str(list(npVec))
 
 def DSL(expStr: str, vars: dict):
     return eval(expStr.format(**vars))
@@ -55,8 +59,13 @@ def DSL(expStr: str, vars: dict):
 
 if __name__ == '__main__':
     bones = {
-        "$bone1": 11
+        "$bone1": 11,
+        "v1": np.array([-0.2, 1, 0]),
+        "v2": np.array([0, 1, 0])
     }
+    print(_T(bones["v1"]))
     # print(DSL('{$bone1} in range(0, 20)', bones))
-    # print(angle(np.array([-0.2, 1, 0]), np.array([0, 1, 0]), m=True))
-    print(DSL("time.time()", {}))
+
+    print(DSL("angle({_T(v1)}, {_T(v2)}, m=True)", bones))
+    # print(DSL("time.time()", {}))
+    # xx = (angle(ly(torso), torso) in range(0, 50)) and angle(ly(femur), femur) > 30 and angle(ly(tibia), tibia) > 30

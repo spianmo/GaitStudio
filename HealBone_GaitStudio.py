@@ -18,6 +18,7 @@ from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 
 from decorator import FpsPerformance
+from evaluate.NormEngine import NormEngine
 from evaluate.QRequireCollectDialog import QRequireCollectDialog
 from evaluate.EvaluateCore import EvaluateMetadata
 from widgets.QDataFrameTable import DataFrameTable
@@ -476,8 +477,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.logViewAppend("Pose Detect完成, 结果分析中...")
         self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
         if "calcRule" in result:
+            normEngine = NormEngine(result['norms'], result['extraParams'])
+            testRes = '合格' if normEngine.exec(result['data'])['result'] else '不合格'
             self.showInfoMessage(title=result["evaluateName"],
-                                 content=f"{result['nameZH']}{result['nameEN']}为{result['data']}{result['unit']}")
+                                 content=f"{result['nameZH']}{result['nameEN']}为{result['data']}{result['unit']}, {testRes}")
         try:
             if "analysisReport" in result and len(result["analysisReport"]) != 0:
                 analysisReport = result["analysisReport"]
