@@ -350,7 +350,7 @@ QHeaderView {
 QHeaderView::section, QTableCornerButton:section{
     margin:0px;
     font-weight:bold;
-    border:1px solid #2b2b2b;
+    border:1px solid #222;
     border-left-width:0px;
     border-right-width:1px;
     border-top-width:0px;

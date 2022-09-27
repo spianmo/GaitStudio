@@ -21,15 +21,14 @@ class PandasModel(QAbstractTableModel):
         return 0
 
     def columnCount(self, parent=QModelIndex()) -> int:
-        print("调用一次columnCount")
         if parent == QModelIndex():
-            return len(self._dataframe.columns)
+            return len(self._dataframe.columns) - 1
         return 0
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                return str(self._dataframe.columns[section])
+                return str(self._dataframe.columns[section + 1])
 
             if orientation == Qt.Vertical:
                 return str(self._dataframe.index[section])
@@ -37,12 +36,11 @@ class PandasModel(QAbstractTableModel):
         return None
 
     def data(self, index: PySide2.QtCore.QModelIndex, role: int = ...) -> typing.Any:
-        print("调用一次data", self._dataframe.shape)
         if not index.isValid():
             return None
 
         if role == Qt.DisplayRole:
-            return str(self._dataframe.iloc[index.row(), index.column()])
+            return str(self._dataframe.iloc[index.row(), index.column() + 1])
 
         return None
 

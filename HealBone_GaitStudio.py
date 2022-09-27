@@ -201,6 +201,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.anglesDataFrameTable = QTableView()
         model = PandasModel(self.anglesDataFrame)
         self.anglesDataFrameTable.setModel(model)
+        for col_index in range(len(self.anglesDataFrame.columns) - 1):
+            self.anglesDataFrameTable.setColumnWidth(col_index, 120)
         self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
         self.hideLogoFrame = True
         self.pts_cams = []
