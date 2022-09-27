@@ -1,9 +1,53 @@
-import numpy as np
+import typing
+
+import PySide2
+import pandas as pd
 from PySide2 import QtCore
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-from pandas import DataFrame
+
+
+class PandasModel(QAbstractTableModel):
+
+    def __init__(self, dataframe: pd.DataFrame, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self._dataframe = dataframe
+
+    def rowCount(self, parent=QModelIndex()) -> int:
+        if parent == QModelIndex():
+            return len(self._dataframe)
+
+        return 0
+
+    def columnCount(self, parent=QModelIndex()) -> int:
+        print("调用一次columnCount")
+        if parent == QModelIndex():
+            return len(self._dataframe.columns)
+        return 0
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return str(self._dataframe.columns[section])
+
+            if orientation == Qt.Vertical:
+                return str(self._dataframe.index[section])
+
+        return None
+
+    def data(self, index: PySide2.QtCore.QModelIndex, role: int = ...) -> typing.Any:
+        print("调用一次data", self._dataframe.shape)
+        if not index.isValid():
+            return None
+
+        if role == Qt.DisplayRole:
+            return str(self._dataframe.iloc[index.row(), index.column()])
+
+        return None
+
+    def refresh(self):
+        self.layoutChanged.emit()
 
 
 class DataFrameTable(QTableWidget):
@@ -13,7 +57,7 @@ class DataFrameTable(QTableWidget):
         headerTitles = df.columns.to_list()
         self.setHorizontalHeaderLabels(headerTitles)
         self.horizontalHeader().setDragEnabled(True)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        # self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.df = df
         size_policy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setSizePolicy(size_policy)
@@ -27,7 +71,7 @@ class DataFrameTable(QTableWidget):
         table_row = self.df.shape[0]
         table_col = self.df.shape[1]
         self.setRowCount(table_row)
-        self.setColumnCount(table_col)
+        self.setColumnCount(table_col - 1)
         for row in range(table_row):
             for col in range(table_col):
                 if col == table_col - 1:

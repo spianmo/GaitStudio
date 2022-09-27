@@ -21,7 +21,7 @@ from decorator import FpsPerformance
 from evaluate.NormEngine import NormEngine
 from evaluate.QRequireCollectDialog import QRequireCollectDialog
 from evaluate.EvaluateCore import EvaluateMetadata
-from widgets.QDataFrameTable import DataFrameTable
+from widgets.QDataFrameTable import DataFrameTable, PandasModel
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
 
@@ -192,9 +192,15 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.patientWin.setHidden(True)
         self.patientWin.setMinimumSize(QSize(741, 515))
         self.showStatusMessage("Info: Healbone GaitStudio组件加载完毕")
-        self.anglesDataFrame = pd.DataFrame()
+        self.anglesDataFrame = pd.DataFrame(columns=["frame_index", "Time_in_sec",
+                                                     "TorsoLHip_angle", "TorsoRHip_angle", "LHip_angle",
+                                                     "RHip_angle", "LKnee_angle", "RKnee_angle",
+                                                     "TorsoLFemur_angle", "TorsoRFemur_angle", "LTibiaSelf_vector",
+                                                     "RTibiaSelf_vector", "LAnkle_angle", "RAnkle_angle"])
         self.dockWidgetContentsLayout = QVBoxLayout(self.anglesDockWidgetContents)
-        self.anglesDataFrameTable = DataFrameTable(self.anglesDataFrame)
+        self.anglesDataFrameTable = QTableView()
+        model = PandasModel(self.anglesDataFrame)
+        self.anglesDataFrameTable.setModel(model)
         self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
         self.hideLogoFrame = True
         self.pts_cams = []
@@ -285,8 +291,9 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
     def plotFrameAngles(self, angles: dict):
         # TODO: 更新视图卡顿
-        # self.anglesDataFrame = pd.concat([self.anglesDataFrame, pd.DataFrame([angles])], ignore_index=True)
-        # self.anglesDataFrameTable.set_data(self.anglesDataFrame)
+        self.anglesDataFrame.loc[self.anglesDataFrame.shape[0] + 1] = angles
+        self.anglesDataFrameTable.model().refresh()
+
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0].append(angles["Time_in_sec"])
@@ -318,8 +325,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         清空表格
         """
-        self.anglesDataFrame = pd.DataFrame()
-        self.anglesDataFrameTable.set_data(self.anglesDataFrame)
+        self.anglesDataFrame.drop(self.anglesDataFrame.index, inplace=True)
+        self.anglesDataFrameTable.model().refresh()
 
     def displayCVFrames(self, frames):
         if self.hideLogoFrame:
