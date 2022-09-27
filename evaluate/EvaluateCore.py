@@ -129,9 +129,9 @@ EvaluateMetadata = [
         # 躯干与地面的夹角在(0, 50)范围内，并且股骨与地面的夹角大于30°，并且胫骨与地面的夹角大于30°,
         "calcRules": {
             "credit": [11, 12, 23, 24, 25, 26, 27, 28],
-            "start": "(angle(ly({$torso}),{$torso}, m=True) <= 45) and angle(ly({$femur}),{$femur}, m=True)>30 and angle(ly({$tibia}),{$tibia}, m=True)>30",
+            "start": "(angle(ly(lz({$torso})),lz({$torso}), m=True) <= 45) and angle(ly(lz({$femur})),lz({$femur}), m=True)>30 and angle(reverse(lz({$femur})),reverse(lz({$tibia})))<41",
             "interrupt": "False",
-            "end": "not (angle(ly({$femur}),{$femur})>30 and angle(ly({$tibia}),{$tibia})>30)"
+            "end": "not ((angle(ly(lz({$torso})),lz({$torso}), m=True) <= 45) and angle(ly(lz({$femur})),lz({$femur}), m=True)>30 and angle(reverse(lz({$femur})),reverse(lz({$tibia})))<41)"
         },
         "patientTips": {
             "onBeforeDetect": "开始仰卧，双膝弯曲，双脚放在地板上，伸直一\n条腿，使其与另一条腿保持一条直线，然后收紧腹部，\n将臀部抬离地板，形成桥式姿势。",

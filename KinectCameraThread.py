@@ -295,7 +295,6 @@ class KinectCaptureThread(QThread):
 
                     if pose_landmarks is None or pose_world_landmarks is None or pose_landmarks_proto is None or \
                             pose_world_landmarks_proto is None:
-                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         self.emitPatientTips("请进入相机范围")
                         self.emitVideoFrames(
                             self.processFrames(pose_landmarks_proto, frame, color_depth_image(depth_image_raw)))
@@ -361,11 +360,10 @@ class KinectCaptureThread(QThread):
                     self.venv["$keypoints"] = pose_keypoints
                     self.generateVenvVectors(pose_keypoints)
                     # print(
-                    #     f'f=线段((0,0,0),({self.venv["$torso"][0]},{self.venv["$torso"][1]},{self.venv["$torso"][2]}))')
+                    #     f'躯干与地面角度 y:{DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv)}')
                     # print(
-                    #     f'f=线段((0,0,0),({self.venv["$torso"][0]},{0},{self.venv["$torso"][2]}))')
-                    print(
-                        f'躯干与地面角度 y:{DSL("angle(ly({$torso}),{$torso}, m=True)", self.venv)}')
+                    #     f'胫骨与股骨夹角{DSL("angle(reverse(lz({$femur})),reverse(lz({$tibia})))", self.venv)}'
+                    # )
                     if credible_pose(self.venv["$keypoints"], self.evaluateMetadata["calcRules"]["credit"]) and DSL(
                             self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
