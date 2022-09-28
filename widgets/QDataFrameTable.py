@@ -47,7 +47,9 @@ class PandasModel(QAbstractTableModel):
         if role == Qt.BackgroundRole:
             value = self._dataframe.iloc[index.row()][index.column() + 1]
             value = int(value)
-            return QColor(self._colors[round(value / 180 * (len(self._colors) - 1))])
+            # return QColor(self._colors[round(value / 180 * (len(self._colors) - 1))])
+            rangedValue = value / 180
+            return QColor(round(255 * rangedValue), 0, round(255 * (1 - rangedValue)), 130)
 
         return None
 
