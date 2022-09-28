@@ -21,7 +21,7 @@ from KinectCameraThread import KinectCaptureThread
 from decorator import FpsPerformance
 from evaluate.NormEngine import NormEngine
 from evaluate.QRequireCollectDialog import QRequireCollectDialog
-from evaluate.EvaluateCore import EvaluateMetadata
+from evaluate.EvaluateCore import EvaluateMetadata, AnalysisReport
 from widgets.QDataFrameTable import DataFrameTable, PandasModel
 from widgets.QMaximumDockWidget import QMaximumDockWidget
 
@@ -498,20 +498,20 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         :return:
         """
         self.logViewAppend("Pose Detect完成, 结果分析中...")
-        self.showInfoMessage(content="Pose Detect完成, 结果分析中...")
+        self.showInfoMessage(content="Pose Detect完成, 即将分析评估结果。")
         if "calcRule" in result:
             normEngine = NormEngine(result['norms'], result['extraParams'])
             testRes = '合格' if normEngine.exec(result['data'])['result'] else '不合格'
             self.showInfoMessage(title=result["evaluateName"],
                                  content=f"{result['nameZH']}{result['nameEN']}为{result['data']}{result['unit']}, {testRes}")
         try:
-            if "analysisReport" in result and len(result["analysisReport"]) != 0:
+            if "analysisReport" in result:
                 analysisReport = result["analysisReport"]
-                if analysisReport == "Gait_Analysis":
+                if analysisReport == AnalysisReport.Gait:
                     Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams,
                                                analysis_keypoint=PoseLandmark.RIGHT_KNEE,
                                                use_modern_ui=use_modern_ui)
-                elif analysisReport == "单腿桥SLB":
+                elif analysisReport == AnalysisReport.SLB:
                     print("单腿桥报告尚未实现")
 
             # todo: 1、最大下蹲角度（躯干和） 2、躯干和大腿（侧面） 3、脚踝和小腿（余角） 4、肌肉控制情况

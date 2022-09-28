@@ -23,6 +23,11 @@ class NormType(Enum):
     NoneType = 3
 
 
+class AnalysisReport(Enum):
+    Gait = 1
+    SLB = 2
+
+
 PART_ANGLE_ALL = {
     PartAngle.Knee: {
         "name": "膝关节",
@@ -113,7 +118,7 @@ EvaluateMetadata = [
         },
         "EchoNumber": "str(({$k23[2]}+{$k24[2]}+{$k11[2]}+{$k12[2]})/4)+'m'",
         "result": {
-            "analysisReport": "Gait_Analysis"
+            "analysisReport": AnalysisReport.Gait
         },
         "norms": {
             "type": NormType.NoneType,
@@ -153,7 +158,8 @@ EvaluateMetadata = [
             "nameEN": "StickTime",
             "nameZH": "坚持时间",
             "unit": "sec",
-            "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))"
+            "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))",
+            "analysisReport": AnalysisReport.SLB
         },
         "norms": {
             "type": NormType.BaseOffsetFloat,
