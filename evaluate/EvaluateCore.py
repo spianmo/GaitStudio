@@ -75,7 +75,8 @@ InfoForm = {
     },
     RequireCollect.time: {
         "type": "spinbox",
-        "title": "检测时长/sec"
+        "title": "检测时长/sec",
+        "defaultValue": 20,
     }
 }
 

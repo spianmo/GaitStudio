@@ -1,3 +1,4 @@
+import random
 import sys
 import time
 from typing import List
@@ -197,12 +198,13 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                                                      "RHip_angle", "LKnee_angle", "RKnee_angle",
                                                      "TorsoLFemur_angle", "TorsoRFemur_angle", "LTibiaSelf_vector",
                                                      "RTibiaSelf_vector", "LAnkle_angle", "RAnkle_angle"])
+
         self.dockWidgetContentsLayout = QVBoxLayout(self.anglesDockWidgetContents)
         self.anglesDataFrameTable = QTableView()
         model = PandasModel(self.anglesDataFrame)
         self.anglesDataFrameTable.setModel(model)
-        for col_index in range(len(self.anglesDataFrame.columns) - 1):
-            self.anglesDataFrameTable.setColumnWidth(col_index, 120)
+        for col_index in range(len(self.anglesDataFrame.columns)):
+            self.anglesDataFrameTable.setColumnWidth(col_index, 130)
         self.dockWidgetContentsLayout.addWidget(self.anglesDataFrameTable)
         self.hideLogoFrame = True
         self.pts_cams = []

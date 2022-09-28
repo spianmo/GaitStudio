@@ -81,12 +81,12 @@ class QRequireCollectDialog(QDialog, Ui_Dialog):
                 self.formLayout.addRow(self.labels[inputEdit.__getattribute__("formKey")], inputEdit)
             elif formMeta["type"] == "spinbox":
                 spinbox = QSpinBox()
-                spinbox.setValue(15)
+                spinbox.setValue(formMeta["defaultValue"])
                 spinbox.__setattr__("formKey", formItemMeta)
                 spinbox.__setattr__("format", formMeta["title"])
                 spinbox.valueChanged.connect(
-                    lambda value: self.valueChange(inputEdit.__getattribute__("formKey"), value,
-                                                   inputEdit.__getattribute__("format")))
+                    lambda value: self.valueChange(spinbox.__getattribute__("formKey"), value,
+                                                   spinbox.__getattribute__("format")))
                 self.labels[spinbox.__getattribute__("formKey")] = QLabel(
                     formMeta["title"].replace("{}",
                                               str(formMeta[

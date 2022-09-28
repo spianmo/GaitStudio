@@ -24,6 +24,10 @@ QGroupBox {
     margin-top: 1ex;
 }
 
+QTextEdit#outputText {
+font-family: Consolas;
+}
+
 QPushButton {
     background-color: #212121;
     border-radius: 6px;
@@ -319,13 +323,14 @@ QFrame#logoFrame, QFrame#logoFrame_2, QFrame#logoFrame_3 {
 
 QTableView
 {
-    background-color:#2F2F2F;
+/*    background-color:#2F2F2F;*/
     border:1px solid #2b2b2b;
-    font-family: Times;
+    font-family: Consolas;
 }
 
 QTableView::item{
-background:#2F2F2F;
+/*background:#2F2F2F;*/
+color:#ffffff;
 }
 
 QTableView::item:hover{

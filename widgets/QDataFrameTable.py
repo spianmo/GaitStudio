@@ -2,7 +2,7 @@ import typing
 
 import PySide2
 import pandas as pd
-from PySide2 import QtCore
+from PySide2 import QtCore, QtGui
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -13,6 +13,8 @@ class PandasModel(QAbstractTableModel):
     def __init__(self, dataframe: pd.DataFrame, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self._dataframe = dataframe
+        self._colors = ['#15169a', '#21168e', '#2d1682', '#44166b', '#491666', '#54165b', '#63164c', '#75163a',
+                        '#83162c', '#91161e', '#95161a']
 
     def rowCount(self, parent=QModelIndex()) -> int:
         if parent == QModelIndex():
@@ -40,7 +42,12 @@ class PandasModel(QAbstractTableModel):
             return None
 
         if role == Qt.DisplayRole:
-            return str(self._dataframe.iloc[index.row(), index.column() + 1])
+            return str(round(self._dataframe.iloc[index.row(), index.column() + 1], 8))
+
+        if role == Qt.BackgroundRole:
+            value = self._dataframe.iloc[index.row()][index.column() + 1]
+            value = int(value)
+            return QColor(self._colors[round(value / 180 * (len(self._colors) - 1))])
 
         return None
 
