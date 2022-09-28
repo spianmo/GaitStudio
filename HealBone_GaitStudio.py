@@ -85,6 +85,15 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         fpsStr = ""
         currentPatientEchoNumber = ""
 
+    class TimerObject(QObject):
+
+        def __init__(self, anglesDataFrameTable, parent, *args, **kwargs):
+            super().__init__(parent, *args, **kwargs)
+            self.anglesDataFrameTable = anglesDataFrameTable
+
+        def timerEvent(self, event):
+            self.anglesDataFrameTable.model().refresh()
+
     def __init__(self, *args):
         QMainWindow.__init__(self, *args)
         MainWindow.Ui_MainWindow.__init__(self)
@@ -211,6 +220,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         self.pts_cams = []
         for detectIndex, detectionItem in enumerate(EvaluateMetadata):
             self.cbPosturalAssessment.addItem(detectionItem["name"])
+        self.angleTableTimer = self.TimerObject(self.anglesDataFrameTable, self.window())
+        self.angleTableTimer.startTimer(1000)
 
     def showStatusMessage(self, text, timeout=2000):
         self.statusBar.showMessage(text, timeout)
@@ -297,7 +308,6 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
     def plotFrameAngles(self, angles: dict):
         # TODO: 更新视图卡顿
         self.anglesDataFrame.loc[self.anglesDataFrame.shape[0] + 1] = angles
-        self.anglesDataFrameTable.model().refresh()
 
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
