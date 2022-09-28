@@ -201,6 +201,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
         self.dockWidgetContentsLayout = QVBoxLayout(self.anglesDockWidgetContents)
         self.anglesDataFrameTable = QTableView()
+        self.anglesDataFrameDock.setMinimumWidth(600)
         model = PandasModel(self.anglesDataFrame)
         self.anglesDataFrameTable.setModel(model)
         for col_index in range(len(self.anglesDataFrame.columns)):
