@@ -523,7 +523,8 @@ class KinectCaptureThread(QThread):
         self.venv["$L$femur"] = list(self.venv[f"$k25"] - self.venv[f"$k23"])
         self.venv["$R$tibia"] = list(self.venv[f"$k26"] - self.venv[f"$k28"])
         self.venv["$L$tibia"] = list(self.venv[f"$k25"] - self.venv[f"$k27"])
-        self.venv["$torso"] = list((self.venv["$k23"] + self.venv["$k24"]) / 2 - self.venv["$k0"])
+        self.venv["$M$hip"] = (self.venv["$k23"] + self.venv["$k24"]) / 2
+        self.venv["$torso"] = list(self.venv["$M$hip"] - self.venv["$k0"])
         if "$side" in self.venv:
             self.venv["$femur"] = list(self.venv["$L$femur"]) if self.venv["$side"] == "left" else self.venv["$R$femur"]
             self.venv["$tibia"] = list(self.venv["$L$tibia"]) if self.venv["$side"] == "left" else self.venv["$R$tibia"]
