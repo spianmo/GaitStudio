@@ -117,12 +117,10 @@ EvaluateMetadata = [
             "onDetectEnd": "检测结束"
         },
         "EchoNumber": "str(({$k23[2]}+{$k24[2]}+{$k11[2]}+{$k12[2]})/4)+'m'",
-        "result": {
-            "analysisReport": AnalysisReport.Gait
+        "output": {
+            "analysisReport": AnalysisReport.Gait,
+            "general": []
         },
-        "norms": {
-            "type": NormType.NoneType,
-        }
     },
     {
         "name": "单腿桥SLB",
@@ -154,109 +152,115 @@ EvaluateMetadata = [
             "onDetectEnd": "检测结束"
         },
         "EchoNumber": "str(round(currentTime() - {$detectStartTime}, 1))+'s'",
-        "result": {
-            "nameEN": "StickTime",
-            "nameZH": "坚持时间",
-            "unit": "sec",
-            "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))",
-            "analysisReport": AnalysisReport.SLB
+        "output": {
+            "analysisReport": AnalysisReport.SLB,
+            "general": [
+                {
+                    "nameEN": "StickTime",
+                    "nameZH": "坚持时间",
+                    "unit": "sec",
+                    "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))",
+                    "norm": {
+                        "type": NormType.BaseOffsetFloat,
+                        "unit": "sec",
+                        "rule": {
+                            "base": 23.0,
+                            "offset": 16.5
+                        }
+                    }
+                }
+            ]
         },
-        "norms": {
-            "type": NormType.BaseOffsetFloat,
-            "unit": "sec",
-            "rule": {
-                "base": 23.0,
-                "offset": 16.5
-            }
-        }
     },
-    # {
-    #     "name": "单腿站SLS",
-    #     "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-    #     "requireCollect": [
-    #         RequireCollect.name,
-    #         RequireCollect.age,
-    #         RequireCollect.gender,
-    #         RequireCollect.eyesClosed
-    #     ],
-    #     "calcRules": {
-    #         "start": "",
-    #         "interrupt": "",
-    #         "end": ""
-    #     },
-    #     "result": {
-    #         "analysisReport": "SLS_Analysis",
-    #         "nameEN": "StickTime",
-    #         "nameZH": "坚持时间",
-    #         "unit": "sec",
-    #         "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))"
-    #     },
-    #     "norms": {
-    #         "type": NormType.RangeDeepDict,
-    #         "unit": "sec",
-    #         "ruleHead": ["age", "gender", "eyesClosed"],
-    #         "rule": {
-    #             (18, 39): {
-    #                 "Female": {
-    #                     False: 43.5,
-    #                     True: 8.5,
-    #                 },
-    #                 "Male": {
-    #                     False: 43.2,
-    #                     True: 10.2,
-    #                 }
-    #             },
-    #             (40, 49): {
-    #                 "Female": {
-    #                     False: 40.4,
-    #                     True: 7.4,
-    #                 },
-    #                 "Male": {
-    #                     False: 40.1,
-    #                     True: 7.3,
-    #                 }
-    #             },
-    #             (50, 59): {
-    #                 "Female": {
-    #                     False: 36,
-    #                     True: 5.0,
-    #                 },
-    #                 "Male": {
-    #                     False: 38.1,
-    #                     True: 4.5,
-    #                 }
-    #             },
-    #             (60, 69): {
-    #                 "Female": {
-    #                     False: 25.1,
-    #                     True: 2.5,
-    #                 },
-    #                 "Male": {
-    #                     False: 28.7,
-    #                     True: 3.1,
-    #                 }
-    #             },
-    #             (70, 79): {
-    #                 "Female": {
-    #                     False: 11.3,
-    #                     True: 2.2,
-    #                 },
-    #                 "Male": {
-    #                     False: 18.3,
-    #                     True: 1.9,
-    #                 }
-    #             },
-    #             (80, 99): {
-    #                 "Female": {
-    #                     False: 7.4,
-    #                     True: 1.4,
-    #                 },
-    #                 "Male": {
-    #                     False: 5.6,
-    #                     True: 1.3,
-    #                 }
-    #             }
-    #         }
-    #     }
-    # }
+    {
+        "name": "单腿站SLS",
+        "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
+        "requireCollect": [
+            RequireCollect.name,
+            RequireCollect.age,
+            RequireCollect.gender,
+            RequireCollect.eyesClosed
+        ],
+        "calcRules": {
+            "start": "",
+            "interrupt": "",
+            "end": ""
+        },
+        "output": {
+            "analysisReport": "SLS_Analysis",
+            "general": [{
+                "nameEN": "StickTime",
+                "nameZH": "坚持时间",
+                "unit": "sec",
+                "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))",
+                "norm": {
+                    "type": NormType.RangeDeepDict,
+                    "unit": "sec",
+                    "ruleHead": ["age", "gender", "eyesClosed"],
+                    "rule": {
+                        (18, 39): {
+                            "Female": {
+                                False: 43.5,
+                                True: 8.5,
+                            },
+                            "Male": {
+                                False: 43.2,
+                                True: 10.2,
+                            }
+                        },
+                        (40, 49): {
+                            "Female": {
+                                False: 40.4,
+                                True: 7.4,
+                            },
+                            "Male": {
+                                False: 40.1,
+                                True: 7.3,
+                            }
+                        },
+                        (50, 59): {
+                            "Female": {
+                                False: 36,
+                                True: 5.0,
+                            },
+                            "Male": {
+                                False: 38.1,
+                                True: 4.5,
+                            }
+                        },
+                        (60, 69): {
+                            "Female": {
+                                False: 25.1,
+                                True: 2.5,
+                            },
+                            "Male": {
+                                False: 28.7,
+                                True: 3.1,
+                            }
+                        },
+                        (70, 79): {
+                            "Female": {
+                                False: 11.3,
+                                True: 2.2,
+                            },
+                            "Male": {
+                                False: 18.3,
+                                True: 1.9,
+                            }
+                        },
+                        (80, 99): {
+                            "Female": {
+                                False: 7.4,
+                                True: 1.4,
+                            },
+                            "Male": {
+                                False: 5.6,
+                                True: 1.3,
+                            }
+                        }
+                    }
+                }
+            }]
+        }
+    }
 ]

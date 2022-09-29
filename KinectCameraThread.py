@@ -280,15 +280,16 @@ class KinectCaptureThread(QThread):
                         finishFlag = False
                     if not self.recordFlag or finishFlag:
                         if self.detectFlag:
+                            calcNorms = []
+                            for generalNorm in self.evaluateMetadata["output"]["general"]:
+                                calcNorms.append(DSL(generalNorm["calcRule"], self.venv) if "calcRule" in generalNorm else "")
                             self.emitDetectFinish({
-                                "data": DSL(self.evaluateMetadata["result"]["calcRule"],
-                                            self.venv) if "calcRule" in self.evaluateMetadata["result"] else "",
+                                "calcNorms": calcNorms,
                                 "evaluateName": self.evaluateMetadata["name"],
                                 "patientName": self.venv["$name"],
-                                "norms": self.evaluateMetadata["norms"],
                                 "extraParams": self.extraConfig,
                                 "part": self.evaluateMetadata["part"],
-                                **self.evaluateMetadata["result"]
+                                **self.evaluateMetadata["output"]
                             })
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])
                             self.emitPatientTips(self.evaluateMetadata["patientTips"]["onDetectEnd"])
@@ -391,13 +392,16 @@ class KinectCaptureThread(QThread):
                         没有达到检测开始标准
                         """
                         if self.detectFlag and DSL(self.evaluateMetadata["calcRules"]["end"], self.venv):
+                            calcNorms = []
+                            for generalNorm in self.evaluateMetadata["output"]["general"]:
+                                calcNorms.append(
+                                    DSL(generalNorm["calcRule"], self.venv) if "calcRule" in generalNorm else "")
                             self.emitDetectFinish({
-                                "data": DSL(self.evaluateMetadata["result"]["calcRule"],
-                                            self.venv) if "calcRule" in self.evaluateMetadata["result"] else "",
+                                "calcNorms": calcNorms,
                                 "evaluateName": self.evaluateMetadata["name"],
                                 "norms": self.evaluateMetadata["norms"],
                                 "extraParams": self.extraConfig,
-                                **self.evaluateMetadata["result"]
+                                **self.evaluateMetadata["output"]
                             })
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])
                             self.emitPatientTips(self.evaluateMetadata["patientTips"]["onDetectEnd"])
