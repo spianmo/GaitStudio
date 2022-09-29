@@ -127,13 +127,16 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.anglePltLayouts: List[List[pg.PlotWidget]] = []
         self.anglePltDataList: List[List[List]] = []
+        self.anglePltLines: List[List] = []
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             self.anglePltLayouts.append([])
             self.anglePltDataList.append([])
+            self.anglePltLines.append([])
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 label_style = {'color': '#EEE', 'font-size': '12px', 'font-family': '微软雅黑'}
 
                 self.anglePltDataList[anglesCubeIndex].append([[], []])
+                self.anglePltLines[anglesCubeIndex].append([])
                 self.anglePltLayouts[anglesCubeIndex].append(
                     pg.PlotWidget(parent=self.angleViewerDockScrollAreaContents, background="#2F2F2F"))
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setTitle(anglesCube["title"] + " " + angleCube[1],
@@ -148,6 +151,13 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('left', angleCube[3], **label_style)
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setLabel('bottom', angleCube[2], **label_style)
+
+                self.anglePltLines[anglesCubeIndex][angleCubeIndex] = self.anglePltLayouts[anglesCubeIndex][
+                    angleCubeIndex].plot(
+                    x=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                    y=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                    pen=({'color': "r", "width": 1.5}))
+
                 self.angleViewerDockScrollAreaContentsLayout.addWidget(
                     self.anglePltLayouts[anglesCubeIndex][angleCubeIndex])
         """
@@ -322,20 +332,21 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                             -1] - self.viewModel.anglesViewerRange,
                         self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0][-1])
 
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(
-                    x=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
-                    y=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
-                    pen=({'color': "r", "width": 1.5}), clear=True)
+                self.anglePltLines[anglesCubeIndex][angleCubeIndex].setData(
+                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1])
 
     def clearAnglesViewer(self):
         self.pts_cams = []
         for anglesCubeIndex, anglesCube in enumerate(self.viewModel.anglesCheckCube):
             for angleCubeIndex, angleCube in enumerate(anglesCube["axis"]):
                 self.anglePltDataList[anglesCubeIndex][angleCubeIndex] = [[], []]
-                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].getPlotItem().plot(
-                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
-                    self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
-                    pen=({'color': "r", "width": 1.5}), clear=True)
+                self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].clear()
+                self.anglePltLines[anglesCubeIndex][angleCubeIndex] = self.anglePltLayouts[anglesCubeIndex][
+                    angleCubeIndex].plot(
+                    x=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][0],
+                    y=self.anglePltDataList[anglesCubeIndex][angleCubeIndex][1],
+                    pen=({'color': "r", "width": 1.5}))
                 self.anglePltLayouts[anglesCubeIndex][angleCubeIndex].setXRange(0, self.viewModel.anglesViewerRange)
         """
         清空表格
