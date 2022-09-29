@@ -284,8 +284,10 @@ class KinectCaptureThread(QThread):
                                 "data": DSL(self.evaluateMetadata["result"]["calcRule"],
                                             self.venv) if "calcRule" in self.evaluateMetadata["result"] else "",
                                 "evaluateName": self.evaluateMetadata["name"],
+                                "patientName": self.venv["$name"],
                                 "norms": self.evaluateMetadata["norms"],
                                 "extraParams": self.extraConfig,
+                                "part": self.evaluateMetadata["part"],
                                 **self.evaluateMetadata["result"]
                             })
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])

@@ -1,9 +1,9 @@
-import random
+import os
 import sys
 import time
+from pathlib import Path
 from typing import List
 
-import cv2
 import pandas as pd
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -13,17 +13,20 @@ import pyqtgraph as pg
 from mediapipe.python.solutions.pose import PoseLandmark
 from qtmodernredux import QtModernRedux
 
-import Gait_Analysis_GUI
+from evaluate import PluginGaitAnalysis
 import MainWindow
 from GUISignal import LogSignal
 from KinectCameraThread import KinectCaptureThread
 
-from decorator import FpsPerformance
 from evaluate.NormEngine import NormEngine
 from evaluate.QRequireCollectDialog import QRequireCollectDialog
 from evaluate.EvaluateCore import EvaluateMetadata, AnalysisReport
-from widgets.QDataFrameTable import DataFrameTable, PandasModel
+from evaluate.ReportModuleBuilder import get_local_format_time, polt_angle_plots, generateROMPart
+from widgets.QDataFrameTable import PandasModel
 from widgets.QMaximumDockWidget import QMaximumDockWidget
+
+from reports.GenarateGaitReport import HealBoneGaitReport
+from widgets.QPDFViewer import PDFViewer
 
 
 class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
@@ -518,12 +521,39 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         try:
             if "analysisReport" in result:
                 analysisReport = result["analysisReport"]
+                analysisResult = {}
+                df_angles = pd.DataFrame(self.anglesDataFrame)
+                """
+                根据不同评估动作的要求进行分析，给出不同的分析结果
+                """
                 if analysisReport == AnalysisReport.Gait:
-                    Gait_Analysis_GUI.analysis(df_angles=pd.DataFrame(self.anglesDataFrame), pts_cam=self.pts_cams,
-                                               analysis_keypoint=PoseLandmark.RIGHT_KNEE,
-                                               use_modern_ui=use_modern_ui)
+                    analysisResult = PluginGaitAnalysis.analysis(df_angles=df_angles, pts_cam=self.pts_cams,
+                                                                 analysis_keypoint=PoseLandmark.RIGHT_KNEE)
                 elif analysisReport == AnalysisReport.SLB:
                     print("单腿桥报告尚未实现")
+
+                """
+                创建报告
+                """
+                report_output = Path("../report_output")
+                if not report_output.is_dir():
+                    os.makedirs(report_output)
+
+                data_name = f"{result['evaluateName']}Report-{get_local_format_time(time.time())}"
+                report = HealBoneGaitReport('report_output/' + data_name + '.pdf',
+                                            evaluateName=result["evaluateName"],
+                                            patientName=result["patientName"],
+                                            SpatiotemporalData=analysisResult["SpatiotemporalData"],
+                                            ROMData=generateROMPart(df_angles, result['part']),
+                                            ROMGraph=polt_angle_plots(df_angles),
+                                            SpatiotemporalGraph=analysisResult["SpatiotemporalGraph"])
+                report.exportPDF()
+
+                df_angles.to_excel("report_output/" + data_name + ".xlsx")
+                v = QtModernRedux.wrap(PDFViewer(title=data_name, pdf=f'./report_output/{data_name}.pdf'),
+                                       transparent_window=False) if use_modern_ui else PDFViewer(title=data_name,
+                                                                                                 pdf=f'./report_output/{data_name}.pdf')
+                v.exec_()
 
             # todo: 1、最大下蹲角度（躯干和） 2、躯干和大腿（侧面） 3、脚踝和小腿（余角） 4、肌肉控制情况
         except AssertionError as e:

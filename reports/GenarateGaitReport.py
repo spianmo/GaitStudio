@@ -45,10 +45,12 @@ class PageHeaderFooter(canvas.Canvas):
         self.saveState()
         self.setStrokeColorRGB(0, 0, 0)
         self.setLineWidth(0.5)
-        self.drawImage(resourcePath + "static/healbone_banner.png", self.width - inch * 8 - 5, self.height - 50, width=100, height=20,
+        self.drawImage(resourcePath + "static/healbone_banner.png", self.width - inch * 8 - 5, self.height - 50,
+                       width=100, height=20,
                        preserveAspectRatio=True,
                        mask='auto')
-        self.drawImage(resourcePath + "static/gait.png", self.width - inch * 2, self.height - 50, width=100, height=30, preserveAspectRatio=True,
+        self.drawImage(resourcePath + "static/gait.png", self.width - inch * 2, self.height - 50, width=100, height=30,
+                       preserveAspectRatio=True,
                        mask='auto')
         self.line(30, 740, LETTER[0] - 50, 740)
         self.line(66, 78, LETTER[0] - 66, 78)
@@ -67,7 +69,8 @@ colorGreenLine = Color((50.0 / 255), (140.0 / 255), (140.0 / 255), 1)
 
 
 def ParagraphReportHeader(color=colorGreen0, fontSize=12, text='', leftIndent=-14, alignment=TA_LEFT, leading=12):
-    psHeaderText = ParagraphStyle('Hed0', fontName='msyh', fontSize=fontSize, alignment=alignment, borderWidth=3, textColor=color,
+    psHeaderText = ParagraphStyle('Hed0', fontName='msyh', fontSize=fontSize, alignment=alignment, borderWidth=3,
+                                  textColor=color,
                                   leftIndent=leftIndent, leading=leading)
     return Paragraph(text, psHeaderText)
 
@@ -94,8 +97,11 @@ def ReportNoBorderTable(lineData: List[List], colWidths=None, rowHeights=None, t
 
 class HealBoneGaitReport:
 
-    def __init__(self, path, SpatiotemporalData=None, ROMData=None, SpatiotemporalGraph=None, ROMGraph=None):
+    def __init__(self, path, patientName, evaluateName, SpatiotemporalData=None, ROMData=None, SpatiotemporalGraph=None,
+                 ROMGraph=None):
         self.path = path
+        self.patientName = patientName
+        self.evaluateName = evaluateName
         self.SpatiotemporalData = SpatiotemporalData
         self.ROMData = ROMData
         self.SpatiotemporalGraph = SpatiotemporalGraph
@@ -117,7 +123,8 @@ class HealBoneGaitReport:
         # ROM关节活动度参数图表页
         self.ROMPage()
 
-        self.doc = SimpleDocTemplate(self.path, pagesize=LETTER, author="NanJin HealBone Lab", title="HealBone Gait Report")
+        self.doc = SimpleDocTemplate(self.path, pagesize=LETTER, author="NanJin HealBone Lab",
+                                     title="HealBone Gait Report")
 
     def coverPage(self):
         img = Image(resourcePath + 'static/healbone_banner.png', kind='proportional')
@@ -146,8 +153,8 @@ class HealBoneGaitReport:
         # """
         time_fmt_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         text = """HEALBONE GAIT ANALYSIS REPORT<br/>
-        复骨医疗步态分析报告<br/>
-        受测者姓名: 测试人员1<br/>
+        复骨医疗""" + self.evaluateName + """报告<br/>
+        受测者姓名: """ + self.patientName + """<br/>
         受测时间: """ + time_fmt_str + """<br/>
         地点: 南京复骨医疗实验室<br/>
         """
@@ -169,21 +176,24 @@ class HealBoneGaitReport:
         主要参数
         """
 
-        self.elements.append(ReportNoBorderTable(lineData=self.SpatiotemporalData, colWidths=120, rowHeights=45, tableStyle=[
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
-            ("ALIGN", (2, 0), (2, -1), 'CENTER'),
-            ("ALIGN", (3, 0), (3, -1), 'CENTER'),
-            ('BACKGROUND', (0, 0), (-1, 0), colorGreen2),
-            ('BACKGROUND', (0, -1), (-1, -1), colorBlue1),
-            ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONT', (0, 0), (-1, -1), 'msyh'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('LEADING', (0, 0), (-1, -1), 18)
-        ]))
+        self.elements.append(
+            ReportNoBorderTable(lineData=self.SpatiotemporalData, colWidths=120, rowHeights=45, tableStyle=[
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
+                ("ALIGN", (2, 0), (2, -1), 'CENTER'),
+                ("ALIGN", (3, 0), (3, -1), 'CENTER'),
+                ('BACKGROUND', (0, 0), (-1, 0), colorGreen2),
+                ('BACKGROUND', (0, -1), (-1, -1), colorBlue1),
+                ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONT', (0, 0), (-1, -1), 'msyh'),
+                ('FONTSIZE', (0, 0), (-1, -1), 12),
+                ('LEADING', (0, 0), (-1, -1), 18)
+            ]))
         self.elements.append(HeightSpacer(heightPixels=10))
-        self.elements.append(ParagraphReportHeader(text='*注: HealBone Lab的Gait检测结果仅对步态评估提供参考建议', color=colorBlack, fontSize=10))
+        self.elements.append(
+            ParagraphReportHeader(text=f'*注: HealBone Lab的{self.evaluateName}检测结果仅对步态评估提供参考建议', color=colorBlack,
+                                  fontSize=10))
 
     def ROMPage(self):
         for rom_index, romItem in enumerate(self.ROMData):
@@ -200,19 +210,20 @@ class HealBoneGaitReport:
             主要参数
             """
 
-            self.elements.append(ReportNoBorderTable(lineData=romItem["list"], colWidths=120, rowHeights=38, tableStyle=[
-                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-                ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
-                ("ALIGN", (2, 0), (2, -1), 'CENTER'),
-                ("ALIGN", (3, 0), (3, -1), 'CENTER'),
-                ('BACKGROUND', (0, 0), (-1, 0), colorGreen2),
-                ('BACKGROUND', (0, -1), (-1, -1), colorBlue1),
-                ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('FONT', (0, 0), (-1, -1), 'msyh'),
-                ('FONTSIZE', (0, 0), (-1, -1), 12),
-                ('LEADING', (0, 0), (-1, -1), 15)
-            ]))
+            self.elements.append(
+                ReportNoBorderTable(lineData=romItem["list"], colWidths=120, rowHeights=38, tableStyle=[
+                    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                    ("ALIGN", (1, 0), (1, -1), 'RIGHT'),
+                    ("ALIGN", (2, 0), (2, -1), 'CENTER'),
+                    ("ALIGN", (3, 0), (3, -1), 'CENTER'),
+                    ('BACKGROUND', (0, 0), (-1, 0), colorGreen2),
+                    ('BACKGROUND', (0, -1), (-1, -1), colorBlue1),
+                    ('LINEABOVE', (0, 0), (-1, -1), 1, colorBlue1),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('FONT', (0, 0), (-1, -1), 'msyh'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 12),
+                    ('LEADING', (0, 0), (-1, -1), 15)
+                ]))
 
             self.elements.append(HeightSpacer(heightPixels=10))
             self.elements.append(ParagraphReportHeader(
