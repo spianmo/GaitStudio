@@ -580,7 +580,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    use_modern_ui = False
+    use_modern_ui = True
 
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
@@ -595,6 +595,7 @@ if __name__ == '__main__':
 
     if use_modern_ui:
         _hbWin = QtModernRedux.wrap(hbWin, titlebar_color=QColor('#303030'))
+        _hbWin.graphicsEffect().setEnabled(False)
         _hbWin.show()
     else:
         hbWin.show()
