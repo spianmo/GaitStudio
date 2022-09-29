@@ -582,12 +582,16 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 if __name__ == '__main__':
     use_modern_ui = True
 
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setAttribute(Qt.AA_Use96Dpi)
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
     app = QtModernRedux.QApplication(sys.argv) if use_modern_ui else QApplication()
     app.setStyleSheet(open('resources/styleSheet.qss', encoding='utf-8').read())
     hbWin = HealBoneWindow()
+    hbWin.setMinimumHeight(855)
+    hbWin.setMinimumWidth(1328)
     # 信号槽
     logSignal = LogSignal()
     logSignal.signal.connect(lambda log: hbWin.logViewAppend(log))
