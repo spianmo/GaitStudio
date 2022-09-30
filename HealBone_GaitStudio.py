@@ -528,7 +528,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                     "df_angles": df_angles,
                     "pts_cams": self.pts_cams,
                     "landmark": PoseLandmark.RIGHT_KNEE,
-                    "norms": detectResult['result']['general'],
+                    "norms": detectResult['general'],
                     "calcNorms": detectResult['calcNorms'],
                     "extraParams": detectResult['extraParams']
                 })

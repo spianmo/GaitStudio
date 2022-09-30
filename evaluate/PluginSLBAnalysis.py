@@ -4,9 +4,9 @@ from evaluate.NormEngine import NormEngine
 
 def analysis(norms: list, calcNorms: list, extraParams: dict):
     insertedArray = []
-    for norm_index, norm in enumerate(norms):
-        insertedArray.append([f"{norm['nameEN']}\n{norm['nameZH']}", calcNorms[norm_index], norm['unit'],
-                              normToStr(norm, extraParams)])
+    for generalNormIndex, generalNorm in enumerate(norms):
+        insertedArray.append([f"{generalNorm['nameEN']}\n{generalNorm['nameZH']}", calcNorms[generalNormIndex], generalNorm['unit'],
+                              normToStr(generalNorm['norm'], extraParams)])
     return {"SpatiotemporalData": [
         ["参数Parameters", "数值Data", "单位Unit", "参考值Reference"],
         *insertedArray,

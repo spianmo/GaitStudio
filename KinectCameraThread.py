@@ -399,8 +399,9 @@ class KinectCaptureThread(QThread):
                             self.emitDetectFinish({
                                 "calcNorms": calcNorms,
                                 "evaluateName": self.evaluateMetadata["name"],
-                                "norms": self.evaluateMetadata["norms"],
+                                "patientName": self.venv["$name"],
                                 "extraParams": self.extraConfig,
+                                "part": self.evaluateMetadata["part"],
                                 **self.evaluateMetadata["output"]
                             })
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onDetectEnd"])

@@ -10,6 +10,7 @@ attrs==22.1.0
 backcall==0.2.0
 beautifulsoup4==4.11.1
 bio==1.4.0
+biopython==1.79
 biothings-client==0.2.6
 bleach==5.0.1
 certifi==2022.6.15
@@ -35,6 +36,7 @@ h5py==3.7.0
 idna==3.3
 imageio==2.21.1
 imageio-ffmpeg==0.4.7
+importlib-metadata==4.12.0
 importlib-resources==5.9.0
 ipykernel==6.15.1
 ipython==8.4.0
@@ -87,13 +89,13 @@ psutil==5.9.1
 pure-eval==0.2.2
 pycparser==2.21
 Pygments==2.13.0
-pyinstaller==5.3
-pyinstaller-hooks-contrib==2022.8
+pyinstaller==5.4.1
+pyinstaller-hooks-contrib==2022.10
 pyk4a==1.4.0
 pykalman==0.9.5
 pyparsing==3.0.9
-pypiwin32==223
 PyQt5==5.15.7
+PyQt5-Frameless-Window==0.1.0
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.11.0
 pyqtgraph==0.12.4
@@ -107,7 +109,6 @@ python-version==0.0.2
 pytz==2022.2.1
 pywin32==304
 pywin32-ctypes==0.2.0
-pywinpty==2.0.7
 PyYAML==6.0
 pyzmq==23.2.1
 qimage2ndarray==1.9.0
@@ -128,7 +129,7 @@ stack-data==0.4.0
 statsmodels==0.13.2
 svglib==1.4.1
 sympy==1.10.1
--e git+https://github.com/dmnfarrell/tablexplore.git#egg=tablexplore
+-e git+https://github.com/dmnfarrell/tablexplore.git@47dfda931d6aa55c61d96b420c2a1a7e540e3779#egg=tablexplore
 tabulate==0.8.10
 terminado==0.15.0
 tinycss2==1.1.1

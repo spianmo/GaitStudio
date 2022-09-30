@@ -6,7 +6,7 @@ class ReportAnalysisFactory:
     def __init__(self, analysisReport: AnalysisReport):
         self.analysisReport = analysisReport
 
-    def exec(self, *args, **kwargs):
+    def exec(self, kwargs):
         analysisResult = {}
         if self.analysisReport == AnalysisReport.Gait:
             analysisResult = PluginGaitAnalysis.analysis(df_angles=kwargs["df_angles"], pts_cam=kwargs["pts_cams"],
