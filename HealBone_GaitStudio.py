@@ -539,9 +539,10 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
                 if not report_output.is_dir():
                     os.makedirs(report_output)
 
-                data_name = f"{detectResult['evaluateName']}Report-{get_local_format_time(time.time())}"
+                data_name = f"{detectResult['evaluateName']}-Report-{get_local_format_time(time.time())}"
                 report = HealBoneGaitReport('report_output/' + data_name + '.pdf',
                                             evaluateName=detectResult["evaluateName"],
+                                            evaluateNameEn=detectResult["analysisReport"].name,
                                             patientName=detectResult["patientName"],
                                             SpatiotemporalData=analysisResult["SpatiotemporalData"],
                                             SpatiotemporalGraph=analysisResult["SpatiotemporalGraph"],

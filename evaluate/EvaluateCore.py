@@ -160,7 +160,7 @@ EvaluateMetadata = [
                     "nameEN": "StickTime",
                     "nameZH": "坚持时间",
                     "unit": "sec",
-                    "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))",
+                    "calcRule": "round(currentTime() - {$detectStartTime}, 1)",
                     "norm": {
                         "type": NormType.BaseOffsetFloat,
                         "unit": "sec",
@@ -173,95 +173,113 @@ EvaluateMetadata = [
             ]
         },
     },
-    # {
-    #     "name": "单腿站SLS",
-    #     "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
-    #     "requireCollect": [
-    #         RequireCollect.name,
-    #         RequireCollect.age,
-    #         RequireCollect.gender,
-    #         RequireCollect.eyesClosed
-    #     ],
-    #     "calcRules": {
-    #         "start": "",
-    #         "interrupt": "",
-    #         "end": ""
-    #     },
-    #     "output": {
-    #         "analysisReport": AnalysisReport.SLS,
-    #         "general": [{
-    #             "nameEN": "StickTime",
-    #             "nameZH": "坚持时间",
-    #             "unit": "sec",
-    #             "calcRule": "str(round(currentTime() - {$detectStartTime}, 1))",
-    #             "norm": {
-    #                 "type": NormType.RangeDeepDict,
-    #                 "unit": "sec",
-    #                 "ruleHead": ["age", "gender", "eyesClosed"],
-    #                 "rule": {
-    #                     (18, 39): {
-    #                         "Female": {
-    #                             False: 43.5,
-    #                             True: 8.5,
-    #                         },
-    #                         "Male": {
-    #                             False: 43.2,
-    #                             True: 10.2,
-    #                         }
-    #                     },
-    #                     (40, 49): {
-    #                         "Female": {
-    #                             False: 40.4,
-    #                             True: 7.4,
-    #                         },
-    #                         "Male": {
-    #                             False: 40.1,
-    #                             True: 7.3,
-    #                         }
-    #                     },
-    #                     (50, 59): {
-    #                         "Female": {
-    #                             False: 36,
-    #                             True: 5.0,
-    #                         },
-    #                         "Male": {
-    #                             False: 38.1,
-    #                             True: 4.5,
-    #                         }
-    #                     },
-    #                     (60, 69): {
-    #                         "Female": {
-    #                             False: 25.1,
-    #                             True: 2.5,
-    #                         },
-    #                         "Male": {
-    #                             False: 28.7,
-    #                             True: 3.1,
-    #                         }
-    #                     },
-    #                     (70, 79): {
-    #                         "Female": {
-    #                             False: 11.3,
-    #                             True: 2.2,
-    #                         },
-    #                         "Male": {
-    #                             False: 18.3,
-    #                             True: 1.9,
-    #                         }
-    #                     },
-    #                     (80, 99): {
-    #                         "Female": {
-    #                             False: 7.4,
-    #                             True: 1.4,
-    #                         },
-    #                         "Male": {
-    #                             False: 5.6,
-    #                             True: 1.3,
-    #                         }
-    #                     }
-    #                 }
-    #             }
-    #         }]
-    #     }
-    # }
+    {
+        "name": "单腿站SLS",
+        "requireCollect": [
+            RequireCollect.name,
+            RequireCollect.age,
+            RequireCollect.gender,
+            RequireCollect.eyesClosed,
+            RequireCollect.side
+        ],
+        "part": [PartAngle.Knee, PartAngle.Hip, PartAngle.Pelvis, PartAngle.Ankle],
+        "venv": ["$torso", "$L$femur", "$R$femur", "$L$tibia", "$R$tibia"],
+        "calcRules": {
+            "credit": [11, 12, 23, 24, 25, 26, 27, 28],
+            "start": "(70 <= angle(ly({$torso}),{$torso}, m=True) <= 120)",
+            "interrupt": "False",
+            "end": "not (70 <= angle(ly({$torso}),{$torso}, m=True) <= 120)"
+        },
+        "patientTips": {
+            "onBeforeDetect": "以直立姿势开始，双脚并拢，双臂放在身体两侧。\n将一只脚抬离地板，用另一条腿保持平衡。 ",
+            "onFirstDetect": "已达到动作要求，开始计时，请坚持",
+            "onDetecting": "'已坚持' + str(round(currentTime() - {$detectStartTime}, 1)) + '秒'",
+            "onDetectingInterrupt": "",
+            "onDetectEnd": "检测完成，等待生成报告"
+        },
+        "sequenceLog": {
+            "onBeforeDetect": "以直立姿势开始，双脚并拢，双臂放在身体两侧。将一只脚抬离地板，用另一条腿保持平衡。 在这个位置保持平衡。尽量不要将手臂从身体上移开或让体重从一侧转移到另一侧。",
+            "onFirstDetect": "已达到动作要求，开始检测",
+            "onDetecting": "'已坚持' + str(currentTime() - {$detectStartTime}) + '秒'",
+            "onDetectingInterrupt": "",
+            "onDetectEnd": "检测结束"
+        },
+        "EchoNumber": "str(round(currentTime() - {$detectStartTime}, 1))+'s'",
+        "output": {
+            "analysisReport": AnalysisReport.SLS,
+            "general": [{
+                "nameEN": "StickTime",
+                "nameZH": "坚持时间",
+                "unit": "sec",
+                "calcRule": "round(currentTime() - {$detectStartTime}, 1)",
+                "norm": {
+                    "type": NormType.RangeDeepDict,
+                    "unit": "sec",
+                    "ruleHead": ["age", "gender", "eyesClosed"],
+                    "rule": {
+                        (18, 39): {
+                            "Female": {
+                                False: 43.5,
+                                True: 8.5,
+                            },
+                            "Male": {
+                                False: 43.2,
+                                True: 10.2,
+                            }
+                        },
+                        (40, 49): {
+                            "Female": {
+                                False: 40.4,
+                                True: 7.4,
+                            },
+                            "Male": {
+                                False: 40.1,
+                                True: 7.3,
+                            }
+                        },
+                        (50, 59): {
+                            "Female": {
+                                False: 36,
+                                True: 5.0,
+                            },
+                            "Male": {
+                                False: 38.1,
+                                True: 4.5,
+                            }
+                        },
+                        (60, 69): {
+                            "Female": {
+                                False: 25.1,
+                                True: 2.5,
+                            },
+                            "Male": {
+                                False: 28.7,
+                                True: 3.1,
+                            }
+                        },
+                        (70, 79): {
+                            "Female": {
+                                False: 11.3,
+                                True: 2.2,
+                            },
+                            "Male": {
+                                False: 18.3,
+                                True: 1.9,
+                            }
+                        },
+                        (80, 99): {
+                            "Female": {
+                                False: 7.4,
+                                True: 1.4,
+                            },
+                            "Male": {
+                                False: 5.6,
+                                True: 1.3,
+                            }
+                        }
+                    }
+                }
+            }]
+        }
+    }
 ]

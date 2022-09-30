@@ -97,11 +97,12 @@ def ReportNoBorderTable(lineData: List[List], colWidths=None, rowHeights=None, t
 
 class HealBoneGaitReport:
 
-    def __init__(self, path, patientName, evaluateName, SpatiotemporalData=None, ROMData=None, SpatiotemporalGraph=None,
+    def __init__(self, path, patientName, evaluateName, evaluateNameEn, SpatiotemporalData=None, ROMData=None, SpatiotemporalGraph=None,
                  ROMGraph=None):
         self.path = path
         self.patientName = patientName
         self.evaluateName = evaluateName
+        self.evaluateNameEn = evaluateNameEn
         self.SpatiotemporalData = SpatiotemporalData
         self.ROMData = ROMData
         self.SpatiotemporalGraph = SpatiotemporalGraph
@@ -124,7 +125,7 @@ class HealBoneGaitReport:
         self.ROMPage()
 
         self.doc = SimpleDocTemplate(self.path, pagesize=LETTER, author="NanJin HealBone Lab",
-                                     title="HealBone Gait Report")
+                                     title=f"HealBone {self.evaluateNameEn} Report")
 
     def coverPage(self):
         img = Image(resourcePath + 'static/healbone_banner.png', kind='proportional')
@@ -152,7 +153,7 @@ class HealBoneGaitReport:
         # LAB: NanJin HealBone Lab1<br/>
         # """
         time_fmt_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-        text = """HEALBONE GAIT ANALYSIS REPORT<br/>
+        text = """HEALBONE """+ self.evaluateNameEn.upper() +""" ANALYSIS REPORT<br/>
         复骨医疗""" + self.evaluateName + """报告<br/>
         受测者姓名: """ + self.patientName + """<br/>
         受测时间: """ + time_fmt_str + """<br/>
@@ -192,8 +193,9 @@ class HealBoneGaitReport:
             ]))
         self.elements.append(HeightSpacer(heightPixels=10))
         self.elements.append(
-            ParagraphReportHeader(text=f'*注: HealBone Lab的{self.evaluateName}检测结果仅对步态评估提供参考建议', color=colorBlack,
+            ParagraphReportHeader(text=f'*注: HealBone Lab的{self.evaluateName}检测结果仅对{self.evaluateNameEn}评估提供参考建议', color=colorBlack,
                                   fontSize=10))
+        self.elements.append(PageBreak())
 
     def ROMPage(self):
         for rom_index, romItem in enumerate(self.ROMData):

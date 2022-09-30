@@ -367,7 +367,7 @@ class KinectCaptureThread(QThread):
                     # print(
                     #     f'胫骨与股骨夹角{DSL("angle(reverse(lz({$femur})),reverse(lz({$tibia})))", self.venv)}'
                     # )
-                    if credible_pose(self.venv["$keypoints"], self.evaluateMetadata["calcRules"]["credit"]) and DSL(
+                    if credible_pose(self.venv["$keypoints"], self.evaluateMetadata["calcRules"]["credit"]) > 0.5 and DSL(
                             self.evaluateMetadata["calcRules"]["start"], self.venv):
                         if not self.detectFlag:
                             self.emitLog(self.evaluateMetadata["sequenceLog"]["onFirstDetect"])

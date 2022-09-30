@@ -4,7 +4,9 @@ from evaluate.EvaluateCore import NormType, EvaluateMetadata
 class NormEngine:
     def __init__(self, norms, extraParams):
         self.norms = norms
-        self.extraParams = extraParams
+        self.extraParams = {}
+        for infoItem in extraParams.items():
+            self.extraParams[f"{infoItem[0].name}"] = infoItem[1]
 
     def exec(self, src):
         if self.norms["type"] == NormType.BaseOffsetFloat:
