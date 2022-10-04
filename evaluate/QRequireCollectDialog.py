@@ -3,7 +3,7 @@ import copy
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialog, QSlider, QComboBox, QLineEdit, QLabel, QSpinBox
 
-from Dialog import Ui_Dialog
+from CollectDialog import Ui_CollectDialog
 from evaluate.EvaluateCore import InfoForm, RequireCollect
 
 
@@ -11,7 +11,7 @@ class ViewModel:
     pass
 
 
-class QRequireCollectDialog(QDialog, Ui_Dialog):
+class QRequireCollectDialog(QDialog, Ui_CollectDialog):
     def __init__(self, parent=None, metadata=None):
         super(QRequireCollectDialog, self).__init__(parent)
         if metadata is None:
