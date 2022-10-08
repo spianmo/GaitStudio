@@ -12,6 +12,7 @@ import qimage2ndarray
 import pyqtgraph as pg
 from mediapipe.python.solutions.pose import PoseLandmark
 from qtmodernredux import QtModernRedux
+from qtmodernredux.apl_style.windowstyle import Constants
 
 from evaluate import PluginGaitAnalysis
 import MainWindow
@@ -107,7 +108,7 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
         无边框窗口
         """
         if use_modern_ui:
-            self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+            self.setWindowFlags(self.windowFlags() and Qt.FramelessWindowHint)
         self.setupUi(self)
 
         """
@@ -611,6 +612,8 @@ class HealBoneWindow(QMainWindow, MainWindow.Ui_MainWindow):
 
 if __name__ == '__main__':
     use_modern_ui = True
+
+    Constants.WINDOW_CORNER_RADIUS_PX = 5
 
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     QApplication.setAttribute(Qt.AA_Use96Dpi)

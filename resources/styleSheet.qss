@@ -2,7 +2,7 @@
     font-family: 微软雅黑;
     color: #BBB;
     background-color: #2F2F2F;
-    border-radius: 4px;
+    border-radius: 5px;
 }
 
 
