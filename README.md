@@ -4,7 +4,7 @@
 >
 > Based on the Kinect depth camera and MediaPipe, real-time reasoning of the joint activity of each part of the human body, and output a detection report.
 
-定义了一套检测规则DSL，可扩展多种检测项目。检测速率在15FPS左右，支持深度视图、RGB视图以及叠加视图的切换显示。实时展示各部位关节角度，自由调节检测BlazePose模型精度和Kinect相机参数。
+定义了一套检测规则DSL，可扩展多种检测项目。检测速率在15FPS左右，支持深度视图、RGB视图以及叠加视图的切换显示。实时展示各部位关节角度，自由调节检测BlazePose模型精度和Kinect相机参数。程序入口：HealBone_GaitStudio.py
 
 **TODO:**
 
